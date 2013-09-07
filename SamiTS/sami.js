@@ -2,13 +2,12 @@
     (document.getElementById("loader")).onchange = function (ev) {
         var reader = new FileReader();
         reader.onload = function (ev) {
-            //try {
-            var xsyncs = SamiParser.Parse(ev.target.result);
+            try  {
+                var xsyncs = SamiParser.Parse(ev.target.result);
+            } catch (e) {
+                return alert("자막 파일을 읽는 중에 오류가 발생했습니다: " + e);
+            }
 
-            //}
-            //catch (e) {
-            //    return alert("자막 파일을 읽는 중에 오류가 발생했습니다: " + e);
-            //}
             var srtDocument = "";
             var write = function (i, text) {
                 srtDocument += i.toString();
