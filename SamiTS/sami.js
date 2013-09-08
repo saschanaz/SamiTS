@@ -1,4 +1,10 @@
 ﻿"use strict";
+var SubType;
+(function (SubType) {
+    SubType[SubType["SRT"] = 0] = "SRT";
+    SubType[SubType["WebVTT"] = 1] = "WebVTT";
+})(SubType || (SubType = {}));
+
 (function () {
     var subtypechecks;
     var file;
@@ -13,7 +19,7 @@
                 } catch (e) {
                     return alert("자막 파일을 읽는 중에 오류가 발생했습니다: " + e);
                 }
-                convert(xsyncs);
+                (document.getElementById("output")).value = convert(xsyncs);
             };
             file = (ev.target).files[0];
             if (getFileExtension(file) === "smi")
@@ -23,20 +29,38 @@ else
         };
 
         (document.getElementById("downloader")).onclick = function () {
-            var blob = new Blob([(document.getElementById("output")).value], { type: "text/plain", endings: "transparent" });
-            saveAs(blob, getFileDisplayName((document.getElementById("loader")).files[0]) + ".srt");
+            if (xsyncs) {
+                var blob = new Blob([(document.getElementById("output")).value], { type: "text/plain", endings: "transparent" });
+                saveAs(blob, getFileDisplayName((document.getElementById("loader")).files[0]) + getExtensionForSubType());
+            }
         };
         (subtypechecks[0]).onclick = (subtypechecks[1]).onclick = function (ev) {
             if (xsyncs)
-                convert(xsyncs);
+                (document.getElementById("output")).value = convert(xsyncs);
         };
     });
 
     function convert(xsyncs) {
+        var subtype = getCheckedSubType();
+        if (subtype == SubType.SRT)
+            return SamiTS.SubRipWriter.write(xsyncs);
+else if (subtype == SubType.WebVTT)
+            return SamiTS.WebVTTWriter.write(xsyncs);
+    }
+
+    function getExtensionForSubType() {
+        var subtype = getCheckedSubType();
+        if (subtype == SubType.SRT)
+            return ".srt";
+else if (subtype == SubType.WebVTT)
+            return ".vtt";
+    }
+
+    function getCheckedSubType() {
         if ((subtypechecks[0]).checked)
-            (document.getElementById("output")).value = SamiTS.SubRipWriter.write(xsyncs);
+            return SubType.SRT;
 else if ((subtypechecks[1]).checked)
-            (document.getElementById("output")).value = SamiTS.WebVTTWriter.write(xsyncs);
+            return SubType.WebVTT;
     }
 
     function getFileExtension(file) {
