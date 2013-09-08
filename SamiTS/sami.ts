@@ -1,4 +1,8 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
+﻿"use strict";
+
+declare var saveAs: (data: Blob, filename: string) => {}
+
+document.addEventListener("DOMContentLoaded", () => {
     (<HTMLInputElement>document.getElementById("loader")).onchange = (ev: Event) => {
         var reader = new FileReader();
         reader.onload = (ev) => {
@@ -36,12 +40,23 @@
             reader.readAsText((<HTMLInputElement>ev.target).files[0]);
         else
             alert("파일 형식이 .smi가 아닙니다.");
+    };
+
+    (<HTMLButtonElement>document.getElementById("downloader")).onclick = () => {
+        var blob = new Blob([(<HTMLTextAreaElement>document.getElementById("output")).value], { type: "text/plain", endings: "transparent" });
+        saveAs(blob, getFileDisplayName((<HTMLInputElement>document.getElementById("loader")).files[0]) + ".srt");
     }
 });
 
 function getFileExtension(file: File) {
     var splitted = file.name.split('.');
     return splitted[splitted.length - 1].toLowerCase();
+}
+
+function getFileDisplayName(file: File) {
+    var splitted = file.name.split('.');
+    splitted = splitted.slice(0, splitted.length - 1);
+    return splitted.join('.');
 }
 
 function getSubRipTime(ms: number) {
@@ -94,7 +109,6 @@ class SamiParser {
                         if (attrAndPos.attribute === null) {
                             position++;
                             list.push({ element: xe, startPosition: startPosition, endPosition: position });
-                            console.log(list.length + " " + xe.outerHTML);
                             break;
                         }
                         else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)

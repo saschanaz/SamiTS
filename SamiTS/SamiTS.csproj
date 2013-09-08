@@ -18,6 +18,7 @@
   <ItemGroup>
     <Content Include="app.css" />
     <Content Include="default.htm" />
+    <Content Include="filesaverjs\FileSaver.js" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
