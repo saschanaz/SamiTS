@@ -15,17 +15,19 @@
                 srtDocument += "\r\n" + text;
             };
             var text;
-            for (var i = 0; i < xsyncs.length - 2; i++) {
-                text = xsyncs[i].innerText.trim();
-                if (text.length > 0) {
-                    write(i, text);
-                    srtDocument += "\r\n\r\n";
-                }
-            }
-            if (i > 0) {
-                text = xsyncs[i].innerText.trim();
+            var syncindex = 0;
+            if (xsyncs.length > 0) {
+                text = xsyncs[0].innerText.trim();
                 if (text.length > 0)
-                    write(i, text);
+                    write(syncindex, text);
+                for (var i = 1; i < xsyncs.length - 1; i++) {
+                    text = xsyncs[i].innerText.trim();
+                    if (text.length > 0) {
+                        srtDocument += "\r\n\r\n";
+                        syncindex++;
+                        write(syncindex, text);
+                    }
+                }
             }
             (document.getElementById("output")).value = srtDocument;
         };
