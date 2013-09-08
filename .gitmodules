@@ -1,0 +1,3 @@
+[submodule "SamiTS/filesaverjs"]
+	path = SamiTS/filesaverjs
+	url = https://github.com/eligrey/FileSaver.js.git
