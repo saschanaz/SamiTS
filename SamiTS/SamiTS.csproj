@@ -23,6 +23,9 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="sami.ts" />
+    <TypeScriptCompile Include="subripwriter.ts" />
+    <TypeScriptCompile Include="syncparser.ts" />
+    <TypeScriptCompile Include="webvttwriter.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">
