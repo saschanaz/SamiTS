@@ -8,7 +8,7 @@ module SamiTS {
                 subDocument += "\r\n" + text;
             };
             var text: string;
-            var syncindex = 0;
+            var syncindex = 1;
             if (xsyncs.length > 0) {
                 text = xsyncs[0].innerText.trim();
                 if (text.length > 0) write(0, syncindex, text);
