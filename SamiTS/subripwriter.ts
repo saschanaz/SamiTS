@@ -1,6 +1,6 @@
 module SamiTS {
     export class SubRipWriter {
-        static write(xsyncs: HTMLElement[]) {
+        static write(xsyncs: HTMLElement[], useTags: boolean) {
             var subDocument = "";
             var write = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
@@ -9,11 +9,12 @@ module SamiTS {
             };
             var text: string;
             var syncindex = 1;
+            var getText = useTags ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0]);
+                text = getText(xsyncs[0]);
                 if (text.length > 0) write(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.getRichText(xsyncs[i]);
+                    text = getText(xsyncs[i]);
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -42,12 +43,34 @@ module SamiTS {
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         }
 
+        private static getSimpleText(syncobject: Node) {
+            var result = '';
+            Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
+                if (node.nodeType === 1)//element
+                    switch ((<HTMLElement>node).tagName.toLowerCase()) {
+                        case "p":
+                        default: {
+                            result += this.getSimpleText(node);
+                            break;
+                        }
+                        case "br": {
+                            result += "\r\n";
+                            break;
+                        }
+                    }
+                else //text
+                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+            });
+            return result;
+        }
+
         private static getRichText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
                 if (node.nodeType === 1)//element
                     switch ((<HTMLElement>node).tagName.toLowerCase()) {
-                        case "p": {
+                        case "p":
+                        default: {
                             result += this.getRichText(node);
                             break;
                         }
