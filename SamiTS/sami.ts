@@ -8,10 +8,12 @@ enum SubType {
 
 (function () {
     var subtypechecks: NodeList;
+    var tagusecheck: Node;
     var file: File;
     var xsyncs: HTMLElement[];
     document.addEventListener("DOMContentLoaded", () => {
         subtypechecks = document.getElementsByName("subtype");
+        tagusecheck = document.getElementById("taguse");
         (<HTMLInputElement>document.getElementById("loader")).onchange = (ev: Event) => {
             var reader = new FileReader();
             reader.onload = (ev) => {
@@ -37,7 +39,8 @@ enum SubType {
             }
         };
         (<HTMLInputElement>subtypechecks[0]).onclick
-            = (<HTMLInputElement>subtypechecks[1]).onclick
+        = (<HTMLInputElement>subtypechecks[1]).onclick
+        = (<HTMLInputElement>tagusecheck).onclick
             = (ev: MouseEvent) => {
                 if (xsyncs)
                     (<HTMLTextAreaElement>document.getElementById("output")).value = convert(xsyncs);
@@ -45,26 +48,31 @@ enum SubType {
     });
 
     function convert(xsyncs: HTMLElement[]) {
-        var subtype = getCheckedSubType();
+        var subtype = getTargetSubType();
+        var taguse = getTagUse();
         if (subtype == SubType.SRT)
-            return SamiTS.SubRipWriter.write(xsyncs);
+            return SamiTS.SubRipWriter.write(xsyncs, taguse);
         else if (subtype == SubType.WebVTT)
             return SamiTS.WebVTTWriter.write(xsyncs);
     }
 
     function getExtensionForSubType() {
-        var subtype = getCheckedSubType();
+        var subtype = getTargetSubType();
         if (subtype == SubType.SRT)
             return ".srt";
         else if (subtype == SubType.WebVTT)
             return ".vtt";
     }
 
-    function getCheckedSubType() {
+    function getTargetSubType() {
         if ((<HTMLInputElement>subtypechecks[0]).checked)
             return SubType.SRT;
         else if ((<HTMLInputElement>subtypechecks[1]).checked)
             return SubType.WebVTT;
+    }
+
+    function getTagUse() {
+        return ((<HTMLInputElement>tagusecheck).checked);
     }
 
     function getFileExtension(file: File) {

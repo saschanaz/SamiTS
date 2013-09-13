@@ -3,7 +3,7 @@ var SamiTS;
     var SubRipWriter = (function () {
         function SubRipWriter() {
         }
-        SubRipWriter.write = function (xsyncs) {
+        SubRipWriter.write = function (xsyncs, useTags) {
             var _this = this;
             var subDocument = "";
             var write = function (i, syncindex, text) {
@@ -13,12 +13,17 @@ var SamiTS;
             };
             var text;
             var syncindex = 1;
+            var getText = useTags ? function (xsync) {
+                return _this.getRichText(xsync);
+            } : function (xsync) {
+                return _this.getSimpleText(xsync);
+            };
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0]);
+                text = getText(xsyncs[0]);
                 if (text.length > 0)
                     write(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.getRichText(xsyncs[i]);
+                    text = getText(xsyncs[i]);
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -51,13 +56,36 @@ var SamiTS;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         };
 
+        SubRipWriter.getSimpleText = function (syncobject) {
+            var _this = this;
+            var result = '';
+            Array.prototype.forEach.call(syncobject.childNodes, function (node) {
+                if (node.nodeType === 1)
+                    switch ((node).tagName.toLowerCase()) {
+                        case "p":
+                        default: {
+                            result += _this.getSimpleText(node);
+                            break;
+                        }
+                        case "br": {
+                            result += "\r\n";
+                            break;
+                        }
+                    }
+else
+                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+            });
+            return result;
+        };
+
         SubRipWriter.getRichText = function (syncobject) {
             var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1)
                     switch ((node).tagName.toLowerCase()) {
-                        case "p": {
+                        case "p":
+                        default: {
                             result += _this.getRichText(node);
                             break;
                         }
