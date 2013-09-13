@@ -14,11 +14,11 @@ var SamiTS;
             var text;
             var syncindex = 1;
             if (xsyncs.length > 0) {
-                text = xsyncs[0].innerText.trim();
+                text = this.getRichText(xsyncs[0]);
                 if (text.length > 0)
                     write(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = xsyncs[i].innerText.trim();
+                    text = this.getRichText(xsyncs[i]);
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -49,6 +49,41 @@ var SamiTS;
             while (msstr.length < 3)
                 msstr = '0' + msstr;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
+        };
+
+        SubRipWriter.getRichText = function (syncobject) {
+            var _this = this;
+            var result = '';
+            Array.prototype.forEach.call(syncobject.childNodes, function (node) {
+                if (node.nodeType === 1)
+                    switch ((node).tagName.toLowerCase()) {
+                        case "p": {
+                            result += _this.getRichText(node);
+                            break;
+                        }
+                        case "br": {
+                            result += "\r\n";
+                            break;
+                        }
+                        case "font": {
+                            var fontelement = document.createElement("font");
+                            var color = (node).getAttribute("color");
+                            if (color)
+                                fontelement.setAttribute("color", color);
+                            result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
+                            break;
+                        }
+                        case "b":
+                        case "i":
+                        case "u": {
+                            result += (node).outerHTML;
+                            break;
+                        }
+                    }
+else
+                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+            });
+            return result;
         };
         return SubRipWriter;
     })();
