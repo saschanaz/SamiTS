@@ -46,9 +46,9 @@ else
         var subtype = getTargetSubType();
         var taguse = getTagUse();
         if (subtype == SubType.SRT)
-            return SamiTS.SubRipWriter.write(xsyncs, taguse);
+            return (new SamiTS.SubRipWriter()).write(xsyncs, taguse);
 else if (subtype == SubType.WebVTT)
-            return SamiTS.WebVTTWriter.write(xsyncs);
+            return (new SamiTS.WebVTTWriter()).write(xsyncs);
     }
 
     function getExtensionForSubType() {

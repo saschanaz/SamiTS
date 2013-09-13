@@ -3,7 +3,7 @@ var SamiTS;
     var SubRipWriter = (function () {
         function SubRipWriter() {
         }
-        SubRipWriter.write = function (xsyncs, useTags) {
+        SubRipWriter.prototype.write = function (xsyncs, useTags) {
             var _this = this;
             var subDocument = "";
             var write = function (i, syncindex, text) {
@@ -34,7 +34,7 @@ var SamiTS;
             return subDocument;
         };
 
-        SubRipWriter.getSubRipTime = function (ms) {
+        SubRipWriter.prototype.getSubRipTime = function (ms) {
             var hour = (ms - ms % 3600000) / 3600000;
             ms -= hour * 3600000;
             var min = (ms - ms % 60000) / 60000;
@@ -56,7 +56,7 @@ var SamiTS;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         };
 
-        SubRipWriter.getSimpleText = function (syncobject) {
+        SubRipWriter.prototype.getSimpleText = function (syncobject) {
             var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
@@ -78,7 +78,7 @@ else
             return result;
         };
 
-        SubRipWriter.getRichText = function (syncobject) {
+        SubRipWriter.prototype.getRichText = function (syncobject) {
             var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
