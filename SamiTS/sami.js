@@ -7,10 +7,12 @@ var SubType;
 
 (function () {
     var subtypechecks;
+    var tagusecheck;
     var file;
     var xsyncs;
     document.addEventListener("DOMContentLoaded", function () {
         subtypechecks = document.getElementsByName("subtype");
+        tagusecheck = document.getElementById("taguse");
         (document.getElementById("loader")).onchange = function (ev) {
             var reader = new FileReader();
             reader.onload = function (ev) {
@@ -34,33 +36,38 @@ else
                 saveAs(blob, getFileDisplayName((document.getElementById("loader")).files[0]) + getExtensionForSubType());
             }
         };
-        (subtypechecks[0]).onclick = (subtypechecks[1]).onclick = function (ev) {
+        (subtypechecks[0]).onclick = (subtypechecks[1]).onclick = (tagusecheck).onclick = function (ev) {
             if (xsyncs)
                 (document.getElementById("output")).value = convert(xsyncs);
         };
     });
 
     function convert(xsyncs) {
-        var subtype = getCheckedSubType();
+        var subtype = getTargetSubType();
+        var taguse = getTagUse();
         if (subtype == SubType.SRT)
-            return SamiTS.SubRipWriter.write(xsyncs);
+            return SamiTS.SubRipWriter.write(xsyncs, taguse);
 else if (subtype == SubType.WebVTT)
             return SamiTS.WebVTTWriter.write(xsyncs);
     }
 
     function getExtensionForSubType() {
-        var subtype = getCheckedSubType();
+        var subtype = getTargetSubType();
         if (subtype == SubType.SRT)
             return ".srt";
 else if (subtype == SubType.WebVTT)
             return ".vtt";
     }
 
-    function getCheckedSubType() {
+    function getTargetSubType() {
         if ((subtypechecks[0]).checked)
             return SubType.SRT;
 else if ((subtypechecks[1]).checked)
             return SubType.WebVTT;
+    }
+
+    function getTagUse() {
+        return ((tagusecheck).checked);
     }
 
     function getFileExtension(file) {
