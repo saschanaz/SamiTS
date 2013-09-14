@@ -1,6 +1,6 @@
 module SamiTS {
     export class SubRipWriter {
-        static write(xsyncs: HTMLElement[], useTags: boolean) {
+        write(xsyncs: HTMLElement[], useTags: boolean) {
             var subDocument = "";
             var write = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
@@ -25,7 +25,7 @@ module SamiTS {
             return subDocument;
         }
 
-        private static getSubRipTime(ms: number) {
+        private getSubRipTime(ms: number) {
             var hour = (ms - ms % 3600000) / 3600000;
             ms -= hour * 3600000;
             var min = (ms - ms % 60000) / 60000;
@@ -43,7 +43,7 @@ module SamiTS {
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         }
 
-        private static getSimpleText(syncobject: Node) {
+        private getSimpleText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
                 if (node.nodeType === 1)//element
@@ -64,7 +64,7 @@ module SamiTS {
             return result;
         }
 
-        private static getRichText(syncobject: Node) {
+        private getRichText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
                 if (node.nodeType === 1)//element
