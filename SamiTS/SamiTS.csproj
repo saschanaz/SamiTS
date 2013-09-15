@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="sami.ts" />
+    <TypeScriptCompile Include="sdpuswriter.ts" />
     <TypeScriptCompile Include="subripwriter.ts" />
     <TypeScriptCompile Include="syncparser.ts" />
     <TypeScriptCompile Include="webvttwriter.ts" />
