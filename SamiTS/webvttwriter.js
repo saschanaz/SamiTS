@@ -8,7 +8,7 @@ var SamiTS;
         WebVTTWriter.prototype.write = function (xsyncs) {
             var _this = this;
             this.getRichText(xsyncs[0]);
-            var subHeader = "WEBVTT\r\n\r\n";
+            var subHeader = "WEBVTT";
             var subDocument = '';
             var write = function (i, text) {
                 subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].getAttribute("start")));
@@ -29,6 +29,9 @@ var SamiTS;
                 }
             }
 
+            //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
+            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
         };
 
@@ -161,7 +164,13 @@ else
             return !!this.ruledictionary[targetname];
         };
         WebVTTStyleSheet.prototype.insertRuleForName = function (targetname, rule) {
-            this.ruledictionary[targetname] = rule;
+            this.ruledictionary[targetname] = "::cue(v[voice=\"" + targetname + "\"]) { " + rule + " }";
+        };
+        WebVTTStyleSheet.prototype.getStyleSheetString = function () {
+            var resultarray = [];
+            for (var rule in this.ruledictionary)
+                resultarray.push(this.ruledictionary[rule]);
+            return resultarray.join('\r\n');
         };
         return WebVTTStyleSheet;
     })();
