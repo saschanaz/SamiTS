@@ -127,8 +127,11 @@ module SamiTS {
                             break;
                         }
                     }
-                else //text
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                else { //text
+                    var text = node.nodeValue.replace(/[\r\n]/g, '');
+                    if (text.trim().length > 0)//prevents cues consists of a single &nbsp;
+                        result += text;
+                }
             });
             return result;
         }
