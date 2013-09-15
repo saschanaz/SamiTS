@@ -134,8 +134,11 @@ var SamiTS;
                             break;
                         }
                     }
-else
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+else {
+                    var text = node.nodeValue.replace(/[\r\n]/g, '');
+                    if (text.trim().length > 0)
+                        result += text;
+                }
             });
             return result;
         };
