@@ -4,7 +4,7 @@ module SamiTS {
         private domparser = new DOMParser();
         write(xsyncs: HTMLElement[]) {
             this.getRichText(xsyncs[0]);
-            var subHeader = "WEBVTT\r\n\r\n";
+            var subHeader = "WEBVTT";
             var subDocument = '';
             var write = (i: number, text: string) => {
                 subDocument += this.getWebVTTTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].getAttribute("start")));
@@ -24,8 +24,9 @@ module SamiTS {
                 }
             }
 
-            
-
+            //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
+            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
         }
 
@@ -152,7 +153,13 @@ module SamiTS {
             return !!this.ruledictionary[targetname];
         }
         insertRuleForName(targetname: string, rule: string) {
-            this.ruledictionary[targetname] = rule;
+            this.ruledictionary[targetname] = "::cue(v[voice=\"" + targetname + "\"]) { " + rule + " }";
+        }
+        getStyleSheetString() {
+            var resultarray: string[] = [];
+            for (var rule in this.ruledictionary)
+                resultarray.push(<string>this.ruledictionary[rule]);
+            return resultarray.join('\r\n');
         }
     }
 }
