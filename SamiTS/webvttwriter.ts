@@ -1,3 +1,5 @@
+"use strict";
+
 module SamiTS {
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();

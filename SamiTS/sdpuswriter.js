@@ -1,4 +1,5 @@
-﻿var SamiTS;
+﻿"use strict";
+var SamiTS;
 (function (SamiTS) {
     var SDPUSWriter = (function () {
         function SDPUSWriter() {

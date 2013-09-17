@@ -1,3 +1,5 @@
+"use strict";
+
 module SamiTS {
     export class SamiParser {
         static Parse(samiDocument: string) {
