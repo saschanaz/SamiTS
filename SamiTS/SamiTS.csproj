@@ -22,8 +22,8 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="appcore.ts" />
     <TypeScriptCompile Include="sami.ts" />
+    <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="sdpuswriter.ts" />
     <TypeScriptCompile Include="subripwriter.ts" />
     <TypeScriptCompile Include="syncparser.ts" />
