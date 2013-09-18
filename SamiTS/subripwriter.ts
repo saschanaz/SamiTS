@@ -1,3 +1,5 @@
+"use strict";
+
 module SamiTS {
     export class SubRipWriter {
         write(xsyncs: HTMLElement[], useTags: boolean) {

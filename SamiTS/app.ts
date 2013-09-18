@@ -1,22 +1,29 @@
 ﻿"use strict";
-var subtypechecks;
 
-var track;
+declare var saveAs: (data: Blob, filename: string) => {}
+
+var subtypechecks: NodeList;
+declare var taguse: HTMLInputElement;
+declare var areaselector: HTMLButtonElement;
+declare var previewarea: HTMLDivElement;
+declare var player: HTMLVideoElement;
+declare var output: HTMLTextAreaElement;
+var track: HTMLTrackElement;
 var isPreviewAreaShown = false;
-var subtitleFileDisplayName;
-document.addEventListener("DOMContentLoaded", function () {
+var subtitleFileDisplayName: string;
+document.addEventListener("DOMContentLoaded", () => {
     subtypechecks = document.getElementsByName("subtype");
 });
 
-function load(evt) {
-    var files = (evt.target).files;
-    var videofile;
-    var subfile;
+function load(evt: Event) {
+    var files = (<HTMLInputElement>evt.target).files;
+    var videofile: File;
+    var subfile: File;
     for (var i = 0; i < files.length; i++) {
         var file = files[i];
         if (!videofile && getFileExtension(file) === "mp4")
             videofile = file;
-else if (!subfile && getFileExtension(file) === "smi")
+        else if (!subfile && getFileExtension(file) === "smi")
             subfile = file;
         if (videofile && subfile)
             break;
@@ -25,14 +32,13 @@ else if (!subfile && getFileExtension(file) === "smi")
         return;
 
     subtitleFileDisplayName = getFileDisplayName(subfile);
-    SamiTS.convertFromFile(subfile, getTargetSubType(), getTagUse(), function (result) {
+    SamiTS.convertFromFile(subfile, getTargetSubType(), getTagUse(), (result: string) => {
         hidePreviewArea();
         hidePlayer();
         hideAreaSelector();
         output.value = result;
         if (track) {
-            player.removeChild(track);
-            (document.getElementById("areaselector"));
+            player.removeChild(track); (<HTMLButtonElement>document.getElementById("areaselector"))
             player.src = '';
         }
         if (videofile) {
@@ -46,7 +52,8 @@ else if (!subfile && getFileExtension(file) === "smi")
             player.appendChild(track);
             showAreaSelector();
             showPlayer();
-        } else
+        }
+        else
             showPreviewArea();
     });
 }
@@ -55,7 +62,8 @@ function selectArea() {
     if (isPreviewAreaShown) {
         hidePreviewArea();
         showPlayer();
-    } else {
+    }
+    else {
         hidePlayer();
         showPreviewArea();
     }
@@ -108,9 +116,9 @@ function getMIMETypeForSubType() {
 }
 
 function getTargetSubType() {
-    if ((subtypechecks[0]).checked)
+    if ((<HTMLInputElement>subtypechecks[0]).checked)
         return SamiTS.SubType.WebVTT;
-else if ((subtypechecks[1]).checked)
+    else if ((<HTMLInputElement>subtypechecks[1]).checked)
         return SamiTS.SubType.SRT;
 }
 
@@ -118,14 +126,13 @@ function getTagUse() {
     return taguse.checked;
 }
 
-function getFileExtension(file) {
+function getFileExtension(file: File) {
     var splitted = file.name.split('.');
     return splitted[splitted.length - 1].toLowerCase();
 }
 
-function getFileDisplayName(file) {
+function getFileDisplayName(file: File) {
     var splitted = file.name.split('.');
     splitted = splitted.slice(0, splitted.length - 1);
     return splitted.join('.');
 }
-//# sourceMappingURL=app.js.map

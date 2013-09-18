@@ -1,4 +1,6 @@
-﻿module SamiTS {
+﻿"use strict";
+
+module SamiTS {
     export class SDPUSWriter {
         private xmlNamespaceURI = "http://www.w3.org/XML/1998/namespace";
         private xmlnsNamespaceURI = "http://www.w3.org/2000/xmlns/";
