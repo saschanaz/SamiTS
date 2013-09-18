@@ -1,3 +1,4 @@
+"use strict";
 var SamiTS;
 (function (SamiTS) {
     var WebVTTWriter = (function () {
