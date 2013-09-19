@@ -87,10 +87,9 @@ module SamiTS {
                             break;
                         }
                         case "ruby": {
-                            var inner = this.getRichText(node);
-                            var innerparsed = this.domparser.parseFromString(inner, "text/html").body;
+                            var innerparsed = this.domparser.parseFromString((<HTMLElement>node).innerHTML, "text/html").body;
                             var rt = innerparsed.getElementsByTagName("rt")[0];
-                            if (rt.innerHTML.length == 0 && rt !== innerparsed.childNodes[innerparsed.childNodes.length - 1]) {
+                            if (rt && rt.innerHTML.length == 0 && rt !== innerparsed.childNodes[innerparsed.childNodes.length - 1]) {
                                 var rtdetected = false;
                                 //Array.prototype.forEach.call(innerparsed.childNodes, (innernode: Node) => {
                                 var i = 0;
