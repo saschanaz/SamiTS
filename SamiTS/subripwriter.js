@@ -99,7 +99,10 @@ else
                             var color = (node).getAttribute("color");
                             if (color)
                                 fontelement.setAttribute("color", color);
-                            result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
+                            if (fontelement.attributes.length > 0)
+                                result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
+else
+                                result += _this.getRichText(node);
                             break;
                         }
                         case "b":
