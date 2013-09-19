@@ -84,7 +84,10 @@ module SamiTS {
                             var fontelement = document.createElement("font");
                             var color = (<HTMLElement>node).getAttribute("color");
                             if (color) fontelement.setAttribute("color", color);
-                            result += fontelement.outerHTML.replace("</font>", this.getRichText(node) + "</font>");
+                            if (fontelement.attributes.length > 0)
+                                result += fontelement.outerHTML.replace("</font>", this.getRichText(node) + "</font>");
+                            else
+                                result += this.getRichText(node);
                             break;
                         }
                         case "b":
