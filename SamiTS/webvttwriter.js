@@ -22,7 +22,7 @@ var SamiTS;
                 if (text.length > 0)
                     write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.getRichText(xsyncs[i]);
+                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -61,6 +61,14 @@ var SamiTS;
                 return hourstr + ':' + minstr + ':' + secstr + '.' + msstr;
             } else
                 return minstr + ':' + secstr + '.' + msstr;
+        };
+
+        WebVTTWriter.prototype.cleanVacuum = function (uncleaned) {
+            var result = uncleaned.trim();
+
+            //while (result.lastIndexOf('\r\n\r\n') > -1)
+            //    result = result.replace('\r\n\r\n', '\r\n');
+            return result;
         };
 
         WebVTTWriter.prototype.getRichText = function (syncobject) {
@@ -135,9 +143,7 @@ var SamiTS;
                         }
                     }
 else {
-                    var text = node.nodeValue.replace(/[\r\n]/g, '');
-                    if (text.trim().length > 0)
-                        result += text;
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
                 }
             });
             return result;
