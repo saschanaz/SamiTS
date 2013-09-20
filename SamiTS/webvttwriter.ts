@@ -18,7 +18,7 @@ module SamiTS {
                 text = this.getRichText(xsyncs[0]);
                 if (text.length > 0) write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));//prevents cues consists of a single &nbsp;
+                    text = this.cleanVacuum(this.getRichText(this.correctRubyNodes(xsyncs[i])));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -61,6 +61,42 @@ module SamiTS {
             while (result.lastIndexOf('\r\n\r\n') > -1)
                 result = result.replace('\r\n\r\n', '\r\n');
             return result;
+        }
+
+        private correctRubyNodes(syncobject: HTMLElement) {
+            var syncstr = syncobject.innerHTML;
+            var newsync = <HTMLElement>this.domparser.parseFromString(syncobject.outerHTML, "text/html").getElementsByTagName("sync")[0];
+            var rubylist = newsync.getElementsByTagName("ruby");
+            var rtlist = rubylist.length > 0 ? newsync.getElementsByTagName("rt") : undefined;
+            if (!rtlist || rtlist.length == 0)
+                return syncobject;
+            
+            var rubyindexlist: number[] = [];
+            var rtindexlist: number[] = [];
+            rubyindexlist.push(syncobject.outerHTML.indexOf(rubylist[0].outerHTML));
+            for (var i = 1; i < rubylist.length; i++)
+                rubyindexlist.push(syncstr.indexOf((rubylist[i].outerHTML), rubyindexlist[i - 1] + rubylist[i - 1].outerHTML.length));
+            rtindexlist.push(syncobject.outerHTML.indexOf(rtlist[0].outerHTML));
+            for (var i = 1; i < rubylist.length; i++)
+                rtindexlist.push(syncstr.indexOf((rtlist[i].outerHTML), rtindexlist[i - 1] + rtlist[i - 1].outerHTML.length));
+
+            if (!this.isRubyParentExist(rtlist[0])) {
+                newsync.innerHTML = syncstr.slice(0, rubyindexlist[0]) + syncstr.slice(rubyindexlist[0], rtindexlist[0] + rtlist[0].outerHTML.length).replace(/<\/font>/g, '') + syncstr.slice(rtindexlist[0] + rtlist[0].outerHTML.length);
+                return newsync;
+            }
+            else
+                return syncobject;
+        }
+
+        private isRubyParentExist(rtelement: HTMLElement) {
+            if (rtelement.parentElement) {
+                if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
+                    return true;
+                else
+                    return this.isRubyParentExist(rtelement.parentElement);
+            }
+            else
+                return false;
         }
 
         private getRichText(syncobject: Node) {
