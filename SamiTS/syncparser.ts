@@ -6,9 +6,9 @@ module SamiTS {
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
             var syncs = this.parseSyncs(samiDocument);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = samiDocument.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, bodyendindex);
             var syncElements: HTMLElement[] = [];
             syncs.forEach((sync) => {
                 syncElements.push(sync.element);

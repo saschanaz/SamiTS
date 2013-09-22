@@ -71,27 +71,51 @@ var SamiTS;
         };
 
         WebVTTWriter.prototype.correctRubyNodes = function (syncobject) {
-            var syncstr = syncobject.innerHTML;
-            var newsync = this.domparser.parseFromString(syncobject.outerHTML, "text/html").getElementsByTagName("sync")[0];
+            var syncstr = syncobject.dataset['originalstring'];
             var rubylist = newsync.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? newsync.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            var rubyindexlist = [];
+            var rubystartindexlist = [];
+            var rubyendindexlist = [];
             var rtindexlist = [];
-            rubyindexlist.push(syncobject.outerHTML.indexOf(rubylist[0].outerHTML));
+            rubystartindexlist.push(syncstr.indexOf('<ruby'));
             for (var i = 1; i < rubylist.length; i++)
-                rubyindexlist.push(syncstr.indexOf((rubylist[i].outerHTML), rubyindexlist[i - 1] + rubylist[i - 1].outerHTML.length));
-            rtindexlist.push(syncobject.outerHTML.indexOf(rtlist[0].outerHTML));
+                rubystartindexlist.push(syncstr.indexOf('<ruby', rubystartindexlist[i - 1] + 6));
+            rubyendindexlist.push(syncstr.indexOf('</ruby>'));
             for (var i = 1; i < rubylist.length; i++)
-                rtindexlist.push(syncstr.indexOf((rtlist[i].outerHTML), rtindexlist[i - 1] + rtlist[i - 1].outerHTML.length));
+                rubyendindexlist.push(syncstr.indexOf('</ruby>', rubyendindexlist[i - 1] + 7));
+            rtindexlist.push(syncstr.indexOf('<rt'));
+            for (var i = 1; i < rtlist.length; i++)
+                rtindexlist.push(syncstr.indexOf('<rt', rtindexlist[i - 1] + 4));
 
             if (!this.isRubyParentExist(rtlist[0])) {
-                newsync.innerHTML = syncstr.slice(0, rubyindexlist[0]) + syncstr.slice(rubyindexlist[0], rtindexlist[0] + rtlist[0].outerHTML.length).replace(/<\/font>/g, '') + syncstr.slice(rtindexlist[0] + rtlist[0].outerHTML.length);
+                var newsync = this.domparser.parseFromString(syncobject.outerHTML, "text/html").getElementsByTagName("sync")[0];
+                newsync.innerHTML = syncstr.slice(0, rubystartindexlist[0]) + syncstr.slice(rubystartindexlist[0], rubyendindexlist[0] + 7).replace(/<\/font>/g, '') + syncstr.slice(rubyendindexlist[0] + 7);
                 return newsync;
             } else
                 return syncobject;
+        };
+
+        WebVTTWriter.prototype.findCommonParent = function (rubyelement, rtelement) {
+            var rubyparent = rubyelement;
+            while (rubyparent && !rubyparent.contains(rtelement)) {
+                rubyparent = rubyparent.parentElement;
+            }
+            if (!rubyparent)
+                return null;
+            return rubyparent;
+        };
+
+        WebVTTWriter.prototype.findDirectChild = function (parentelement, childelement) {
+            var child = childelement;
+            while (child.parentElement && child.parentElement != parentelement) {
+                child = child.parentElement;
+            }
+            if (!child.parentElement)
+                return null;
+            return child;
         };
 
         WebVTTWriter.prototype.isRubyParentExist = function (rtelement) {

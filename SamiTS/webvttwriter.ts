@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 module SamiTS {
     export class WebVTTWriter {
@@ -64,28 +64,54 @@ module SamiTS {
         }
 
         private correctRubyNodes(syncobject: HTMLElement) {
-            var syncstr = syncobject.innerHTML;
-            var newsync = <HTMLElement>this.domparser.parseFromString(syncobject.outerHTML, "text/html").getElementsByTagName("sync")[0];
+            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
+            var syncstr = <string>syncobject.dataset['originalstring'];
             var rubylist = newsync.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? newsync.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
-            
-            var rubyindexlist: number[] = [];
+
+            var rubystartindexlist: number[] = [];
+            var rubyendindexlist: number[] = [];
             var rtindexlist: number[] = [];
-            rubyindexlist.push(syncobject.outerHTML.indexOf(rubylist[0].outerHTML));
+            rubystartindexlist.push(syncstr.indexOf('<ruby'));
             for (var i = 1; i < rubylist.length; i++)
-                rubyindexlist.push(syncstr.indexOf((rubylist[i].outerHTML), rubyindexlist[i - 1] + rubylist[i - 1].outerHTML.length));
-            rtindexlist.push(syncobject.outerHTML.indexOf(rtlist[0].outerHTML));
+                rubystartindexlist.push(syncstr.indexOf('<ruby', rubystartindexlist[i - 1] + 6));
+            rubyendindexlist.push(syncstr.indexOf('</ruby>'));
             for (var i = 1; i < rubylist.length; i++)
-                rtindexlist.push(syncstr.indexOf((rtlist[i].outerHTML), rtindexlist[i - 1] + rtlist[i - 1].outerHTML.length));
+                rubyendindexlist.push(syncstr.indexOf('</ruby>', rubyendindexlist[i - 1] + 7));
+            rtindexlist.push(syncstr.indexOf('<rt'));
+            for (var i = 1; i < rtlist.length; i++)
+                rtindexlist.push(syncstr.indexOf('<rt', rtindexlist[i - 1] + 4));
 
             if (!this.isRubyParentExist(rtlist[0])) {
-                newsync.innerHTML = syncstr.slice(0, rubyindexlist[0]) + syncstr.slice(rubyindexlist[0], rtindexlist[0] + rtlist[0].outerHTML.length).replace(/<\/font>/g, '') + syncstr.slice(rtindexlist[0] + rtlist[0].outerHTML.length);
+                var newsync = <HTMLElement>this.domparser.parseFromString(syncobject.outerHTML, "text/html").getElementsByTagName("sync")[0];
+                newsync.innerHTML = syncstr.slice(0, rubystartindexlist[0]) + syncstr.slice(rubystartindexlist[0], rubyendindexlist[0] + 7).replace(/<\/font>/g, '') + syncstr.slice(rubyendindexlist[0] + 7);
                 return newsync;
             }
             else
                 return syncobject;
+
+        }
+
+        private findCommonParent(rubyelement: HTMLElement, rtelement: HTMLElement) {
+            var rubyparent = rubyelement;
+            while (rubyparent && !rubyparent.contains(rtelement)) {
+                rubyparent = rubyparent.parentElement;
+            }
+            if (!rubyparent)
+                return null;
+            return rubyparent;
+        }
+
+        private findDirectChild(parentelement: HTMLElement, childelement: HTMLElement) {
+            var child = childelement;
+            while (child.parentElement && child.parentElement != parentelement) {
+                child = child.parentElement;
+            }
+            if (!child.parentElement)
+                return null;
+            return child;
         }
 
         private isRubyParentExist(rtelement: HTMLElement) {
