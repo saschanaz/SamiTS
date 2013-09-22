@@ -69,8 +69,9 @@ module SamiTS {
         private getRichText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
-                if (node.nodeType === 1)//element
-                    switch ((<HTMLElement>node).tagName.toLowerCase()) {
+                if (node.nodeType === 1) { //element
+                    var tagname = (<HTMLElement>node).tagName.toLowerCase();
+                    switch (tagname) {
                         case "p":
                         default: {
                             result += this.getRichText(node);
@@ -93,10 +94,11 @@ module SamiTS {
                         case "b":
                         case "i":
                         case "u": {
-                            result += (<HTMLElement>node).outerHTML;
+                            result += '<' + tagname + '>' + this.getRichText(node) + '</' + tagname + '>';
                             break;
                         }
                     }
+                }
                 else //text
                     result += node.nodeValue.replace(/[\r\n]/g, '').trim();
             });

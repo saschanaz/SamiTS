@@ -124,8 +124,9 @@ else
             var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
-                if (node.nodeType === 1)
-                    switch ((node).tagName.toLowerCase()) {
+                if (node.nodeType === 1) {
+                    var tagname = (node).tagName.toLowerCase();
+                    switch (tagname) {
                         case "p":
                         default: {
                             result += _this.getRichText(node);
@@ -187,11 +188,11 @@ else
                         case "b":
                         case "i":
                         case "u": {
-                            result += (node).outerHTML;
+                            result += '<' + tagname + '>' + _this.getRichText(node) + '</' + tagname + '>';
                             break;
                         }
                     }
-else {
+                } else {
                     result += node.nodeValue.replace(/[\r\n]/g, '');
                 }
             });

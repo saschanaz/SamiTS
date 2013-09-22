@@ -7,16 +7,12 @@
     var SubType = SamiTS.SubType;
 
     function convertFromString(samiString, targetSubType, useTextStyles) {
-        try  {
-            var xsyncs = SamiTS.SamiParser.Parse(samiString);
-            switch (targetSubType) {
-                case SubType.WebVTT:
-                    return (new SamiTS.WebVTTWriter()).write(xsyncs);
-                case SubType.SRT:
-                    return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
-            }
-        } catch (e) {
-            alert("자막 파일을 읽는 중에 오류가 발생했습니다: " + e);
+        var xsyncs = SamiTS.SamiParser.Parse(samiString);
+        switch (targetSubType) {
+            case SubType.WebVTT:
+                return (new SamiTS.WebVTTWriter()).write(xsyncs);
+            case SubType.SRT:
+                return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
         }
     }
     SamiTS.convertFromString = convertFromString;
@@ -24,11 +20,7 @@
     function convertFromFile(samiFile, targetSubType, useTextStyles, read) {
         var reader = new FileReader();
         reader.onload = function (ev) {
-            try  {
-                read(convertFromString(ev.target.result, targetSubType, useTextStyles));
-            } catch (e) {
-                alert("자막 파일을 읽는 중에 오류가 발생했습니다: " + e);
-            }
+            read(convertFromString(ev.target.result, targetSubType, useTextStyles));
         };
         reader.readAsText(samiFile);
     }
