@@ -153,7 +153,7 @@ else
                         }
                         case "ruby": {
                             var innerparsed = _this.domparser.parseFromString((node).innerHTML, "text/html").body;
-                            var rt = innerparsed.getElementsByTagName("rt")[0];
+                            var rt = innerparsed ? innerparsed.getElementsByTagName("rt")[0] : undefined;
                             if (rt && rt.innerHTML.length == 0 && rt !== innerparsed.childNodes[innerparsed.childNodes.length - 1]) {
                                 var rtdetected = false;
 
