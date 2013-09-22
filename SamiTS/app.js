@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 var subtypechecks;
 
 var track;
@@ -38,11 +38,11 @@ else if (!subfile && getFileExtension(file) === "smi")
         if (videofile) {
             player.src = URL.createObjectURL(videofile);
             track = document.createElement("track");
-            track.label = "日本語";
-            track.kind = "subtitles";
-            track.srclang = "ja";
-            track.src = URL.createObjectURL(new Blob([result], { type: "text/vtt" }));
-            track.default = true;
+            track.setAttribute("label", "日本語");
+            track.setAttribute("kind", "subtitles");
+            track.setAttribute("srclang", "ja");
+            track.setAttribute("src", URL.createObjectURL(new Blob([result], { type: "text/vtt" })));
+            track.setAttribute("default", "true");
             player.appendChild(track);
             showAreaSelector();
             showPlayer();
