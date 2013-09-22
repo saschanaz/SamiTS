@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 var SamiTS;
 (function (SamiTS) {
     var WebVTTWriter = (function () {
@@ -71,28 +71,20 @@ var SamiTS;
         };
 
         WebVTTWriter.prototype.correctRubyNodes = function (syncobject) {
+            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
             var syncstr = syncobject.dataset['originalstring'];
-            var rubylist = newsync.getElementsByTagName("ruby");
-            var rtlist = rubylist.length > 0 ? newsync.getElementsByTagName("rt") : undefined;
+            var rubylist = syncobject.getElementsByTagName("ruby");
+            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            var rubystartindexlist = [];
-            var rubyendindexlist = [];
-            var rtindexlist = [];
-            rubystartindexlist.push(syncstr.indexOf('<ruby'));
-            for (var i = 1; i < rubylist.length; i++)
-                rubystartindexlist.push(syncstr.indexOf('<ruby', rubystartindexlist[i - 1] + 6));
-            rubyendindexlist.push(syncstr.indexOf('</ruby>'));
-            for (var i = 1; i < rubylist.length; i++)
-                rubyendindexlist.push(syncstr.indexOf('</ruby>', rubyendindexlist[i - 1] + 7));
-            rtindexlist.push(syncstr.indexOf('<rt'));
-            for (var i = 1; i < rtlist.length; i++)
-                rtindexlist.push(syncstr.indexOf('<rt', rtindexlist[i - 1] + 4));
-
-            if (!this.isRubyParentExist(rtlist[0])) {
-                var newsync = this.domparser.parseFromString(syncobject.outerHTML, "text/html").getElementsByTagName("sync")[0];
-                newsync.innerHTML = syncstr.slice(0, rubystartindexlist[0]) + syncstr.slice(rubystartindexlist[0], rubyendindexlist[0] + 7).replace(/<\/font>/g, '') + syncstr.slice(rubyendindexlist[0] + 7);
+            if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
+                var newsync = syncobject.cloneNode(true);
+                var newsyncstr = syncstr;
+                SamiTS.HTMLTagFinder.FindTags('font', syncstr).reverse().forEach(function (fonttag) {
+                    newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
+                });
+                newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
                 return newsync;
             } else
                 return syncobject;
