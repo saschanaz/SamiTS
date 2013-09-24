@@ -6,7 +6,7 @@ var SamiTS;
         }
         SamiParser.Parse = function (samiDocument) {
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
-            var syncs = SamiTS.HTMLTagFinder.FindTags('sync', samiDocument);
+            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samiDocument);
             for (var i = 0; i < syncs.length - 1; i++)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)

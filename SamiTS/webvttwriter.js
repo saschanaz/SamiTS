@@ -81,33 +81,14 @@ var SamiTS;
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
                 var newsync = syncobject.cloneNode(true);
                 var newsyncstr = syncstr;
-                SamiTS.HTMLTagFinder.FindTags('font', syncstr).reverse().forEach(function (fonttag) {
+                SamiTS.HTMLTagFinder.FindStartTags('font', syncstr).reverse().forEach(function (fonttag) {
                     newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
                 });
                 newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
+                this.filterFontAndText(syncobject);
                 return newsync;
             } else
                 return syncobject;
-        };
-
-        WebVTTWriter.prototype.findCommonParent = function (rubyelement, rtelement) {
-            var rubyparent = rubyelement;
-            while (rubyparent && !rubyparent.contains(rtelement)) {
-                rubyparent = rubyparent.parentElement;
-            }
-            if (!rubyparent)
-                return null;
-            return rubyparent;
-        };
-
-        WebVTTWriter.prototype.findDirectChild = function (parentelement, childelement) {
-            var child = childelement;
-            while (child.parentElement && child.parentElement != parentelement) {
-                child = child.parentElement;
-            }
-            if (!child.parentElement)
-                return null;
-            return child;
         };
 
         WebVTTWriter.prototype.isRubyParentExist = function (rtelement) {
@@ -118,6 +99,12 @@ else
                     return this.isRubyParentExist(rtelement.parentElement);
             } else
                 return false;
+        };
+
+        WebVTTWriter.prototype.filterFontAndText = function (syncobject) {
+            var elements = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            //walker.nextNode
+            //child에서 parentNode 계속 넣어서 font 나올 때까지 filter를 이용해 체크(text는 parent일 리 없으니 나오지 않음
         };
 
         WebVTTWriter.prototype.getRichText = function (syncobject) {

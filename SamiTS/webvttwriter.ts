@@ -74,35 +74,16 @@ module SamiTS {
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
                 var newsync = <HTMLElement>syncobject.cloneNode(true);
                 var newsyncstr = syncstr;
-                HTMLTagFinder.FindTags('font', syncstr).reverse().forEach((fonttag: { element: HTMLElement; startPosition: number; endPosition: number; }) => {
+                HTMLTagFinder.FindStartTags('font', syncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
                     newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
                 });
                 newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
+                this.filterFontAndText(syncobject);
                 return newsync;
             }
             else
                 return syncobject;
 
-        }
-
-        private findCommonParent(rubyelement: HTMLElement, rtelement: HTMLElement) {
-            var rubyparent = rubyelement;
-            while (rubyparent && !rubyparent.contains(rtelement)) {
-                rubyparent = rubyparent.parentElement;
-            }
-            if (!rubyparent)
-                return null;
-            return rubyparent;
-        }
-
-        private findDirectChild(parentelement: HTMLElement, childelement: HTMLElement) {
-            var child = childelement;
-            while (child.parentElement && child.parentElement != parentelement) {
-                child = child.parentElement;
-            }
-            if (!child.parentElement)
-                return null;
-            return child;
         }
 
         private isRubyParentExist(rtelement: HTMLElement) {
@@ -114,6 +95,12 @@ module SamiTS {
             }
             else
                 return false;
+        }
+
+        private filterFontAndText(syncobject: HTMLElement) {
+            var elements = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            //walker.nextNode
+            //child에서 parentNode 계속 넣어서 font 나올 때까지 filter를 이용해 체크(text는 parent일 리 없으니 나오지 않음
         }
 
         private getRichText(syncobject: Node) {
