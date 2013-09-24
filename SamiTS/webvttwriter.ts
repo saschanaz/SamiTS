@@ -148,7 +148,8 @@ module SamiTS {
                             break;
                         }
                         case "ruby": {
-                            var innerparsed = this.domparser.parseFromString((<HTMLElement>node).innerHTML, "text/html").body;
+                            var inner = (<HTMLElement>node).innerHTML;
+                            var innerparsed = inner.length > 0 ? this.domparser.parseFromString((<HTMLElement>node).innerHTML, "text/html").body : undefined;
                             var rt = innerparsed ? innerparsed.getElementsByTagName("rt")[0] : undefined;
                             if (rt && rt.innerHTML.length == 0 && rt !== innerparsed.childNodes[innerparsed.childNodes.length - 1]) {
                                 var rtdetected = false;
