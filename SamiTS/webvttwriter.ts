@@ -65,20 +65,14 @@ module SamiTS {
 
         private correctRubyNodes(syncobject: HTMLElement) {
             //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            var syncstr = <string>syncobject.dataset['originalstring'];
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var newsync = <HTMLElement>syncobject.cloneNode(true);
-                var newsyncstr = syncstr;
-                HTMLTagFinder.FindStartTags('font', syncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
-                    newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
-                });
-                newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
-                this.filterFontAndText(syncobject);
+                var newsync = this.deleteFont(syncobject);
+                this.extractFontAndText(syncobject);
                 return newsync;
             }
             else
@@ -97,10 +91,35 @@ module SamiTS {
                 return false;
         }
 
-        private filterFontAndText(syncobject: HTMLElement) {
-            var elements = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
-            //walker.nextNode
-            //child에서 parentNode 계속 넣어서 font 나올 때까지 filter를 이용해 체크(text는 parent일 리 없으니 나오지 않음
+        private deleteFont(syncobject: HTMLElement) {
+            var newsync = <HTMLElement>syncobject.cloneNode(true);
+            var newsyncstr = <string>syncobject.dataset['originalstring'];
+            HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
+                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
+            });
+            newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
+            return newsync;
+        }
+
+        private extractFontAndText(syncobject: HTMLElement) {
+            var newsync = <HTMLElement>syncobject.cloneNode(true);
+            var newsyncstr = <string>syncobject.dataset['originalstring'];
+            var tags =HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
+                switch (foundtag.element.tagName.toLowerCase()) {
+                    case "font":
+                    case "p": return false;
+                    default: return true;
+                }
+            }).reverse().forEach((foundtag: SamiTS.FoundHTMLTag) => {
+                newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
+            });;
+            newsyncstr.match(/<\/\w+>/g).forEach((foundendtag: string) => {
+                if (foundendtag !== "</font>")
+                    newsyncstr = newsyncstr.replace(foundendtag, '');
+            });
+            newsync.innerHTML = newsyncstr;
+            return newsync;
         }
 
         private getRichText(syncobject: Node) {

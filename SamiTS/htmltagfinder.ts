@@ -17,20 +17,18 @@ module SamiTS {
                 if (position != -1) {
                     startPosition = position;
                     position += 5;
-                    if (this.charCompare(<string>entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F')) {
-                        var xe = document.createElement(tagname);
-                        while (true) {
-                            var attrAndPos = this.getAttribute(entirestr, position);
-                            position = attrAndPos.nextPosition;
-                            if (attrAndPos.attribute === null) {
-                                position++;
-                                list.push({ element: xe, startPosition: startPosition, endPosition: position });
-                                break;
-                            }
-                            else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
-                                continue;
-                            xe.setAttributeNode(attrAndPos.attribute);
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attribute === null) {
+                            position++;
+                            list.push({ element: xe, startPosition: startPosition, endPosition: position });
+                            break;
                         }
+                        else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                            continue;
+                        xe.setAttributeNode(attrAndPos.attribute);
                     }
                 }
                 else
@@ -54,20 +52,18 @@ module SamiTS {
                         tagname += entirestr[position];
                         position++;
                     }
-                    if (this.charCompare(<string>entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F')) {
-                        var xe = document.createElement(tagname);
-                        while (true) {
-                            var attrAndPos = this.getAttribute(entirestr, position);
-                            position = attrAndPos.nextPosition;
-                            if (attrAndPos.attribute === null) {
-                                position++;
-                                list.push({ element: xe, startPosition: startPosition, endPosition: position });
-                                break;
-                            }
-                            else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
-                                continue;
-                            xe.setAttributeNode(attrAndPos.attribute);
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attribute === null) {
+                            position++;
+                            list.push({ element: xe, startPosition: startPosition, endPosition: position });
+                            break;
                         }
+                        else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                            continue;
+                        xe.setAttributeNode(attrAndPos.attribute);
                     }
                 }
                 else
