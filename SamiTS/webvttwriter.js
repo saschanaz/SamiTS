@@ -71,6 +71,7 @@ var SamiTS;
         };
 
         WebVTTWriter.prototype.correctRubyNodes = function (syncobject) {
+            var _this = this;
             //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
@@ -81,7 +82,14 @@ var SamiTS;
                 var fontdeleted = this.deleteFont(syncobject);
                 var fontextracted = this.extractFontAndText(syncobject);
                 var textsFromNoFont = this.extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = this.extractReadableTextNodes(fontdeleted);
+                var textsFromOnlyFont = this.extractReadableTextNodes(fontextracted);
+                var textstyles = [];
+                textsFromOnlyFont.forEach(function (text) {
+                    var font = _this.getFontFromTextNode(text);
+                    if (font)
+                        textstyles.push(font);
+                });
+
                 return fontdeleted;
             } else
                 return syncobject;
@@ -95,6 +103,18 @@ else
                     return this.isRubyParentExist(rtelement.parentElement);
             } else
                 return false;
+        };
+
+        WebVTTWriter.prototype.getFontFromTextNode = function (text) {
+            if (text.parentNode) {
+                var parent = text.parentNode;
+                if (parent.tagName.toLowerCase() === "font") {
+                    if ((parent).getAttribute("color"))
+                        return parent;
+                }
+                return this.getFontFromTextNode(parent);
+            } else
+                return null;
         };
 
         WebVTTWriter.prototype.deleteFont = function (syncobject) {

@@ -74,7 +74,14 @@ module SamiTS {
                 var fontdeleted = this.deleteFont(syncobject);
                 var fontextracted = this.extractFontAndText(syncobject);
                 var textsFromNoFont = this.extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = this.extractReadableTextNodes(fontdeleted);
+                var textsFromOnlyFont = this.extractReadableTextNodes(fontextracted);
+                var textstyles: HTMLElement[] = [];
+                textsFromOnlyFont.forEach((text: Text) => {
+                    var font = this.getFontFromTextNode(text);
+                    if (font)
+                        textstyles.push(font);
+                });
+
                 return fontdeleted;
             }
             else
@@ -91,6 +98,19 @@ module SamiTS {
             }
             else
                 return false;
+        }
+
+        private getFontFromTextNode(text: Text) {
+            if (text.parentNode) {
+                var parent = <HTMLElement>text.parentNode;
+                if (parent.tagName.toLowerCase() === "font") {
+                    if ((<HTMLElement>parent).getAttribute("color"))
+                        return parent;
+                }
+                return this.getFontFromTextNode(parent);
+            }
+            else
+                return null;
         }
 
         private deleteFont(syncobject: HTMLElement) {
