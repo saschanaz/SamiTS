@@ -71,9 +71,11 @@ module SamiTS {
                 return syncobject;
 
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var newsync = this.deleteFont(syncobject);
-                this.extractFontAndText(syncobject);
-                return newsync;
+                var fontdeleted = this.deleteFont(syncobject);
+                var fontextracted = this.extractFontAndText(syncobject);
+                var textsFromNoFont = this.extractReadableTextNodes(fontdeleted);
+                var textsFromOnlyFont = this.extractReadableTextNodes(fontdeleted);
+                return fontdeleted;
             }
             else
                 return syncobject;
@@ -120,6 +122,19 @@ module SamiTS {
             });
             newsync.innerHTML = newsyncstr;
             return newsync;
+        }
+
+        private extractReadableTextNodes(syncobject: HTMLElement) {
+            var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
+            var node: Node;
+            var textNodes: Node[] = [];
+            node = walker.nextNode();
+            while (node) {
+                if ((<Text>node).nodeValue.trim().length > 0)
+                    textNodes.push(node);
+                node = walker.nextNode();
+            }
+            return textNodes;
         }
 
         private getRichText(syncobject: Node) {
