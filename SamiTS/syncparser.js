@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 var SamiTS;
 (function (SamiTS) {
     var SamiParser = (function () {
