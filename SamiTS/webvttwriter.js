@@ -91,46 +91,20 @@ var SamiTS;
                             break;
                         }
                         case "font": {
-                            var voiceelement = document.createElement("v");
                             var stylename = _this.registerStyle(node);
                             if (stylename) {
-                                voiceelement.setAttribute(stylename, '');
-                                var outer = voiceelement.outerHTML;
+                                var voiceelement = document.createElement("c");
+                                var outer = voiceelement.outerHTML.replace("<c", "<c." + stylename);
                                 if (outer.substr(0, 5) === "<?XML") {
-                                    outer = outer.substr(outer.indexOf("<v"));
+                                    outer = outer.substr(outer.indexOf("<c"));
                                 }
-                                outer = outer.replace(/=""/, '');
-                                result += outer.replace("</v>", _this.getRichText(node) + "</v>");
+                                result += outer.replace("</c>", _this.getRichText(node) + "</c>");
                             } else
                                 result += _this.getRichText(node);
                             break;
                         }
                         case "ruby": {
-                            var inner = (node).innerHTML;
-                            var innerparsed = inner.length > 0 ? _this.domparser.parseFromString((node).innerHTML, "text/html").body : undefined;
-                            var rt = innerparsed ? innerparsed.getElementsByTagName("rt")[0] : undefined;
-                            if (rt && rt.innerHTML.length == 0 && rt !== innerparsed.childNodes[innerparsed.childNodes.length - 1]) {
-                                var rtdetected = false;
-
-                                //Array.prototype.forEach.call(innerparsed.childNodes, (innernode: Node) => {
-                                var i = 0;
-                                while (i < innerparsed.childNodes.length) {
-                                    var innernode = innerparsed.childNodes[i];
-                                    if (rtdetected === false) {
-                                        if (innernode.nodeType == 1 && (innernode).tagName.toLowerCase() === "rt") {
-                                            rtdetected = true;
-                                            i++;
-                                            continue;
-                                        }
-                                        i++;
-                                    } else {
-                                        innerparsed.removeChild(innernode);
-                                        rt.appendChild(innernode);
-                                    }
-                                }
-                                result += "<ruby>" + _this.getRichText(innerparsed) + "</ruby>";
-                            } else
-                                result += "<ruby>" + _this.getRichText(node) + "</ruby>";
+                            result += "<ruby>" + _this.getRichText(node) + "</ruby>";
                             break;
                         }
                         case "rt": {
@@ -160,14 +134,14 @@ var SamiTS;
             var color = fontelement.getAttribute("color");
             if (color) {
                 styleName += 'c' + color.replace('#', '').toLowerCase();
-                rule += "color: " + this.correctColorAttribute(color) + ';';
+                rule += "color: " + this.fixIncorrectColorAttribute(color) + ';';
             }
             if (styleName.length != 0 && !this.webvttStyleSheet.isRuleForNameExist(styleName))
                 this.webvttStyleSheet.insertRuleForName(styleName, rule);
             return styleName;
         };
 
-        WebVTTWriter.prototype.correctColorAttribute = function (colorstr) {
+        WebVTTWriter.prototype.fixIncorrectColorAttribute = function (colorstr) {
             if (colorstr.length == 6 && colorstr.search(/^[0-9a-f]{6}/) == 0) {
                 return '#' + colorstr;
             } else
@@ -180,24 +154,32 @@ var SamiTS;
     var WebVTTStyleSheet = (function () {
         function WebVTTStyleSheet() {
             this.ruledictionary = {};
-            this.conventionalStyle = "video::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }";
+            this.conventionalStyle = [
+                "::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }",
+                "::cue-region { font: 0.077vh sans-serif; line-height: 0.1vh; }"
+            ];
         }
         WebVTTStyleSheet.prototype.isRuleForNameExist = function (targetname) {
             return !!this.ruledictionary[targetname];
         };
         WebVTTStyleSheet.prototype.insertRuleForName = function (targetname, rule) {
-            this.ruledictionary[targetname] = "::cue(v[voice=\"" + targetname + "\"]) { " + rule + " }";
+            this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
         };
         WebVTTStyleSheet.prototype.getStyleSheetString = function () {
             var resultarray = [];
-            resultarray.push(this.conventionalStyle);
+            this.conventionalStyle.forEach(function (rule) {
+                resultarray.push(rule);
+            });
             for (var rule in this.ruledictionary)
                 resultarray.push(this.ruledictionary[rule]);
             return resultarray.join('\r\n');
         };
         WebVTTStyleSheet.prototype.getCSSStyleSheetNode = function () {
             var styleSheet = document.createElement("style");
-            var result = this.conventionalStyle;
+            var result = '';
+            this.conventionalStyle.forEach(function (rule) {
+                result += "video" + rule;
+            });
             for (var rule in this.ruledictionary)
                 result += "video" + this.ruledictionary[rule];
             if (styleSheet.sheet)
