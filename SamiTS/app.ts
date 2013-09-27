@@ -26,7 +26,7 @@ function load(evt: Event) {
     var subfile: File;
     for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        if (!videofile && getFileExtension(file) === "mp4")
+        if (!videofile && player.canPlayType(file.type))
             videofile = file;
         else if (!subfile && getFileExtension(file) === "smi")
             subfile = file;
