@@ -6,7 +6,8 @@ var SamiTS;
             this.webvttStyleSheet = new WebVTTStyleSheet();
             this.domparser = new DOMParser();
         }
-        WebVTTWriter.prototype.write = function (xsyncs) {
+        WebVTTWriter.prototype.write = function (xsyncs, styleOutput) {
+            if (typeof styleOutput === "undefined") { styleOutput = null; }
             var _this = this;
             this.getRichText(xsyncs[0]);
             var subHeader = "WEBVTT";

@@ -4,7 +4,7 @@ module SamiTS {
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
         private domparser = new DOMParser();
-        write(xsyncs: HTMLElement[]) {
+        write(xsyncs: HTMLElement[], styleOutput: (styleSheet: CSSStyleSheet) => void = null) {
             this.getRichText(xsyncs[0]);
             var subHeader = "WEBVTT";
             var subDocument = '';
