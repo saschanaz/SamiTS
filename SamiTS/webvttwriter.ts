@@ -18,7 +18,7 @@ module SamiTS {
                 text = this.getRichText(xsyncs[0]);
                 if (text.length > 0) write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(this.correctRubyNodes(xsyncs[i])));//prevents cues consists of a single &nbsp;
+                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -63,58 +63,7 @@ module SamiTS {
             return result;
         }
 
-        private correctRubyNodes(syncobject: HTMLElement) {
-            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            var syncstr = <string>syncobject.dataset['originalstring'];
-            var rubylist = syncobject.getElementsByTagName("ruby");
-            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
-            if (!rtlist || rtlist.length == 0)
-                return syncobject;
-
-            if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var newsync = <HTMLElement>syncobject.cloneNode(true);
-                var newsyncstr = syncstr;
-                HTMLTagFinder.FindTags('font', syncstr).reverse().forEach((fonttag: { element: HTMLElement; startPosition: number; endPosition: number; }) => {
-                    newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
-                });
-                newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
-                return newsync;
-            }
-            else
-                return syncobject;
-
-        }
-
-        private findCommonParent(rubyelement: HTMLElement, rtelement: HTMLElement) {
-            var rubyparent = rubyelement;
-            while (rubyparent && !rubyparent.contains(rtelement)) {
-                rubyparent = rubyparent.parentElement;
-            }
-            if (!rubyparent)
-                return null;
-            return rubyparent;
-        }
-
-        private findDirectChild(parentelement: HTMLElement, childelement: HTMLElement) {
-            var child = childelement;
-            while (child.parentElement && child.parentElement != parentelement) {
-                child = child.parentElement;
-            }
-            if (!child.parentElement)
-                return null;
-            return child;
-        }
-
-        private isRubyParentExist(rtelement: HTMLElement) {
-            if (rtelement.parentElement) {
-                if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
-                    return true;
-                else
-                    return this.isRubyParentExist(rtelement.parentElement);
-            }
-            else
-                return false;
-        }
+        
 
         private getRichText(syncobject: Node) {
             var result = '';
