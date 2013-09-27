@@ -2,11 +2,18 @@
 var subtypechecks;
 
 var track;
+var style;
 var isPreviewAreaShown = false;
 var subtitleFileDisplayName;
 document.addEventListener("DOMContentLoaded", function () {
     subtypechecks = document.getElementsByName("subtype");
 });
+
+var SubType;
+(function (SubType) {
+    SubType[SubType["WebVTT"] = 0] = "WebVTT";
+    SubType[SubType["SRT"] = 1] = "SRT";
+})(SubType || (SubType = {}));
 
 function load(evt) {
     var files = (evt.target).files;
@@ -25,7 +32,7 @@ else if (!subfile && getFileExtension(file) === "smi")
         return;
 
     subtitleFileDisplayName = getFileDisplayName(subfile);
-    SamiTS.convertFromFile(subfile, getTargetSubType(), getTagUse(), function (result) {
+    var resultOutput = function (result) {
         hidePreviewArea();
         hidePlayer();
         hideAreaSelector();
@@ -48,7 +55,43 @@ else if (!subfile && getFileExtension(file) === "smi")
             showPlayer();
         } else
             showPreviewArea();
-    });
+    };
+
+    switch (getTargetSubType()) {
+        case SubType.WebVTT:
+            return SamiTS.convertToWebVTTFromFile(subfile, resultOutput, function (resultStyle) {
+                if (style)
+                    document.head.removeChild(style);
+                style = resultStyle;
+                document.head.appendChild(resultStyle);
+            });
+        case SubType.SRT:
+            return SamiTS.convertToSubRipFromFile(subfile, resultOutput, getTagUse());
+    }
+    //SamiTS.convertFromFile(subfile, getTargetSubType(), getTagUse(), (result: string) => {
+    //    hidePreviewArea();
+    //    hidePlayer();
+    //    hideAreaSelector();
+    //    output.value = result;
+    //    if (track) {
+    //        player.removeChild(track); (<HTMLButtonElement>document.getElementById("areaselector"))
+    //        player.src = '';
+    //    }
+    //    if (videofile) {
+    //        player.src = URL.createObjectURL(videofile);
+    //        track = document.createElement("track");
+    //        track.label = "日本語";
+    //        track.kind = "subtitles";
+    //        track.srclang = "ja";
+    //        track.src = URL.createObjectURL(new Blob([result], { type: "text/vtt" }));
+    //        track.default = true;
+    //        player.appendChild(track);
+    //        showAreaSelector();
+    //        showPlayer();
+    //    }
+    //    else
+    //        showPreviewArea();
+    //});
 }
 
 function selectArea() {
@@ -91,27 +134,27 @@ function download() {
 
 function getExtensionForSubType() {
     switch (getTargetSubType()) {
-        case SamiTS.SubType.WebVTT:
+        case SubType.WebVTT:
             return ".vtt";
-        case SamiTS.SubType.SRT:
+        case SubType.SRT:
             return ".srt";
     }
 }
 
 function getMIMETypeForSubType() {
     switch (getTargetSubType()) {
-        case SamiTS.SubType.WebVTT:
+        case SubType.WebVTT:
             return "text/vtt";
-        case SamiTS.SubType.SRT:
+        case SubType.SRT:
             return "text/plain";
     }
 }
 
 function getTargetSubType() {
     if ((subtypechecks[0]).checked)
-        return SamiTS.SubType.WebVTT;
+        return SubType.WebVTT;
 else if ((subtypechecks[1]).checked)
-        return SamiTS.SubType.SRT;
+        return SubType.SRT;
 }
 
 function getTagUse() {
