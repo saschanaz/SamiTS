@@ -16,7 +16,7 @@ module SamiTS {
                 position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
                 if (position != -1) {
                     startPosition = position;
-                    position += tagname.length;
+                    position += tagname.length + 1;
                     var xe = document.createElement(tagname);
                     while (true) {
                         var attrAndPos = this.getAttribute(entirestr, position);
