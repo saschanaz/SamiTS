@@ -66,7 +66,7 @@ else
                 var parent = text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
                     if ((parent).getAttribute("color"))
-                        return parent;
+                        return parent.cloneNode(false);
                 }
                 return this.getFontFromNode(parent);
             } else

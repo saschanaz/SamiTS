@@ -65,7 +65,7 @@ module SamiTS {
                 var parent = <HTMLElement>text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
                     if ((<HTMLElement>parent).getAttribute("color"))
-                        return parent;
+                        return <HTMLElement>parent.cloneNode(false);
                 }
                 return this.getFontFromNode(parent);
             }
