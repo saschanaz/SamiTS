@@ -180,7 +180,10 @@ var SamiTS;
     var WebVTTStyleSheet = (function () {
         function WebVTTStyleSheet() {
             this.ruledictionary = {};
-            this.conventionalStyle = "video::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }";
+            this.conventionalStyle = [
+                "::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }",
+                "::cue-region { font: 0.077vh sans-serif; line-height: 0.1vh; }"
+            ];
         }
         WebVTTStyleSheet.prototype.isRuleForNameExist = function (targetname) {
             return !!this.ruledictionary[targetname];
@@ -190,14 +193,19 @@ var SamiTS;
         };
         WebVTTStyleSheet.prototype.getStyleSheetString = function () {
             var resultarray = [];
-            resultarray.push(this.conventionalStyle);
+            this.conventionalStyle.forEach(function (rule) {
+                resultarray.push(rule);
+            });
             for (var rule in this.ruledictionary)
                 resultarray.push(this.ruledictionary[rule]);
             return resultarray.join('\r\n');
         };
         WebVTTStyleSheet.prototype.getCSSStyleSheetNode = function () {
             var styleSheet = document.createElement("style");
-            var result = this.conventionalStyle;
+            var result = '';
+            this.conventionalStyle.forEach(function (rule) {
+                result += "video" + rule;
+            });
             for (var rule in this.ruledictionary)
                 result += "video" + this.ruledictionary[rule];
             if (styleSheet.sheet)

@@ -172,7 +172,10 @@ module SamiTS {
 
     class WebVTTStyleSheet {
         private ruledictionary = {};
-        private conventionalStyle = "video::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }";
+        private conventionalStyle: string[] = [
+            "::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }",
+            "::cue-region { font: 0.077vh sans-serif; line-height: 0.1vh; }"
+        ];
         isRuleForNameExist(targetname: string) {
             return !!this.ruledictionary[targetname];
         }
@@ -181,14 +184,19 @@ module SamiTS {
         }
         getStyleSheetString() {
             var resultarray: string[] = [];
-            resultarray.push(this.conventionalStyle);
+            this.conventionalStyle.forEach((rule: string) => {
+                resultarray.push(rule);
+            });
             for (var rule in this.ruledictionary)
                 resultarray.push(<string>this.ruledictionary[rule]);
             return resultarray.join('\r\n');
         }
         getCSSStyleSheetNode() {
             var styleSheet = document.createElement("style");
-            var result = this.conventionalStyle;
+            var result = '';
+            this.conventionalStyle.forEach((rule: string) => {
+                result += "video" + rule;
+            });
             for (var rule in this.ruledictionary)
                 result += "video" + <string>this.ruledictionary[rule];
             if (styleSheet.sheet)
