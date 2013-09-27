@@ -18,7 +18,7 @@ module SamiTS {
                 text = this.getRichText(xsyncs[0]);
                 if (text.length > 0) write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(this.correctRubyNodes(xsyncs[i])));//prevents cues consists of a single &nbsp;
+                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -63,99 +63,7 @@ module SamiTS {
             return result;
         }
 
-        private correctRubyNodes(syncobject: HTMLElement) {
-            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            var rubylist = syncobject.getElementsByTagName("ruby");
-            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
-            if (!rtlist || rtlist.length == 0)
-                return syncobject;
-
-            if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var fontdeleted = this.deleteFont(syncobject);
-                var fontextracted = this.extractFontAndText(syncobject);
-                var textsFromNoFont = this.extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = this.extractReadableTextNodes(fontextracted);
-                var textstyles: HTMLElement[] = [];
-                textsFromOnlyFont.forEach((text: Text) => {
-                    var font = this.getFontFromTextNode(text);
-                    if (font)
-                        textstyles.push(font);
-                });
-
-                return fontdeleted;
-            }
-            else
-                return syncobject;
-
-        }
-
-        private isRubyParentExist(rtelement: HTMLElement) {
-            if (rtelement.parentElement) {
-                if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
-                    return true;
-                else
-                    return this.isRubyParentExist(rtelement.parentElement);
-            }
-            else
-                return false;
-        }
-
-        private getFontFromTextNode(text: Text) {
-            if (text.parentNode) {
-                var parent = <HTMLElement>text.parentNode;
-                if (parent.tagName.toLowerCase() === "font") {
-                    if ((<HTMLElement>parent).getAttribute("color"))
-                        return parent;
-                }
-                return this.getFontFromTextNode(parent);
-            }
-            else
-                return null;
-        }
-
-        private deleteFont(syncobject: HTMLElement) {
-            var newsync = <HTMLElement>syncobject.cloneNode(true);
-            var newsyncstr = <string>syncobject.dataset['originalstring'];
-            HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
-                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
-            });
-            newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
-            return newsync;
-        }
-
-        private extractFontAndText(syncobject: HTMLElement) {
-            var newsync = <HTMLElement>syncobject.cloneNode(true);
-            var newsyncstr = <string>syncobject.dataset['originalstring'];
-            var tags =HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
-            tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
-                switch (foundtag.element.tagName.toLowerCase()) {
-                    case "font":
-                    case "p": return false;
-                    default: return true;
-                }
-            }).reverse().forEach((foundtag: SamiTS.FoundHTMLTag) => {
-                newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
-            });;
-            newsyncstr.match(/<\/\w+>/g).forEach((foundendtag: string) => {
-                if (foundendtag !== "</font>")
-                    newsyncstr = newsyncstr.replace(foundendtag, '');
-            });
-            newsync.innerHTML = newsyncstr;
-            return newsync;
-        }
-
-        private extractReadableTextNodes(syncobject: HTMLElement) {
-            var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
-            var node: Node;
-            var textNodes: Node[] = [];
-            node = walker.nextNode();
-            while (node) {
-                if ((<Text>node).nodeValue.trim().length > 0)
-                    textNodes.push(node);
-                node = walker.nextNode();
-            }
-            return textNodes;
-        }
+        
 
         private getRichText(syncobject: Node) {
             var result = '';
