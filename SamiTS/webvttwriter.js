@@ -31,6 +31,9 @@ var SamiTS;
                 }
             }
 
+            if (styleOutput)
+                styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
+
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
@@ -156,12 +159,19 @@ var SamiTS;
             var rule = '';
             var color = fontelement.getAttribute("color");
             if (color) {
-                styleName += 'C' + color.replace('#', '');
-                rule += "color: " + color + ';';
+                styleName += 'c' + color.replace('#', '').toLowerCase();
+                rule += "color: " + this.correctColorAttribute(color) + ';';
             }
             if (styleName.length != 0 && !this.webvttStyleSheet.isRuleForNameExist(styleName))
                 this.webvttStyleSheet.insertRuleForName(styleName, rule);
             return styleName;
+        };
+
+        WebVTTWriter.prototype.correctColorAttribute = function (colorstr) {
+            if (colorstr.length == 6 && colorstr.search(/^[0-9a-f]{6}/) == 0) {
+                return '#' + colorstr;
+            } else
+                return colorstr;
         };
         return WebVTTWriter;
     })();
@@ -170,6 +180,7 @@ var SamiTS;
     var WebVTTStyleSheet = (function () {
         function WebVTTStyleSheet() {
             this.ruledictionary = {};
+            this.conventionalStyle = "video::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }";
         }
         WebVTTStyleSheet.prototype.isRuleForNameExist = function (targetname) {
             return !!this.ruledictionary[targetname];
@@ -179,9 +190,21 @@ var SamiTS;
         };
         WebVTTStyleSheet.prototype.getStyleSheetString = function () {
             var resultarray = [];
+            resultarray.push(this.conventionalStyle);
             for (var rule in this.ruledictionary)
                 resultarray.push(this.ruledictionary[rule]);
             return resultarray.join('\r\n');
+        };
+        WebVTTStyleSheet.prototype.getCSSStyleSheetNode = function () {
+            var styleSheet = document.createElement("style");
+            var result = this.conventionalStyle;
+            for (var rule in this.ruledictionary)
+                result += "video" + this.ruledictionary[rule];
+            if (styleSheet.sheet)
+                (styleSheet.sheet).cssText = result;
+else
+                styleSheet.appendChild(document.createTextNode(result));
+            return styleSheet;
         };
         return WebVTTStyleSheet;
     })();

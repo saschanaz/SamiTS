@@ -4,7 +4,7 @@ module SamiTS {
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
         private domparser = new DOMParser();
-        write(xsyncs: HTMLElement[], styleOutput: (styleSheet: CSSStyleSheet) => void = null) {
+        write(xsyncs: HTMLElement[], styleOutput: (style: HTMLStyleElement) => void = null) {
             this.getRichText(xsyncs[0]);
             var subHeader = "WEBVTT";
             var subDocument = '';
@@ -25,6 +25,9 @@ module SamiTS {
                     }
                 }
             }
+
+            if (styleOutput)
+                styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
@@ -62,9 +65,7 @@ module SamiTS {
                 result = result.replace('\r\n\r\n', '\r\n');
             return result;
         }
-
         
-
         private getRichText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
@@ -152,17 +153,26 @@ module SamiTS {
             var rule = '';
             var color = fontelement.getAttribute("color");
             if (color) {
-                styleName += 'C' + color.replace('#', '');
-                rule += "color: " + color + ';';
+                styleName += 'c' + color.replace('#', '').toLowerCase();
+                rule += "color: " + this.correctColorAttribute(color) + ';';
             }
             if (styleName.length != 0 && !this.webvttStyleSheet.isRuleForNameExist(styleName))
                 this.webvttStyleSheet.insertRuleForName(styleName, rule);
             return styleName;
         }
+
+        private correctColorAttribute(colorstr: string) {
+            if (colorstr.length == 6 && colorstr.search(/^[0-9a-f]{6}/) == 0) {
+                return '#' + colorstr;
+            }
+            else
+                return colorstr;
+        }
     }
 
     class WebVTTStyleSheet {
         private ruledictionary = {};
+        private conventionalStyle = "video::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }";
         isRuleForNameExist(targetname: string) {
             return !!this.ruledictionary[targetname];
         }
@@ -171,9 +181,21 @@ module SamiTS {
         }
         getStyleSheetString() {
             var resultarray: string[] = [];
+            resultarray.push(this.conventionalStyle);
             for (var rule in this.ruledictionary)
                 resultarray.push(<string>this.ruledictionary[rule]);
             return resultarray.join('\r\n');
+        }
+        getCSSStyleSheetNode() {
+            var styleSheet = document.createElement("style");
+            var result = this.conventionalStyle;
+            for (var rule in this.ruledictionary)
+                result += "video" + <string>this.ruledictionary[rule];
+            if (styleSheet.sheet)
+                (<any>styleSheet.sheet).cssText = result;
+            else
+                styleSheet.appendChild(document.createTextNode(result));
+            return styleSheet;
         }
     }
 }
