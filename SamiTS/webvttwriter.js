@@ -91,16 +91,14 @@ var SamiTS;
                             break;
                         }
                         case "font": {
-                            var voiceelement = document.createElement("v");
                             var stylename = _this.registerStyle(node);
                             if (stylename) {
-                                voiceelement.setAttribute(stylename, '');
-                                var outer = voiceelement.outerHTML;
+                                var voiceelement = document.createElement("c");
+                                var outer = voiceelement.outerHTML.replace("<c", "<c." + stylename);
                                 if (outer.substr(0, 5) === "<?XML") {
-                                    outer = outer.substr(outer.indexOf("<v"));
+                                    outer = outer.substr(outer.indexOf("<c"));
                                 }
-                                outer = outer.replace(/=""/, '');
-                                result += outer.replace("</v>", _this.getRichText(node) + "</v>");
+                                result += outer.replace("</c>", _this.getRichText(node) + "</c>");
                             } else
                                 result += _this.getRichText(node);
                             break;
@@ -165,7 +163,7 @@ var SamiTS;
             return !!this.ruledictionary[targetname];
         };
         WebVTTStyleSheet.prototype.insertRuleForName = function (targetname, rule) {
-            this.ruledictionary[targetname] = "::cue(v[voice=\"" + targetname + "\"]) { " + rule + " }";
+            this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
         };
         WebVTTStyleSheet.prototype.getStyleSheetString = function () {
             var resultarray = [];

@@ -82,16 +82,14 @@ module SamiTS {
                             break;
                         }
                         case "font": {
-                            var voiceelement = document.createElement("v");
                             var stylename = this.registerStyle(<HTMLElement>node);
                             if (stylename) {
-                                voiceelement.setAttribute(stylename, '');
-                                var outer = voiceelement.outerHTML;
+                                var voiceelement = document.createElement("c");
+                                var outer = voiceelement.outerHTML.replace("<c", "<c." + stylename);
                                 if (outer.substr(0, 5) === "<?XML") {
-                                    outer = outer.substr(outer.indexOf("<v"));
+                                    outer = outer.substr(outer.indexOf("<c"));
                                 }
-                                outer = outer.replace(/=""/, '');
-                                result += outer.replace("</v>", this.getRichText(node) + "</v>");
+                                result += outer.replace("</c>", this.getRichText(node) + "</c>");
                             }
                             else
                                 result += this.getRichText(node);
@@ -155,7 +153,7 @@ module SamiTS {
             return !!this.ruledictionary[targetname];
         }
         insertRuleForName(targetname: string, rule: string) {
-            this.ruledictionary[targetname] = "::cue(v[voice=\"" + targetname + "\"]) { " + rule + " }";
+            this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
         }
         getStyleSheetString() {
             var resultarray: string[] = [];
