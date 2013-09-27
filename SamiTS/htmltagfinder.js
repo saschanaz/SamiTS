@@ -1,37 +1,69 @@
-"use strict";
+﻿"use strict";
 var SamiTS;
 (function (SamiTS) {
     var HTMLTagFinder = (function () {
         function HTMLTagFinder() {
         }
-        HTMLTagFinder.FindTags = function (tagname, entirestr) {
+        HTMLTagFinder.FindStartTags = function (tagname, entirestr) {
             var list = [];
             var position = 0;
             var startPosition = 0;
             while (true) {
-                position = this.indexOfInsensitive(entirestr, '<' + tagname, position);
+                position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
                 if (position != -1) {
                     startPosition = position;
                     position += 5;
-                    if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F')) {
-                        var xe = document.createElement(tagname);
-                        while (true) {
-                            var attrAndPos = this.getAttribute(entirestr, position);
-                            position = attrAndPos.nextPosition;
-                            if (attrAndPos.attribute === null) {
-                                position++;
-                                list.push({ element: xe, startPosition: startPosition, endPosition: position });
-                                break;
-                            } else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
-                                continue;
-                            xe.setAttributeNode(attrAndPos.attribute);
-                        }
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attribute === null) {
+                            position++;
+                            list.push({ element: xe, startPosition: startPosition, endPosition: position });
+                            break;
+                        } else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                            continue;
+                        xe.setAttributeNode(attrAndPos.attribute);
                     }
                 } else
                     break;
             }
 
             return list;
+        };
+
+        HTMLTagFinder.FindAllStartTags = function (entirestr) {
+            var list = [];
+            var position = 0;
+            var startPosition = 0;
+            while (true) {
+                position = this.searchWithIndex(entirestr, /<\w+/, position);
+                if (position != -1) {
+                    startPosition = position;
+                    position++;
+                    var tagname = '';
+                    while ((entirestr[position]).search(/[A-z]/) === 0) {
+                        tagname += entirestr[position];
+                        position++;
+                    }
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attribute === null) {
+                            position++;
+                            list.push({ element: xe, startPosition: startPosition, endPosition: position });
+                            break;
+                        } else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                            continue;
+                        xe.setAttributeNode(attrAndPos.attribute);
+                    }
+                } else
+                    break;
+            }
+
+            return list;
+            //return [];//RegExp로 모든 start tag의 시작부를 찾아낼 수 있다. /<\/?\w+/g
         };
 
         HTMLTagFinder.getAttribute = function (entirestr, position) {
@@ -125,18 +157,13 @@ else
             }
         };
 
-        HTMLTagFinder.indexOfInsensitive = function (target, searchString, position) {
+        HTMLTagFinder.searchWithIndex = function (target, query, position) {
             if (typeof position === "undefined") { position = 0; }
-            if (!searchString)
+            if (target.length > position) {
+                var found = target.slice(position).search(query);
+                return found != -1 ? position + found : -1;
+            } else
                 return -1;
-else if (searchString.length == 0)
-                return 0;
-            var lowersearch = searchString.toLowerCase();
-            for (var i = position; i < target.length - searchString.length + 1; i++) {
-                if ((target[i]).toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
-                    return i;
-            }
-            return -1;
         };
 
         HTMLTagFinder.charCompare = function (a) {

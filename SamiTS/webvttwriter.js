@@ -22,7 +22,7 @@ var SamiTS;
                 if (text.length > 0)
                     write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(this.correctRubyNodes(xsyncs[i])));
+                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -68,56 +68,6 @@ var SamiTS;
             while (result.lastIndexOf('\r\n\r\n') > -1)
                 result = result.replace('\r\n\r\n', '\r\n');
             return result;
-        };
-
-        WebVTTWriter.prototype.correctRubyNodes = function (syncobject) {
-            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            var syncstr = syncobject.dataset['originalstring'];
-            var rubylist = syncobject.getElementsByTagName("ruby");
-            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
-            if (!rtlist || rtlist.length == 0)
-                return syncobject;
-
-            if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var newsync = syncobject.cloneNode(true);
-                var newsyncstr = syncstr;
-                SamiTS.HTMLTagFinder.FindTags('font', syncstr).reverse().forEach(function (fonttag) {
-                    newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
-                });
-                newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
-                return newsync;
-            } else
-                return syncobject;
-        };
-
-        WebVTTWriter.prototype.findCommonParent = function (rubyelement, rtelement) {
-            var rubyparent = rubyelement;
-            while (rubyparent && !rubyparent.contains(rtelement)) {
-                rubyparent = rubyparent.parentElement;
-            }
-            if (!rubyparent)
-                return null;
-            return rubyparent;
-        };
-
-        WebVTTWriter.prototype.findDirectChild = function (parentelement, childelement) {
-            var child = childelement;
-            while (child.parentElement && child.parentElement != parentelement) {
-                child = child.parentElement;
-            }
-            if (!child.parentElement)
-                return null;
-            return child;
-        };
-
-        WebVTTWriter.prototype.isRubyParentExist = function (rtelement) {
-            if (rtelement.parentElement) {
-                if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
-                    return true;
-else
-                    return this.isRubyParentExist(rtelement.parentElement);
-            } else
-                return false;
         };
 
         WebVTTWriter.prototype.getRichText = function (syncobject) {
