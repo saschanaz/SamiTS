@@ -98,32 +98,7 @@ module SamiTS {
                             break;
                         }
                         case "ruby": {
-                            var inner = (<HTMLElement>node).innerHTML;
-                            var innerparsed = inner.length > 0 ? this.domparser.parseFromString((<HTMLElement>node).innerHTML, "text/html").body : undefined;
-                            var rt = innerparsed ? innerparsed.getElementsByTagName("rt")[0] : undefined;
-                            if (rt && rt.innerHTML.length == 0 && rt !== innerparsed.childNodes[innerparsed.childNodes.length - 1]) {
-                                var rtdetected = false;
-                                //Array.prototype.forEach.call(innerparsed.childNodes, (innernode: Node) => {
-                                var i = 0;
-                                while (i < innerparsed.childNodes.length) {
-                                    var innernode = innerparsed.childNodes[i];
-                                    if (rtdetected === false) {
-                                        if (innernode.nodeType == 1 && (<HTMLElement>innernode).tagName.toLowerCase() === "rt") {
-                                            rtdetected = true;
-                                            i++;
-                                            continue;
-                                        }
-                                        i++;
-                                    }
-                                    else {
-                                        innerparsed.removeChild(innernode);
-                                        rt.appendChild(innernode);
-                                    }
-                                }
-                                result += "<ruby>" + this.getRichText(innerparsed) + "</ruby>";
-                            }
-                            else
-                                result += "<ruby>" + this.getRichText(node) + "</ruby>";
+                            result += "<ruby>" + this.getRichText(node) + "</ruby>";
                             break;
                         }
                         case "rt": {
@@ -154,14 +129,14 @@ module SamiTS {
             var color = fontelement.getAttribute("color");
             if (color) {
                 styleName += 'c' + color.replace('#', '').toLowerCase();
-                rule += "color: " + this.correctColorAttribute(color) + ';';
+                rule += "color: " + this.fixIncorrectColorAttribute(color) + ';';
             }
             if (styleName.length != 0 && !this.webvttStyleSheet.isRuleForNameExist(styleName))
                 this.webvttStyleSheet.insertRuleForName(styleName, rule);
             return styleName;
         }
 
-        private correctColorAttribute(colorstr: string) {
+        private fixIncorrectColorAttribute(colorstr: string) {
             if (colorstr.length == 6 && colorstr.search(/^[0-9a-f]{6}/) == 0) {
                 return '#' + colorstr;
             }
