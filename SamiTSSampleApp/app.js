@@ -1,4 +1,4 @@
-﻿///<reference path='../SamiTS/sami.ts' />
+﻿///<reference path='../SamiTS/samiconverter.ts' />
 "use strict";
 var subtypechecks;
 
