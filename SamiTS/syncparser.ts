@@ -1,4 +1,5 @@
-﻿"use strict";
+﻿///<reference path='htmltagfinder.ts' />
+"use strict";
 
 module SamiTS {
     export class SamiParser {
