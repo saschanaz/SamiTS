@@ -1,4 +1,7 @@
-﻿module SamiTS {
+﻿///<reference path='syncparser.ts' />
+///<reference path='webvttwriter.ts' />
+///<reference path='subripwriter.ts' />
+module SamiTS {
     export function convertToWebVTTFromString(samiString: string, styleOutput: (style: HTMLStyleElement) => void = null) {
         var xsyncs = SamiParser.Parse(samiString);
         return (new SamiTS.WebVTTWriter()).write(xsyncs, styleOutput);

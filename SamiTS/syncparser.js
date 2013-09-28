@@ -1,4 +1,5 @@
-﻿"use strict";
+﻿///<reference path='htmltagfinder.ts' />
+"use strict";
 var SamiTS;
 (function (SamiTS) {
     var SamiParser = (function () {
