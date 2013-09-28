@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamiTS", "SamiTS\SamiTS.csproj", "{52E5B8DF-AC96-4C96-81A8-3048A6F33B8D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamiTSSampleApp", "SamiTSSampleApp\SamiTSSampleApp.csproj", "{DB3358F5-7AB8-44AC-84D6-4532F1E3A8A3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{52E5B8DF-AC96-4C96-81A8-3048A6F33B8D} = {52E5B8DF-AC96-4C96-81A8-3048A6F33B8D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
