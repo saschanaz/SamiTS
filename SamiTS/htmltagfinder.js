@@ -17,13 +17,13 @@ var SamiTS;
                     while (true) {
                         var attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
-                        if (attrAndPos.attribute === null) {
+                        if (attrAndPos.attributeName === null) {
                             position++;
                             list.push({ element: xe, startPosition: startPosition, endPosition: position });
                             break;
-                        } else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                        } else if (xe.getAttribute(attrAndPos.attributeName) !== null)
                             continue;
-                        xe.setAttributeNode(attrAndPos.attribute);
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
                     }
                 } else
                     break;
@@ -50,13 +50,13 @@ var SamiTS;
                     while (true) {
                         var attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
-                        if (attrAndPos.attribute === null) {
+                        if (attrAndPos.attributeName === null) {
                             position++;
                             list.push({ element: xe, startPosition: startPosition, endPosition: position });
                             break;
-                        } else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                        } else if (xe.getAttribute(attrAndPos.attributeName) !== null)
                             continue;
-                        xe.setAttributeNode(attrAndPos.attribute);
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
                     }
                 } else
                     break;
@@ -75,7 +75,7 @@ else
                     break;
             }
             if (entirestr[position] == '>')
-                return { attribute: null, nextPosition: position };
+                return { attributeName: null, attributeValue: null, nextPosition: position };
 else {
                 var namestr = '';
                 var valuestr = '';
@@ -129,15 +129,9 @@ else
                 };
                 var parsefinish = function () {
                     if (namestr.length === 0)
-                        return { attribute: null, nextPosition: position };
+                        return { attributeName: null, attributeValue: null, nextPosition: position };
 else
-                        try  {
-                            var attr = document.createAttribute(namestr);
-                            attr.nodeValue = valuestr;
-                            return { attribute: attr, nextPosition: position };
-                        } catch (e) {
-                            return { attribute: null, nextPosition: position };
-                        }
+                        return { attributeName: namestr, attributeValue: valuestr, nextPosition: position };
                 };
 
                 while (true) {
