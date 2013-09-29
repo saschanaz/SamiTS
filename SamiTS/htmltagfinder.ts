@@ -21,14 +21,14 @@ module SamiTS {
                     while (true) {
                         var attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
-                        if (attrAndPos.attribute === null) {
+                        if (attrAndPos.attributeName === null) {
                             position++;
                             list.push({ element: xe, startPosition: startPosition, endPosition: position });
                             break;
                         }
-                        else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                        else if (xe.getAttribute(attrAndPos.attributeName) !== null)
                             continue;
-                        xe.setAttributeNode(attrAndPos.attribute);
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
                     }
                 }
                 else
@@ -56,14 +56,14 @@ module SamiTS {
                     while (true) {
                         var attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
-                        if (attrAndPos.attribute === null) {
+                        if (attrAndPos.attributeName === null) {
                             position++;
                             list.push({ element: xe, startPosition: startPosition, endPosition: position });
                             break;
                         }
-                        else if (xe.getAttribute(attrAndPos.attribute.nodeName) !== null)
+                        else if (xe.getAttribute(attrAndPos.attributeName) !== null)
                             continue;
-                        xe.setAttributeNode(attrAndPos.attribute);
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
                     }
                 }
                 else
@@ -74,7 +74,7 @@ module SamiTS {
             //return [];//RegExp로 모든 start tag의 시작부를 찾아낼 수 있다. /<\/?\w+/g
         }
 
-        private static getAttribute(entirestr: string, position: number): { attribute: Attr; nextPosition: number; } {
+        private static getAttribute(entirestr: string, position: number): { attributeName: string; attributeValue: string; nextPosition: number; } {
             while (true) {
                 if (this.charCompare(<string>entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F'))
                     position++;
@@ -82,7 +82,7 @@ module SamiTS {
                     break;
             }
             if (<string>entirestr[position] == '>')
-                return { attribute: null, nextPosition: position };
+                return { attributeName: null, attributeValue: null, nextPosition: position };
             else {
                 var namestr = '';
                 var valuestr = '';
@@ -138,16 +138,9 @@ module SamiTS {
                 }
             var parsefinish = () => {
                     if (namestr.length === 0)
-                        return { attribute: null, nextPosition: position };
+                        return { attributeName: null, attributeValue: null, nextPosition: position };
                     else
-                        try {
-                            var attr = document.createAttribute(namestr);
-                            attr.nodeValue = valuestr;
-                            return { attribute: attr, nextPosition: position };
-                        }
-                        catch (e) {
-                            return { attribute: null, nextPosition: position };
-                        }
+                        return { attributeName: namestr, attributeValue: valuestr, nextPosition: position };
                 }
 
             //attribute name parsing
