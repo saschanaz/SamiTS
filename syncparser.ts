@@ -2,6 +2,22 @@
 "use strict";
 
 module SamiTS {
+    export class SamiCue {
+        syncElement: HTMLElement;
+        constructor(syncElement: HTMLElement) {
+            if (syncElement.tagName.toLowerCase() !== "sync")
+                throw new Error("SamiCue can only accept sync element");
+            else
+                this.syncElement = syncElement;
+
+        }
+
+        filterByLanguageClass(lang: string) {
+            //Array.prototype.filter.call(this.syncElement.children,
+
+        }
+    }
+
     export class SamiParser {
         static Parse(samiDocument: string) {
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
