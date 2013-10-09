@@ -2,7 +2,6 @@
 ## SamiTS
 #################
 
-*.js.map
 htmltagfinder.js
 samiconverter.js
 sdpuswriter.js
