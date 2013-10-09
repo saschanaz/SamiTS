@@ -136,11 +136,6 @@ function hidePlayer() {
     player.style.display = "none";
 }
 
-function download() {
-    var blob = new Blob([output.value], { type: getMIMETypeForSubType(), endings: "transparent" });
-    saveAs(blob, subtitleFileDisplayName + getExtensionForSubType());
-}
-
 function getExtensionForSubType() {
     switch (getTargetSubType()) {
         case SubType.WebVTT:

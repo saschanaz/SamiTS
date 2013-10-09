@@ -16,9 +16,12 @@
     <IISExpressUseClassicPipelineMode />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="app.css" />
+    <Content Include="default.htm" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="htmltagfinder.ts" />
     <TypeScriptCompile Include="samiconverter.ts" />
     <TypeScriptCompile Include="sdpuswriter.ts" />
