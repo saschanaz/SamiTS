@@ -3,12 +3,12 @@
 ///<reference path='subripwriter.ts' />
 module SamiTS {
     export function convertToWebVTTFromString(samiString: string, styleOutput: (style: HTMLStyleElement) => void = null) {
-        var xsyncs = SamiParser.Parse(samiString);
+        var xsyncs = SamiParser.parse(samiString);
         return (new SamiTS.WebVTTWriter()).write(xsyncs, styleOutput);
     }
 
     export function convertToSubRipFromString(samiString: string, useTextStyles: boolean) {
-        var xsyncs = SamiParser.Parse(samiString);
+        var xsyncs = SamiParser.parse(samiString);
         return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
     }
 
