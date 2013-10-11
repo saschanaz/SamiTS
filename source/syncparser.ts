@@ -13,8 +13,16 @@ module SamiTS {
         }
 
         filterByLanguageClass(lang: string) {
-            //Array.prototype.filter.call(this.syncElement.children,
-
+            var newsync = <HTMLElement>this.syncElement.cloneNode(true);
+            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+                if (child.nodeType == 1) {
+                    var className = (<HTMLElement>child).getAttribute("class");
+                    if (!className || className === lang)
+                        newsync.appendChild(child.cloneNode(true));
+                }
+                else
+                    newsync.appendChild(child.cloneNode());
+            });
         }
     }
 
