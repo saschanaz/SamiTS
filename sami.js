@@ -4,6 +4,34 @@ var SamiTS;
     var HTMLTagFinder = (function () {
         function HTMLTagFinder() {
         }
+        HTMLTagFinder.FindStartTag = function (tagname, entirestr) {
+            var tag;
+            var position = 0;
+            var startPosition = 0;
+            while (!tag) {
+                position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
+                if (position != -1) {
+                    startPosition = position;
+                    position += tagname.length + 1;
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attributeName === null) {
+                            position++;
+                            tag = { element: xe, startPosition: startPosition, endPosition: position };
+                            break;
+                        } else if (xe.getAttribute(attrAndPos.attributeName) !== null)
+                            continue;
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
+                    }
+                } else
+                    break;
+            }
+
+            return tag;
+        };
+
         HTMLTagFinder.FindStartTags = function (tagname, entirestr) {
             var list = [];
             var position = 0;
@@ -199,13 +227,18 @@ else
     })();
     SamiTS.SamiCue = SamiCue;
 
-    var SamiParser = (function () {
-        function SamiParser() {
+    var SamiDocument = (function () {
+        function SamiDocument() {
         }
-        SamiParser.parse = function (samiDocument) {
+        SamiDocument.parse = function (samiDocument) {
             var _this = this;
+            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samiDocument);
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
-            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samiDocument);
+
+            var samicontainer = samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex);
+            var samibody = samiDocument.slice(bodystart.endPosition, bodyendindex + 7);
+
+            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
@@ -214,10 +247,13 @@ else
             syncs.forEach(function (sync) {
                 syncElements.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
             });
-            return syncElements;
+            return {
+                samiCues: syncElements,
+                languages: []
+            };
         };
 
-        SamiParser.fixIncorrectRubyNodes = function (syncobject) {
+        SamiDocument.fixIncorrectRubyNodes = function (syncobject) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
@@ -239,7 +275,7 @@ else
                 return syncobject;
         };
 
-        SamiParser.fixIncorrectRPs = function (syncobject) {
+        SamiDocument.fixIncorrectRPs = function (syncobject) {
             var newsync = syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), function (ruby) {
                 var rt = ruby.getElementsByTagName("rt")[0];
@@ -265,7 +301,7 @@ else
             return newsync;
         };
 
-        SamiParser.wrapWith = function (targetNode, newParentNode) {
+        SamiDocument.wrapWith = function (targetNode, newParentNode) {
             var currentParentNode = targetNode.parentNode;
             var currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
@@ -273,7 +309,7 @@ else
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
         };
 
-        SamiParser.isRubyParentExist = function (rtelement) {
+        SamiDocument.isRubyParentExist = function (rtelement) {
             if (rtelement.parentElement) {
                 if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
                     return true;
@@ -283,7 +319,7 @@ else
                 return false;
         };
 
-        SamiParser.getFontFromNode = function (text) {
+        SamiDocument.getFontFromNode = function (text) {
             if (text.parentNode) {
                 var parent = text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
@@ -295,7 +331,7 @@ else
                 return null;
         };
 
-        SamiParser.exchangeFontWithTemp = function (syncobject) {
+        SamiDocument.exchangeFontWithTemp = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset['originalstring'];
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
@@ -305,7 +341,7 @@ else
             return newsync;
         };
 
-        SamiParser.extractFontAndText = function (syncobject) {
+        SamiDocument.extractFontAndText = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset['originalstring'];
             var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
@@ -329,7 +365,7 @@ else
             return newsync;
         };
 
-        SamiParser.extractReadableTextNodes = function (syncobject) {
+        SamiDocument.extractReadableTextNodes = function (syncobject) {
             var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
             var node;
             var textNodes = [];
@@ -342,7 +378,7 @@ else
             return textNodes;
         };
 
-        SamiParser.lastIndexOfInsensitive = function (target, searchString, position) {
+        SamiDocument.lastIndexOfInsensitive = function (target, searchString, position) {
             if (typeof position === "undefined") { position = target.length - searchString.length; }
             if (!searchString)
                 return -1;
@@ -355,9 +391,9 @@ else if (searchString.length == 0)
             }
             return -1;
         };
-        return SamiParser;
+        return SamiDocument;
     })();
-    SamiTS.SamiParser = SamiParser;
+    SamiTS.SamiDocument = SamiDocument;
 })(SamiTS || (SamiTS = {}));
 "use strict";
 var SamiTS;
@@ -679,14 +715,14 @@ var SamiTS;
 (function (SamiTS) {
     function convertToWebVTTFromString(samiString, styleOutput) {
         if (typeof styleOutput === "undefined") { styleOutput = null; }
-        var xsyncs = SamiTS.SamiParser.parse(samiString);
-        return (new SamiTS.WebVTTWriter()).write(xsyncs, styleOutput);
+        var samiDocument = SamiTS.SamiDocument.parse(samiString);
+        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, styleOutput);
     }
     SamiTS.convertToWebVTTFromString = convertToWebVTTFromString;
 
     function convertToSubRipFromString(samiString, useTextStyles) {
-        var xsyncs = SamiTS.SamiParser.parse(samiString);
-        return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
+        var samiDocument = SamiTS.SamiDocument.parse(samiString);
+        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, useTextStyles);
     }
     SamiTS.convertToSubRipFromString = convertToSubRipFromString;
 
