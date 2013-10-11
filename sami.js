@@ -235,8 +235,8 @@ else
             var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samiDocument);
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
 
-            var samicontainer = samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex);
-            var samibody = samiDocument.slice(bodystart.endPosition, bodyendindex + 7);
+            var samicontainer = new DOMParser().parseFromString(samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex), "text/html");
+            var samibody = samiDocument.slice(bodystart.endPosition, bodyendindex);
 
             var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
