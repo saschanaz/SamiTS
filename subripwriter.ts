@@ -11,7 +11,7 @@ module SamiTS {
             };
             var text: string;
             var syncindex = 1;
-            var getText = useTags ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
+            var getText = useTags ? this.getRichText : this.getSimpleText;
             if (xsyncs.length > 0) {
                 text = getText(xsyncs[0]);
                 if (text.length > 0) write(0, syncindex, text);
