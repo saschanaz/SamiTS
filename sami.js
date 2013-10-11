@@ -185,6 +185,15 @@ else
                 this.syncElement = syncElement;
         }
         SamiCue.prototype.filterByLanguageClass = function (lang) {
+            var newsync = this.syncElement.cloneNode(true);
+            Array.prototype.filter.call(this.syncElement.children, function (child) {
+                if (child.nodeType == 1) {
+                    var className = (child).getAttribute("class");
+                    if (!className || className === lang)
+                        newsync.appendChild(child.cloneNode(true));
+                } else
+                    newsync.appendChild(child.cloneNode());
+            });
         };
         return SamiCue;
     })();
@@ -193,7 +202,7 @@ else
     var SamiParser = (function () {
         function SamiParser() {
         }
-        SamiParser.Parse = function (samiDocument) {
+        SamiParser.parse = function (samiDocument) {
             var _this = this;
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
             var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samiDocument);
@@ -203,7 +212,7 @@ else
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, bodyendindex);
             var syncElements = [];
             syncs.forEach(function (sync) {
-                syncElements.push(_this.fixIncorrectRubyNodes(sync.element));
+                syncElements.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
             });
             return syncElements;
         };
@@ -361,21 +370,21 @@ var SamiTS;
         WebVTTWriter.prototype.write = function (xsyncs, styleOutput) {
             if (typeof styleOutput === "undefined") { styleOutput = null; }
             var _this = this;
-            this.getRichText(xsyncs[0]);
+            this.getRichText(xsyncs[0].syncElement);
             var subHeader = "WEBVTT";
             var subDocument = '';
             var write = function (i, text) {
-                subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].getAttribute("start")));
+                subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
             var syncindex = 0;
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0]);
+                text = this.getRichText(xsyncs[0].syncElement);
                 if (text.length > 0)
                     write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));
+                    text = this.cleanVacuum(this.getRichText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -553,7 +562,7 @@ var SamiTS;
             var subDocument = "";
             var write = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
-                subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].getAttribute("start")));
+                subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
@@ -564,11 +573,11 @@ var SamiTS;
                 return _this.getSimpleText(xsync);
             };
             if (xsyncs.length > 0) {
-                text = getText(xsyncs[0]);
+                text = getText(xsyncs[0].syncElement);
                 if (text.length > 0)
                     write(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = getText(xsyncs[i]);
+                    text = getText(xsyncs[i].syncElement);
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -670,13 +679,13 @@ var SamiTS;
 (function (SamiTS) {
     function convertToWebVTTFromString(samiString, styleOutput) {
         if (typeof styleOutput === "undefined") { styleOutput = null; }
-        var xsyncs = SamiTS.SamiParser.Parse(samiString);
+        var xsyncs = SamiTS.SamiParser.parse(samiString);
         return (new SamiTS.WebVTTWriter()).write(xsyncs, styleOutput);
     }
     SamiTS.convertToWebVTTFromString = convertToWebVTTFromString;
 
     function convertToSubRipFromString(samiString, useTextStyles) {
-        var xsyncs = SamiTS.SamiParser.Parse(samiString);
+        var xsyncs = SamiTS.SamiParser.parse(samiString);
         return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
     }
     SamiTS.convertToSubRipFromString = convertToSubRipFromString;

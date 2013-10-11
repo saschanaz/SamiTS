@@ -27,16 +27,16 @@ module SamiTS {
     }
 
     export class SamiParser {
-        static Parse(samiDocument: string) {
+        static parse(samiDocument: string) {
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
             var syncs = HTMLTagFinder.FindStartTags('sync', samiDocument);
             for (var i = 0; i < syncs.length - 1; i++)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, bodyendindex);
-            var syncElements: HTMLElement[] = [];
+            var syncElements: SamiCue[] = [];
             syncs.forEach((sync) => {
-                syncElements.push(this.fixIncorrectRubyNodes(sync.element));
+                syncElements.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
             });
             return syncElements;
         }
