@@ -8,6 +8,36 @@ module SamiTS {
     }
 
     export class HTMLTagFinder {
+        static FindStartTag(tagname: string, entirestr: string): FoundHTMLTag {
+            var tag: FoundHTMLTag;
+            var position = 0;
+            var startPosition = 0;
+            while (!tag) {
+                position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
+                if (position != -1) {
+                    startPosition = position;
+                    position += tagname.length + 1;
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attributeName === null) {
+                            position++;
+                            tag = { element: xe, startPosition: startPosition, endPosition: position };
+                            break;
+                        }
+                        else if (xe.getAttribute(attrAndPos.attributeName) !== null)
+                            continue;
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
+                    }
+                }
+                else
+                    break;
+            }
+
+            return tag;
+        }
+
         static FindStartTags(tagname: string, entirestr: string): FoundHTMLTag[] {
             var list: FoundHTMLTag[] = [];
             var position = 0;

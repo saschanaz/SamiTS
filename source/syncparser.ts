@@ -26,10 +26,18 @@ module SamiTS {
         }
     }
 
-    export class SamiParser {
-        static parse(samiDocument: string) {
+    export class SamiDocument {
+        samiCues: SamiCue[];
+        languages: string[];
+
+        static parse(samiDocument: string): SamiDocument {
+            var bodystart = HTMLTagFinder.FindStartTag('body', samiDocument);
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
-            var syncs = HTMLTagFinder.FindStartTags('sync', samiDocument);
+
+            var samicontainer = samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex);
+            var samibody = samiDocument.slice(bodystart.endPosition, bodyendindex + 7);
+
+            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
@@ -38,17 +46,20 @@ module SamiTS {
             syncs.forEach((sync) => {
                 syncElements.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
             });
-            return syncElements;
+            return {
+                samiCues: syncElements,
+                languages: []
+            }
+            //return syncElements;
         }
 
         private static fixIncorrectRubyNodes(syncobject: HTMLElement) {
-            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            //WebVTTWriter에서 빼서 SamiParser로 옮기기
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
+            //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
                 var fontdeleted = this.exchangeFontWithTemp(syncobject);
                 var fontextracted = this.extractFontAndText(syncobject);
