@@ -34,7 +34,7 @@ module SamiTS {
             var bodystart = HTMLTagFinder.FindStartTag('body', samiDocument);
             var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
 
-            var samicontainer = new DOMParser().parseFromString(samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex), "text/html");
+            var samicontainer = new DOMParser().parseFromString(samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex), "text/html").body.firstChild;
             var samibody = samiDocument.slice(bodystart.endPosition, bodyendindex);
 
             var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
