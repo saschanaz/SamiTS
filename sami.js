@@ -177,6 +177,19 @@ else
 "use strict";
 var SamiTS;
 (function (SamiTS) {
+    var SamiCue = (function () {
+        function SamiCue(syncElement) {
+            if (syncElement.tagName.toLowerCase() !== "sync")
+                throw new Error("SamiCue can only accept sync element");
+else
+                this.syncElement = syncElement;
+        }
+        SamiCue.prototype.filterByLanguageClass = function (lang) {
+        };
+        return SamiCue;
+    })();
+    SamiTS.SamiCue = SamiCue;
+
     var SamiParser = (function () {
         function SamiParser() {
         }

@@ -13,6 +13,11 @@
     }
 }
 declare module SamiTS {
+    class SamiCue {
+        public syncElement: HTMLElement;
+        constructor(syncElement: HTMLElement);
+        public filterByLanguageClass(lang: string): void;
+    }
     class SamiParser {
         static Parse(samiDocument: string): HTMLElement[];
         private static fixIncorrectRubyNodes(syncobject);
