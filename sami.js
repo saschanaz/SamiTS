@@ -63,7 +63,6 @@ var SamiTS;
             }
 
             return list;
-            //return [];//RegExp로 모든 start tag의 시작부를 찾아낼 수 있다. /<\/?\w+/g
         };
 
         HTMLTagFinder.getAttribute = function (entirestr, position) {
@@ -175,7 +174,6 @@ else
     })();
     SamiTS.HTMLTagFinder = HTMLTagFinder;
 })(SamiTS || (SamiTS = {}));
-///<reference path='htmltagfinder.ts' />
 "use strict";
 var SamiTS;
 (function (SamiTS) {
@@ -198,8 +196,6 @@ var SamiTS;
         };
 
         SamiParser.fixIncorrectRubyNodes = function (syncobject) {
-            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            //WebVTTWriter에서 빼서 SamiParser로 옮기기
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
@@ -247,16 +243,7 @@ var SamiTS;
             return newsync;
         };
 
-        SamiParser.wrapWith = //private static deleteRPs(syncobject: HTMLElement) {
-        //    var newsync = <HTMLElement>syncobject.cloneNode(false);
-        //    var newsyncstr = <string>newsync.dataset['originalstring'];
-        //    HTMLTagFinder.FindStartTags('rp', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
-        //        newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
-        //    });
-        //    newsync.dataset['originalstring'] = newsyncstr.replace(/<\/rp>/g, '');
-        //    return newsync;
-        //}
-        function (targetNode, newParentNode) {
+        SamiParser.wrapWith = function (targetNode, newParentNode) {
             var currentParentNode = targetNode.parentNode;
             var currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
@@ -386,7 +373,6 @@ var SamiTS;
             if (styleOutput)
                 styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
 
-            //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
@@ -667,9 +653,6 @@ else
     })();
     SamiTS.SubRipWriter = SubRipWriter;
 })(SamiTS || (SamiTS = {}));
-///<reference path='syncparser.ts' />
-///<reference path='webvttwriter.ts' />
-///<reference path='subripwriter.ts' />
 var SamiTS;
 (function (SamiTS) {
     function convertToWebVTTFromString(samiString, styleOutput) {
@@ -717,18 +700,6 @@ var SamiTS;
             this.sdpusNamespaceURI = "http://www.w3.org/ns/ttml/profile/sdp-us";
         }
         SDPUSWriter.prototype.write = function (xsyncs) {
-            /*
-            example using
-            http://msmvps.com/blogs/martin_honnen/archive/2009/04/13/creating-xml-with-namespaces-with-javascript-and-the-w3c-dom.aspx
-            var ttmlns = "http://www.w3.org/ns/ttml";
-            var ttmlsns = "http://www.w3.org/ns/ttml#styling";
-            var ttmlpns = "http://www.w3.org/ns/ttml#parameter";
-            var doc = document.implementation.createDocument(ttmlns, "tt", null);
-            doc.documentElement.setAttributeNS('http://www.w3.org/2000/xmlns/', "xmlns:s", ttmlsns);
-            doc.documentElement.setAttributeNS('http://www.w3.org/2000/xmlns/', "xmlns:p", ttmlpns);
-            (new XMLSerializer()).serializeToString(doc);
-            이 다음엔 child node 추가 넣기
-            */
             var sdpusdoc = document.implementation.createDocument(this.ttmlNamespaceURI, "tt", null);
             sdpusdoc.documentElement.setAttributeNS(this.xmlNamespaceURI, "xml:lang", "en-us");
             sdpusdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:s", this.ttmlStyleNamespaceURI);
@@ -744,4 +715,3 @@ var SamiTS;
     })();
     SamiTS.SDPUSWriter = SDPUSWriter;
 })(SamiTS || (SamiTS = {}));
-//# sourceMappingURL=sami.js.map
