@@ -172,10 +172,7 @@ module SamiTS {
             });
             for (var rule in this.ruledictionary)
                 result += "video" + <string>this.ruledictionary[rule];
-            if (styleSheet.sheet)
-                (<any>styleSheet.sheet).cssText = result;
-            else
-                styleSheet.appendChild(document.createTextNode(result));
+            styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
         }
     }

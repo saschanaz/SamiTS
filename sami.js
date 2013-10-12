@@ -229,20 +229,60 @@ else
 
     var SamiDocument = (function () {
         function SamiDocument() {
+            this.samiCues = [];
+            this.languages = [];
         }
-        SamiDocument.parse = function (samiDocument) {
+        SamiDocument.parse = function (samistr) {
             var _this = this;
-            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samiDocument);
-            var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
+            var samiDocument = new SamiDocument();
 
-            var samicontainer = new DOMParser().parseFromString(samiDocument.slice(0, bodystart.endPosition) + samiDocument.slice(bodyendindex), "text/html").body.firstChild;
-            var samibody = samiDocument.slice(bodystart.endPosition, bodyendindex);
+            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
+            var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
+
+            var samicontainer = new DOMParser().parseFromString(samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex), "text/html").body.firstChild;
+            var samihead = samicontainer.getElementsByTagName("head")[0];
+
+            var stylestr = samihead.getElementsByTagName("style")[0].innerHTML.replace(/\s/g, "");
+            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);
+            var languages = [];
+            classes.forEach(function (classstr) {
+                var classselector = classstr.match(/\.\w+{/);
+                if (classselector.length != 1)
+                    return;
+                var stylebody = classstr.slice(classselector[0].length).split(';');
+                var name;
+                var lang;
+                for (var i = 0; i < stylebody.length; i++) {
+                    var stylename = stylebody[i].match(/\w+:/);
+                    if (stylename.length == 1) {
+                        var stylevalue = stylebody[i].slice(stylename[0].length);
+                        if (stylename[0].toLowerCase() === "name:") {
+                            name = stylevalue;
+                            break;
+                        } else if (stylename[0].toLowerCase() === "lang:") {
+                            lang = stylevalue;
+                            break;
+                        }
+                    }
+                }
+
+                if (name && lang)
+                    languages.push({
+                        className: classselector[0].slice(1, classstr.length - 1),
+                        languageName: name,
+                        languageCode: lang
+                    });
+            });
+
+            var samistyle = new DOMParser().parseFromString(samihead.getElementsByTagName("style")[0].outerHTML, "text/html").head.getElementsByTagName("style")[0].sheet;
+
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
             var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samistr.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samistr.slice(syncs[i].endPosition, bodyendindex);
             var syncElements = [];
             syncs.forEach(function (sync) {
                 syncElements.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
@@ -578,10 +618,7 @@ var SamiTS;
             });
             for (var rule in this.ruledictionary)
                 result += "video" + this.ruledictionary[rule];
-            if (styleSheet.sheet)
-                (styleSheet.sheet).cssText = result;
-else
-                styleSheet.appendChild(document.createTextNode(result));
+            styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
         };
         return WebVTTStyleSheet;
