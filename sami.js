@@ -246,9 +246,10 @@ else
 
             var stylestr = '';
             Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
-                stylestr += text.data;
+                if (text.data)
+                    stylestr += text.data;
             });
-            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);
+            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
             var languages = [];
             classes.forEach(function (classstr) {
                 var classselector = classstr.match(/\.\w+{/);

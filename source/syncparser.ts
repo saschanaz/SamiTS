@@ -51,7 +51,7 @@ module SamiTS {
             Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
                 if (text.data) stylestr += text.data;
             });
-            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);
+            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
             var languages: SamiLanguage[] = [];
             classes.forEach((classstr) => {
                 var classselector = classstr.match(/\.\w+{/);
