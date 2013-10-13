@@ -81,7 +81,7 @@ module SamiTS {
                     });
             });
 
-            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString(stylestr, "text/html").head.getElementsByTagName("style")[0].sheet;
+            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
 
             var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
