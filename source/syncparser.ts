@@ -64,14 +64,14 @@ module SamiTS {
                     var stylename = stylebody[i].match(/\w+:/);
                     if (stylename.length == 1) {
                         var stylevalue = stylebody[i].slice(stylename[0].length);
-                        if (stylename[0].toLowerCase() === "name:") {
+                        if (!name && stylename[0].toLowerCase() === "name:") {
                             name = stylevalue;
-                            break;
                         }
-                        else if (stylename[0].toLowerCase() === "lang:") {
+                        else if (!lang && stylename[0].toLowerCase() === "lang:") {
                             lang = stylevalue;
-                            break;
                         }
+                        if (name && lang)
+                            break;
                     }
                 }
 
