@@ -64,12 +64,10 @@ module SamiTS {
                     var stylename = stylebody[i].match(/\w+:/);
                     if (stylename.length == 1) {
                         var stylevalue = stylebody[i].slice(stylename[0].length);
-                        if (!name && stylename[0].toLowerCase() === "name:") {
+                        if (!name && stylename[0].toLowerCase() === "name:")
                             name = stylevalue;
-                        }
-                        else if (!lang && stylename[0].toLowerCase() === "lang:") {
+                        else if (!lang && stylename[0].toLowerCase() === "lang:")
                             lang = stylevalue;
-                        }
                         if (name && lang)
                             break;
                     }
@@ -77,7 +75,7 @@ module SamiTS {
 
                 if (name && lang)
                     languages.push({
-                        className: classselector[0].slice(1, classstr.length - 1),
+                        className: classselector[0].slice(1, classselector[0].length - 1),
                         languageName: name,
                         languageCode: lang
                     });
