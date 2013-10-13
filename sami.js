@@ -244,7 +244,10 @@ else
             }), "text/xml").firstChild;
             var samihead = samicontainer.getElementsByTagName("head")[0];
 
-            var stylestr = (samihead.getElementsByTagName("style")[0].firstChild).data;
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
+                stylestr += text.data;
+            });
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);
             var languages = [];
             classes.forEach(function (classstr) {

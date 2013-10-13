@@ -47,7 +47,10 @@ module SamiTS {
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() }), "text/xml").firstChild;
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
 
-            var stylestr = (<Text>samihead.getElementsByTagName("style")[0].firstChild).data;
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
+                if (text.data) stylestr += text.data;
+            });
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);
             var languages: SamiLanguage[] = [];
             classes.forEach((classstr) => {
