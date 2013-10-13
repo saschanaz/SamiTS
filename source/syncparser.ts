@@ -42,14 +42,12 @@ module SamiTS {
             var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
-            var um = (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex));
-            var res = um.replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() });
             var samicontainer = <Element>new DOMParser().parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() }), "text/xml").firstChild;
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
 
-            var stylestr = samihead.getElementsByTagName("style")[0].innerHTML.replace(/\s/g, "");
+            var stylestr = (<Text>samihead.getElementsByTagName("style")[0].firstChild).data;
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);
             var languages: SamiLanguage[] = [];
             classes.forEach((classstr) => {
@@ -82,7 +80,7 @@ module SamiTS {
                     });
             });
 
-            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString(samihead.getElementsByTagName("style")[0].outerHTML, "text/html").head.getElementsByTagName("style")[0].sheet;
+            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString(stylestr, "text/html").head.getElementsByTagName("style")[0].sheet;
 
             var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
