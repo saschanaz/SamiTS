@@ -279,7 +279,7 @@ else if (!lang && stylename[0].toLowerCase() === "lang:")
                     });
             });
 
-            var samistyle = new DOMParser().parseFromString(stylestr, "text/html").head.getElementsByTagName("style")[0].sheet;
+            var samistyle = new DOMParser().parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
 
             var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
