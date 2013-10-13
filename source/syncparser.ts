@@ -51,6 +51,29 @@ module SamiTS {
             Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
                 if (text.data) stylestr += text.data;
             });
+            var languageDeclarations = this.extractClassSelectors(stylestr);
+
+            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+
+            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
+            for (var i = 0; i < syncs.length - 1; i++)
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            if (i > 0)
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+            var syncElements: SamiCue[] = [];
+            syncs.forEach((sync) => {
+                syncElements.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
+            });
+            return {
+                samiCues: syncElements,
+                languages: []
+            }
+            //return syncElements;
+        }
+
+        private static extractClassSelectors(stylestr: string) {
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
             var languages: SamiLanguage[] = [];
             classes.forEach((classstr) => {
@@ -80,25 +103,7 @@ module SamiTS {
                         languageCode: lang
                     });
             });
-
-            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
-
-            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
-
-            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, bodyendindex);
-            var syncElements: SamiCue[] = [];
-            syncs.forEach((sync) => {
-                syncElements.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
-            });
-            return {
-                samiCues: syncElements,
-                languages: []
-            }
-            //return syncElements;
+            return languages;
         }
 
         private static fixIncorrectRubyNodes(syncobject: HTMLElement) {
