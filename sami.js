@@ -239,6 +239,7 @@ else
             var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
+            var abc = samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex);
             var samicontainer = new DOMParser().parseFromString(samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex), "text/html").body.firstChild;
             var samihead = samicontainer.getElementsByTagName("head")[0];
 

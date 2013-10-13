@@ -42,6 +42,7 @@ module SamiTS {
             var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
+            var abc = samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex);
             var samicontainer = <HTMLElement>new DOMParser().parseFromString(samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex), "text/html").body.firstChild;
             var samihead = <HTMLElement>samicontainer.getElementsByTagName("head")[0];
 
