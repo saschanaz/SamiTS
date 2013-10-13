@@ -42,8 +42,10 @@ module SamiTS {
             var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
-            var samicontainer = <HTMLElement>new DOMParser().parseFromString(samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex), "text/xml").body.firstChild;
-            var samihead = <HTMLElement>samicontainer.getElementsByTagName("head")[0];
+            var samicontainer = <Element>new DOMParser().parseFromString(
+                (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
+                    .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() }), "text/xml").firstChild;
+            var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
 
             var stylestr = samihead.getElementsByTagName("style")[0].innerHTML.replace(/\s/g, "");
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{.+}/);

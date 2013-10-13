@@ -239,7 +239,9 @@ else
             var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
-            var samicontainer = new DOMParser().parseFromString(samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex), "text/xml").body.firstChild;
+            var samicontainer = new DOMParser().parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
+                return word.toLowerCase();
+            }), "text/xml").firstChild;
             var samihead = samicontainer.getElementsByTagName("head")[0];
 
             var stylestr = samihead.getElementsByTagName("style")[0].innerHTML.replace(/\s/g, "");
