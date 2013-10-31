@@ -18,17 +18,18 @@ module SamiTS {
 
         }
 
-        filterByLanguageClass(lang: string) {
+        filterByLanguageCode(lang: string) {
             var newsync = <HTMLElement>this.syncElement.cloneNode(true);
             Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
                 if (child.nodeType == 1) {
-                    var className = (<HTMLElement>child).getAttribute("class");
-                    if (!className || className === lang)
+                    var langData = <string>(<HTMLElement>child).dataset["language"];
+                    if (!langData || langData === lang)
                         newsync.appendChild(child.cloneNode(true));
                 }
                 else
                     newsync.appendChild(child.cloneNode());
             });
+            return newsync;
         }
     }
 
@@ -62,15 +63,37 @@ module SamiTS {
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, bodyendindex);
-            var syncElements: SamiCue[] = [];
+
+            var cues: SamiCue[] = [];
             syncs.forEach((sync) => {
-                syncElements.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
+                cues.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
             });
+            cues.forEach((cue: SamiCue) => {
+                this.giveLanguageData(cue, languageDeclarations);
+            });
+
+            var languageNames: string[] = [];
+            languageDeclarations.forEach((value: SamiLanguage) => {
+                languageNames.push(value.languageName);
+            });
+
             return {
-                samiCues: syncElements,
-                languages: []
+                samiCues: cues,
+                languages: languageNames
             }
             //return syncElements;
+        }
+
+        private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
+            Array.prototype.filter.call(cue.syncElement.children, (child: Node) => {
+                for (var i = 0; i < languages.length; i++) {
+                    if (child.nodeType == 1) {
+                        var classCode = <string>(<HTMLElement>child).className;
+                        if (!classCode || classCode === languages[i].className)
+                            (<HTMLElement>child).dataset['language'] = languages[i].languageName;
+                    }
+                }
+            });
         }
 
         private static extractClassSelectors(stylestr: string) {
