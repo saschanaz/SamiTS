@@ -60,9 +60,9 @@ module SamiTS {
 
             var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             var cues: SamiCue[] = [];
             syncs.forEach((sync) => {
@@ -81,7 +81,6 @@ module SamiTS {
                 samiCues: cues,
                 languages: languageNames
             }
-            //return syncElements;
         }
 
         private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
@@ -181,11 +180,11 @@ module SamiTS {
         }
         //private static deleteRPs(syncobject: HTMLElement) {
         //    var newsync = <HTMLElement>syncobject.cloneNode(false);
-        //    var newsyncstr = <string>newsync.dataset['originalstring'];
+        //    var newsyncstr = <string>newsync.dataset['original-string'];
         //    HTMLTagFinder.FindStartTags('rp', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
         //        newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
         //    });
-        //    newsync.dataset['originalstring'] = newsyncstr.replace(/<\/rp>/g, '');
+        //    newsync.dataset['original-string'] = newsyncstr.replace(/<\/rp>/g, '');
         //    return newsync;
         //}
 
@@ -223,7 +222,7 @@ module SamiTS {
 
         private static exchangeFontWithTemp(syncobject: HTMLElement) {//<temp /> will be ignored by parsers
             var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['originalstring'];
+            var newsyncstr = <string>newsync.dataset['original-string'];
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -233,8 +232,8 @@ module SamiTS {
 
         private static extractFontAndText(syncobject: HTMLElement) {
             var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['originalstring'];
-            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            var newsyncstr = <string>newsync.dataset['original-string'];
+            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['original-string']);
             tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":

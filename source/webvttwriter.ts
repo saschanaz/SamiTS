@@ -4,7 +4,7 @@ module SamiTS {
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
         private domparser = new DOMParser();
-        write(xsyncs: SamiCue[], styleOutput: (style: HTMLStyleElement) => void = null) {
+        write(xsyncs: SamiCue[], options: { onstyleload: (style: HTMLStyleElement) => void } = null) {
             this.getRichText(xsyncs[0].syncElement);
             var subHeader = "WEBVTT";
             var subDocument = '';
@@ -26,8 +26,8 @@ module SamiTS {
                 }
             }
 
-            if (styleOutput)
-                styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
+            if (options && options.onstyleload)
+                options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();

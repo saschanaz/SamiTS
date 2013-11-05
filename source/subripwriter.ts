@@ -2,7 +2,7 @@
 
 module SamiTS {
     export class SubRipWriter {
-        write(xsyncs: SamiCue[], useTags: boolean) {
+        write(xsyncs: SamiCue[], options: { useTextStyles: boolean } = null) {
             var subDocument = "";
             var write = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
@@ -11,7 +11,7 @@ module SamiTS {
             };
             var text: string;
             var syncindex = 1;
-            var getText = useTags ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
+            var getText = (options && options.useTextStyles) ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
             if (xsyncs.length > 0) {
                 text = getText(xsyncs[0].syncElement);
                 if (text.length > 0) write(0, syncindex, text);
