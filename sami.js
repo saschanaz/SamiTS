@@ -258,9 +258,9 @@ else
 
             var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             var cues = [];
             syncs.forEach(function (sync) {
@@ -406,7 +406,7 @@ else
 
         SamiDocument.exchangeFontWithTemp = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['originalstring'];
+            var newsyncstr = newsync.dataset['original-string'];
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -416,8 +416,8 @@ else
 
         SamiDocument.extractFontAndText = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['originalstring'];
-            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            var newsyncstr = newsync.dataset['original-string'];
+            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['original-string']);
             tags.filter(function (foundtag) {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
@@ -476,8 +476,8 @@ var SamiTS;
             this.webvttStyleSheet = new WebVTTStyleSheet();
             this.domparser = new DOMParser();
         }
-        WebVTTWriter.prototype.write = function (xsyncs, styleOutput) {
-            if (typeof styleOutput === "undefined") { styleOutput = null; }
+        WebVTTWriter.prototype.write = function (xsyncs, options) {
+            if (typeof options === "undefined") { options = null; }
             var _this = this;
             this.getRichText(xsyncs[0].syncElement);
             var subHeader = "WEBVTT";
@@ -501,8 +501,8 @@ var SamiTS;
                 }
             }
 
-            if (styleOutput)
-                styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
+            if (options && options.onstyleload)
+                options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
 
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
@@ -663,7 +663,8 @@ var SamiTS;
     var SubRipWriter = (function () {
         function SubRipWriter() {
         }
-        SubRipWriter.prototype.write = function (xsyncs, useTags) {
+        SubRipWriter.prototype.write = function (xsyncs, options) {
+            if (typeof options === "undefined") { options = null; }
             var _this = this;
             var subDocument = "";
             var write = function (i, syncindex, text) {
@@ -673,7 +674,7 @@ var SamiTS;
             };
             var text;
             var syncindex = 1;
-            var getText = useTags ? function (xsync) {
+            var getText = (options && options.useTextStyles) ? function (xsync) {
                 return _this.getRichText(xsync);
             } : function (xsync) {
                 return _this.getSimpleText(xsync);
@@ -783,33 +784,35 @@ else
 })(SamiTS || (SamiTS = {}));
 var SamiTS;
 (function (SamiTS) {
-    function convertToWebVTTFromString(samiString, styleOutput) {
-        if (typeof styleOutput === "undefined") { styleOutput = null; }
+    function convertToWebVTTFromString(samiString, options) {
+        if (typeof options === "undefined") { options = null; }
         var samiDocument = SamiTS.SamiDocument.parse(samiString);
-        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, styleOutput);
+        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
     }
     SamiTS.convertToWebVTTFromString = convertToWebVTTFromString;
 
-    function convertToSubRipFromString(samiString, useTextStyles) {
+    function convertToSubRipFromString(samiString, options) {
+        if (typeof options === "undefined") { options = null; }
         var samiDocument = SamiTS.SamiDocument.parse(samiString);
-        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, useTextStyles);
+        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
     }
     SamiTS.convertToSubRipFromString = convertToSubRipFromString;
 
-    function convertToWebVTTFromFile(samiFile, read, styleOutput) {
-        if (typeof styleOutput === "undefined") { styleOutput = null; }
+    function convertToWebVTTFromFile(samiFile, onread, options) {
+        if (typeof options === "undefined") { options = null; }
         var reader = new FileReader();
         reader.onload = function (ev) {
-            read(convertToWebVTTFromString(ev.target.result, styleOutput));
+            onread(convertToWebVTTFromString(ev.target.result, options));
         };
         reader.readAsText(samiFile);
     }
     SamiTS.convertToWebVTTFromFile = convertToWebVTTFromFile;
 
-    function convertToSubRipFromFile(samiFile, read, useTextStyles) {
+    function convertToSubRipFromFile(samiFile, onread, options) {
+        if (typeof options === "undefined") { options = null; }
         var reader = new FileReader();
         reader.onload = function (ev) {
-            read(convertToSubRipFromString(ev.target.result, useTextStyles));
+            onread(convertToSubRipFromString(ev.target.result, options));
         };
         reader.readAsText(samiFile);
     }
