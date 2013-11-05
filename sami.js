@@ -258,9 +258,9 @@ else
 
             var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             var cues = [];
             syncs.forEach(function (sync) {
@@ -406,7 +406,7 @@ else
 
         SamiDocument.exchangeFontWithTemp = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['original-string'];
+            var newsyncstr = newsync.dataset['originalString'];
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -416,8 +416,8 @@ else
 
         SamiDocument.extractFontAndText = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['original-string'];
-            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['original-string']);
+            var newsyncstr = newsync.dataset['originalString'];
+            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalString']);
             tags.filter(function (foundtag) {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":

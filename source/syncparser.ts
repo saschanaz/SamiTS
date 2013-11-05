@@ -60,9 +60,9 @@ module SamiTS {
 
             var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['original-string'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             var cues: SamiCue[] = [];
             syncs.forEach((sync) => {
@@ -180,11 +180,11 @@ module SamiTS {
         }
         //private static deleteRPs(syncobject: HTMLElement) {
         //    var newsync = <HTMLElement>syncobject.cloneNode(false);
-        //    var newsyncstr = <string>newsync.dataset['original-string'];
+        //    var newsyncstr = <string>newsync.dataset['originalString'];
         //    HTMLTagFinder.FindStartTags('rp', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
         //        newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
         //    });
-        //    newsync.dataset['original-string'] = newsyncstr.replace(/<\/rp>/g, '');
+        //    newsync.dataset['originalString'] = newsyncstr.replace(/<\/rp>/g, '');
         //    return newsync;
         //}
 
@@ -222,7 +222,7 @@ module SamiTS {
 
         private static exchangeFontWithTemp(syncobject: HTMLElement) {//<temp /> will be ignored by parsers
             var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['original-string'];
+            var newsyncstr = <string>newsync.dataset['originalString'];
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -232,8 +232,8 @@ module SamiTS {
 
         private static extractFontAndText(syncobject: HTMLElement) {
             var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['original-string'];
-            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['original-string']);
+            var newsyncstr = <string>newsync.dataset['originalString'];
+            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalString']);
             tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
