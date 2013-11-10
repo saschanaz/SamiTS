@@ -1,6 +1,9 @@
 "use strict";
 
 module SamiTS {
+    export enum SubRipLanguageSplitMode {
+        Split, ShowAllTogether
+    }
     export interface SubRipWriterOptions {
         useTextStyles?: boolean
     }
