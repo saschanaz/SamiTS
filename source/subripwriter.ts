@@ -1,8 +1,12 @@
 "use strict";
 
 module SamiTS {
+    export interface SubRipWriterOptions {
+        useTextStyles?: boolean
+    }
+
     export class SubRipWriter {
-        write(xsyncs: SamiCue[], options: { useTextStyles: boolean } = null) {
+        write(xsyncs: SamiCue[], options: SubRipWriterOptions = null) {
             var subDocument = "";
             var write = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();

@@ -2,17 +2,17 @@
 ///<reference path='webvttwriter.ts' />
 ///<reference path='subripwriter.ts' />
 module SamiTS {
-    export function convertToWebVTTFromString(samiString: string, options: { onstyleload: (style: HTMLStyleElement) => void } = null) {
+    export function convertToWebVTTFromString(samiString: string, options: WebVTTWriterOptions = null) {
         var samiDocument = SamiDocument.parse(samiString);
         return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
     }
 
-    export function convertToSubRipFromString(samiString: string, options: { useTextStyles: boolean } = null) {
+    export function convertToSubRipFromString(samiString: string, options: SubRipWriterOptions = null) {
         var samiDocument = SamiDocument.parse(samiString);
         return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
     }
 
-    export function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options: { onstyleload: (style: HTMLStyleElement) => void } = null) {
+    export function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options: WebVTTWriterOptions = null) {
         var reader = new FileReader();
         reader.onload = (ev: any) => {
             onread(convertToWebVTTFromString(<string>ev.target.result, options));
@@ -20,7 +20,7 @@ module SamiTS {
         reader.readAsText(samiFile);
     }
 
-    export function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options: { useTextStyles: boolean } = null) {
+    export function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options: SubRipWriterOptions = null) {
         var reader = new FileReader();
         reader.onload = (ev: any) => {
             onread(convertToSubRipFromString(<string>ev.target.result, options));

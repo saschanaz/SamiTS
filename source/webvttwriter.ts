@@ -1,11 +1,17 @@
 ﻿"use strict";
 
 module SamiTS {
+    export enum WebVTTLanguageSplitMode {
+        Split, ApplyLanguageTag, ShowAllTogether
+    }
+    export interface WebVTTWriterOptions {
+        onstyleload?: (style: HTMLStyleElement) => void;
+        languageSplitMode?: WebVTTLanguageSplitMode;
+    }
+
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
-        private domparser = new DOMParser();
-        write(xsyncs: SamiCue[], options: { onstyleload: (style: HTMLStyleElement) => void } = null) {
-            this.getRichText(xsyncs[0].syncElement);
+        write(xsyncs: SamiCue[], options: WebVTTWriterOptions = null) {
             var subHeader = "WEBVTT";
             var subDocument = '';
             var write = (i: number, text: string) => {
@@ -31,6 +37,7 @@ module SamiTS {
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
         }
@@ -174,6 +181,9 @@ module SamiTS {
                 result += "video" + <string>this.ruledictionary[rule];
             styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
+        }
+        clear() {
+            this.ruledictionary = {};
         }
     }
 }

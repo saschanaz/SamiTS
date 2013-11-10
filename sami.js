@@ -471,15 +471,20 @@ else if (searchString.length == 0)
 "use strict";
 var SamiTS;
 (function (SamiTS) {
+    (function (WebVTTLanguageSplitMode) {
+        WebVTTLanguageSplitMode[WebVTTLanguageSplitMode["Split"] = 0] = "Split";
+        WebVTTLanguageSplitMode[WebVTTLanguageSplitMode["ApplyLanguageTag"] = 1] = "ApplyLanguageTag";
+        WebVTTLanguageSplitMode[WebVTTLanguageSplitMode["ShowAllTogether"] = 2] = "ShowAllTogether";
+    })(SamiTS.WebVTTLanguageSplitMode || (SamiTS.WebVTTLanguageSplitMode = {}));
+    var WebVTTLanguageSplitMode = SamiTS.WebVTTLanguageSplitMode;
+
     var WebVTTWriter = (function () {
         function WebVTTWriter() {
             this.webvttStyleSheet = new WebVTTStyleSheet();
-            this.domparser = new DOMParser();
         }
         WebVTTWriter.prototype.write = function (xsyncs, options) {
             if (typeof options === "undefined") { options = null; }
             var _this = this;
-            this.getRichText(xsyncs[0].syncElement);
             var subHeader = "WEBVTT";
             var subDocument = '';
             var write = function (i, text) {
@@ -505,6 +510,7 @@ var SamiTS;
                 options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
 
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
         };
@@ -653,6 +659,9 @@ var SamiTS;
                 result += "video" + this.ruledictionary[rule];
             styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
+        };
+        WebVTTStyleSheet.prototype.clear = function () {
+            this.ruledictionary = {};
         };
         return WebVTTStyleSheet;
     })();
