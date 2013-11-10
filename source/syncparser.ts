@@ -18,15 +18,47 @@ module SamiTS {
 
         }
 
-        filterByLanguageCode(lang: string) {
-            var newsync = <HTMLElement>this.syncElement.cloneNode(true);
+        /*
+        TODO: filter 말고 split으로 교체
+        language 코드가 발견되면 그 노드의 language에 대응하는 syncElement를 만들어 {}에 추가하고, 그 syncElement에 노드를 넣음
+        코드가 없으면 모든 노드에... 코드 없는 거 뒤에 코드 있는 게 나오면 안된다. 음
+        먼저 스캔 싹 하고 language 목록 만듦?
+        */
+        splitByLanguageCode() {
+            var languages = {};
             Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
                 if (child.nodeType == 1) {
                     var langData = <string>(<HTMLElement>child).dataset["language"];
-                    if (!langData || langData === lang)
-                        newsync.appendChild(child.cloneNode(true));
+                    if (langData)
+                        languages[langData] = <HTMLElement>this.syncElement.cloneNode();
+                }
+            });
+            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+                if (child.nodeType == 1) {
+                    var langData = <string>(<HTMLElement>child).dataset["language"];
+                    if (!langData) {
+                        for (var newsync in languages)
+                            (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+                    }
+                    else
+                        (<HTMLElement>languages[langData]).appendChild(child.cloneNode(true));
                 }
                 else
+                    for (var newsync in languages)
+                        (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+            });
+            return languages;
+        }
+
+        filterByLanguageCode(lang: string) {
+            var newsync = <HTMLElement>this.syncElement.cloneNode();
+            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+                if (child.nodeType == 1) {
+                    var langData = <string>(<HTMLElement>child).dataset["language"];
+                    if (!langData || langData === lang)//no language code or specific language code
+                        newsync.appendChild(child.cloneNode(true));
+                }
+                else//text node
                     newsync.appendChild(child.cloneNode());
             });
             return newsync;

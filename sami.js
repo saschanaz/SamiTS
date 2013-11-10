@@ -212,8 +212,33 @@ var SamiTS;
 else
                 this.syncElement = syncElement;
         }
+        SamiCue.prototype.splitByLanguageCode = function () {
+            var _this = this;
+            var languages = {};
+            Array.prototype.filter.call(this.syncElement.children, function (child) {
+                if (child.nodeType == 1) {
+                    var langData = (child).dataset["language"];
+                    if (langData)
+                        languages[langData] = _this.syncElement.cloneNode();
+                }
+            });
+            Array.prototype.filter.call(this.syncElement.children, function (child) {
+                if (child.nodeType == 1) {
+                    var langData = (child).dataset["language"];
+                    if (!langData) {
+                        for (var newsync in languages)
+                            (newsync).appendChild(child.cloneNode(true));
+                    } else
+                        (languages[langData]).appendChild(child.cloneNode(true));
+                } else
+                    for (var newsync in languages)
+                        (newsync).appendChild(child.cloneNode(true));
+            });
+            return languages;
+        };
+
         SamiCue.prototype.filterByLanguageCode = function (lang) {
-            var newsync = this.syncElement.cloneNode(true);
+            var newsync = this.syncElement.cloneNode();
             Array.prototype.filter.call(this.syncElement.children, function (child) {
                 if (child.nodeType == 1) {
                     var langData = (child).dataset["language"];
@@ -669,6 +694,12 @@ var SamiTS;
 "use strict";
 var SamiTS;
 (function (SamiTS) {
+    (function (SubRipLanguageSplitMode) {
+        SubRipLanguageSplitMode[SubRipLanguageSplitMode["Split"] = 0] = "Split";
+        SubRipLanguageSplitMode[SubRipLanguageSplitMode["ShowAllTogether"] = 1] = "ShowAllTogether";
+    })(SamiTS.SubRipLanguageSplitMode || (SamiTS.SubRipLanguageSplitMode = {}));
+    var SubRipLanguageSplitMode = SamiTS.SubRipLanguageSplitMode;
+
     var SubRipWriter = (function () {
         function SubRipWriter() {
         }
