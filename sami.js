@@ -212,34 +212,9 @@ var SamiTS;
 else
                 this.syncElement = syncElement;
         }
-        SamiCue.prototype.splitByLanguageCode = function () {
-            var _this = this;
-            var languages = {};
-            Array.prototype.filter.call(this.syncElement.children, function (child) {
-                if (child.nodeType == 1) {
-                    var langData = (child).dataset["language"];
-                    if (langData)
-                        languages[langData] = _this.syncElement.cloneNode();
-                }
-            });
-            Array.prototype.filter.call(this.syncElement.children, function (child) {
-                if (child.nodeType == 1) {
-                    var langData = (child).dataset["language"];
-                    if (!langData) {
-                        for (var newsync in languages)
-                            (newsync).appendChild(child.cloneNode(true));
-                    } else
-                        (languages[langData]).appendChild(child.cloneNode(true));
-                } else
-                    for (var newsync in languages)
-                        (newsync).appendChild(child.cloneNode(true));
-            });
-            return languages;
-        };
-
         SamiCue.prototype.filterByLanguageCode = function (lang) {
             var newsync = this.syncElement.cloneNode();
-            Array.prototype.filter.call(this.syncElement.children, function (child) {
+            Array.prototype.forEach.call(this.syncElement.children, function (child) {
                 if (child.nodeType == 1) {
                     var langData = (child).dataset["language"];
                     if (!langData || langData === lang)
@@ -247,7 +222,7 @@ else
                 } else
                     newsync.appendChild(child.cloneNode());
             });
-            return newsync;
+            return new SamiCue(newsync);
         };
         return SamiCue;
     })();
@@ -261,11 +236,12 @@ else
         SamiDocument.parse = function (samistr) {
             var _this = this;
             var samiDocument = new SamiDocument();
+            var domparser = new DOMParser();
 
             var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
-            var samicontainer = new DOMParser().parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
+            var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
                 return word.toLowerCase();
             }), "text/xml").firstChild;
             var samihead = samicontainer.getElementsByTagName("head")[0];
@@ -275,9 +251,9 @@ else
                 if (text.data)
                     stylestr += text.data;
             });
-            var languageDeclarations = this.extractClassSelectors(stylestr);
+            samiDocument.languages = this.extractClassSelectors(stylestr);
 
-            var samistyle = new DOMParser().parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+            var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
 
             var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
@@ -287,32 +263,39 @@ else
             if (i > 0)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
 
-            var cues = [];
             syncs.forEach(function (sync) {
-                cues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
+                samiDocument.samiCues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
             });
-            cues.forEach(function (cue) {
-                _this.giveLanguageData(cue, languageDeclarations);
-            });
-
-            var languageNames = [];
-            languageDeclarations.forEach(function (value) {
-                languageNames.push(value.languageName);
+            samiDocument.samiCues.forEach(function (cue) {
+                _this.giveLanguageData(cue, samiDocument.languages);
             });
 
-            return {
-                samiCues: cues,
-                languages: languageNames
-            };
+            return samiDocument;
+        };
+
+        SamiDocument.prototype.splitByLanguage = function () {
+            var _this = this;
+            var samiDocuments = [];
+            this.languages.forEach(function (value) {
+                var newDocument = new SamiDocument();
+                newDocument.languages.push(value);
+                _this.samiCues.forEach(function (cue) {
+                    var filtered = cue.filterByLanguageCode(value.languageCode);
+                    if (filtered.syncElement.hasChildNodes())
+                        newDocument.samiCues.push(filtered);
+                });
+                samiDocuments.push(newDocument);
+            });
+            return samiDocuments;
         };
 
         SamiDocument.giveLanguageData = function (cue, languages) {
-            Array.prototype.filter.call(cue.syncElement.children, function (child) {
+            Array.prototype.forEach.call(cue.syncElement.children, function (child) {
                 for (var i = 0; i < languages.length; i++) {
                     if (child.nodeType == 1) {
                         var classCode = (child).className;
                         if (!classCode || classCode === languages[i].className)
-                            (child).dataset['language'] = languages[i].languageName;
+                            (child).dataset['language'] = languages[i].languageCode;
                     }
                 }
             });

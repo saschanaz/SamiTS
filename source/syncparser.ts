@@ -2,7 +2,7 @@
 "use strict";
 
 module SamiTS {
-    interface SamiLanguage {
+    export interface SamiLanguage {
         className: string;
         languageName: string;
         languageCode: string;
@@ -24,35 +24,35 @@ module SamiTS {
         코드가 없으면 모든 노드에... 코드 없는 거 뒤에 코드 있는 게 나오면 안된다. 음
         먼저 스캔 싹 하고 language 목록 만듦?
         */
-        splitByLanguageCode() {
-            var languages = {};
-            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
-                if (child.nodeType == 1) {
-                    var langData = <string>(<HTMLElement>child).dataset["language"];
-                    if (langData)
-                        languages[langData] = <HTMLElement>this.syncElement.cloneNode();
-                }
-            });
-            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
-                if (child.nodeType == 1) {
-                    var langData = <string>(<HTMLElement>child).dataset["language"];
-                    if (!langData) {
-                        for (var newsync in languages)
-                            (<HTMLElement>newsync).appendChild(child.cloneNode(true));
-                    }
-                    else
-                        (<HTMLElement>languages[langData]).appendChild(child.cloneNode(true));
-                }
-                else
-                    for (var newsync in languages)
-                        (<HTMLElement>newsync).appendChild(child.cloneNode(true));
-            });
-            return languages;
-        }
+        //splitByLanguageCode() {
+        //    var languages = {};
+        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        //        if (child.nodeType == 1) {
+        //            var langData = <string>(<HTMLElement>child).dataset["language"];
+        //            if (langData)
+        //                languages[langData] = <HTMLElement>this.syncElement.cloneNode();
+        //        }
+        //    });
+        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        //        if (child.nodeType == 1) {
+        //            var langData = <string>(<HTMLElement>child).dataset["language"];
+        //            if (!langData) {
+        //                for (var newsync in languages)
+        //                    (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+        //            }
+        //            else
+        //                (<HTMLElement>languages[langData]).appendChild(child.cloneNode(true));
+        //        }
+        //        else
+        //            for (var newsync in languages)
+        //                (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+        //    });
+        //    return languages;
+        //}
 
         filterByLanguageCode(lang: string) {
             var newsync = <HTMLElement>this.syncElement.cloneNode();
-            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+            Array.prototype.forEach.call(this.syncElement.children, (child: Node) => {
                 if (child.nodeType == 1) {
                     var langData = <string>(<HTMLElement>child).dataset["language"];
                     if (!langData || langData === lang)//no language code or specific language code
@@ -61,21 +61,22 @@ module SamiTS {
                 else//text node
                     newsync.appendChild(child.cloneNode());
             });
-            return newsync;
+            return new SamiCue(newsync);
         }
     }
 
     export class SamiDocument {
         samiCues: SamiCue[] = [];
-        languages: string[] = [];
+        languages: SamiLanguage[] = [];
 
         static parse(samistr: string): SamiDocument {
             var samiDocument = new SamiDocument();
+            var domparser = new DOMParser();
 
             var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
 
-            var samicontainer = <Element>new DOMParser().parseFromString(
+            var samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() }), "text/xml").firstChild;
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
@@ -84,9 +85,9 @@ module SamiTS {
             Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
                 if (text.data) stylestr += text.data;
             });
-            var languageDeclarations = this.extractClassSelectors(stylestr);
+            samiDocument.languages = this.extractClassSelectors(stylestr);
 
-            var samistyle = <CSSStyleSheet>new DOMParser().parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+            var samistyle = <CSSStyleSheet>domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
 
             var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
@@ -96,32 +97,38 @@ module SamiTS {
             if (i > 0)
                 syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
 
-            var cues: SamiCue[] = [];
             syncs.forEach((sync) => {
-                cues.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
+                samiDocument.samiCues.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
             });
-            cues.forEach((cue: SamiCue) => {
-                this.giveLanguageData(cue, languageDeclarations);
-            });
-
-            var languageNames: string[] = [];
-            languageDeclarations.forEach((value: SamiLanguage) => {
-                languageNames.push(value.languageName);
+            samiDocument.samiCues.forEach((cue: SamiCue) => {
+                this.giveLanguageData(cue, samiDocument.languages);
             });
 
-            return {
-                samiCues: cues,
-                languages: languageNames
-            }
+            return samiDocument;
+        }
+
+        splitByLanguage() {
+            var samiDocuments: SamiDocument[] = [];
+            this.languages.forEach((value: SamiLanguage) => {
+                var newDocument = new SamiDocument();
+                newDocument.languages.push(value);
+                this.samiCues.forEach((cue: SamiCue) => {
+                    var filtered = cue.filterByLanguageCode(value.languageCode);
+                    if (filtered.syncElement.hasChildNodes())
+                        newDocument.samiCues.push(filtered);
+                });
+                samiDocuments.push(newDocument);
+            });
+            return samiDocuments;
         }
 
         private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
-            Array.prototype.filter.call(cue.syncElement.children, (child: Node) => {
+            Array.prototype.forEach.call(cue.syncElement.children, (child: Node) => {
                 for (var i = 0; i < languages.length; i++) {
                     if (child.nodeType == 1) {
                         var classCode = <string>(<HTMLElement>child).className;
                         if (!classCode || classCode === languages[i].className)
-                            (<HTMLElement>child).dataset['language'] = languages[i].languageName;
+                            (<HTMLElement>child).dataset['language'] = languages[i].languageCode;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
                     }
                 }
             });
