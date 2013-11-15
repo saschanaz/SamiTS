@@ -584,21 +584,17 @@ var SamiTS;
                                 result += _this.getRichText(node);
                             break;
                         }
-                        case "ruby": {
-                            result += "<ruby>" + _this.getRichText(node) + "</ruby>";
-                            break;
-                        }
-                        case "rt": {
-                            result += "<rt>" + _this.getRichText(node) + "</rt>";
-                            break;
-                        }
                         case "rp": {
                             break;
                         }
+                        case "ruby":
+                        case "rt":
                         case "b":
                         case "i":
                         case "u": {
-                            result += '<' + tagname + '>' + _this.getRichText(node) + '</' + tagname + '>';
+                            var innertext = _this.getRichText(node);
+                            if (innertext.length > 0)
+                                result += '<' + tagname + '>' + innertext + '</' + tagname + '>';
                             break;
                         }
                     }

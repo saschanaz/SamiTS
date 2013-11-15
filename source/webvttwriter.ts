@@ -100,21 +100,17 @@ module SamiTS {
                                 result += this.getRichText(node);
                             break;
                         }
-                        case "ruby": {
-                            result += "<ruby>" + this.getRichText(node) + "</ruby>";
-                            break;
-                        }
-                        case "rt": {
-                            result += "<rt>" + this.getRichText(node) + "</rt>";
-                            break;
-                        }
                         case "rp": {
                             break;
                         }
+                        case "ruby":
+                        case "rt":
                         case "b":
                         case "i":
                         case "u": {
-                            result += '<' + tagname + '>' + this.getRichText(node) + '</' + tagname + '>';
+                            var innertext = this.getRichText(node);
+                            if (innertext.length > 0)
+                                result += '<' + tagname + '>' + innertext + '</' + tagname + '>';
                             break;
                         }
                     }
