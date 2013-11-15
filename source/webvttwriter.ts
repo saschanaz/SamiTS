@@ -24,7 +24,7 @@ module SamiTS {
                 text = this.getRichText(xsyncs[0].syncElement);
                 if (text.length > 0) write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(xsyncs[i].syncElement));//prevents cues consists of a single &nbsp;
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -66,11 +66,9 @@ module SamiTS {
                 return minstr + ':' + secstr + '.' + msstr;
         }
 
-        private cleanVacuum(uncleaned: string) {
-            var result = uncleaned.trim();
-            while (result.lastIndexOf('\r\n\r\n') > -1)
-                result = result.replace('\r\n\r\n', '\r\n');
-            return result;
+        private absorbAir(target: string) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
         }
         
         private getRichText(syncobject: Node) {

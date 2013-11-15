@@ -15,15 +15,15 @@ module SamiTS {
     export function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options: WebVTTWriterOptions = null) {
         var reader = new FileReader();
         reader.onload = (ev: any) => {
-            onread(convertToWebVTTFromString(<string>ev.target.result, options));
+            onread(convertToWebVTTFromString(<string>reader.result, options));
         }
         reader.readAsText(samiFile);
     }
 
     export function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options: SubRipWriterOptions = null) {
         var reader = new FileReader();
-        reader.onload = (ev: any) => {
-            onread(convertToSubRipFromString(<string>ev.target.result, options));
+        reader.onload = (ev: Event) => {
+            onread(convertToSubRipFromString(<string>reader.result, options));
         }
         reader.readAsText(samiFile);
     }

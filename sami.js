@@ -506,7 +506,7 @@ var SamiTS;
                 if (text.length > 0)
                     write(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(xsyncs[i].syncElement));
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         write(i, text);
@@ -550,11 +550,9 @@ var SamiTS;
                 return minstr + ':' + secstr + '.' + msstr;
         };
 
-        WebVTTWriter.prototype.cleanVacuum = function (uncleaned) {
-            var result = uncleaned.trim();
-            while (result.lastIndexOf('\r\n\r\n') > -1)
-                result = result.replace('\r\n\r\n', '\r\n');
-            return result;
+        WebVTTWriter.prototype.absorbAir = function (target) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
         };
 
         WebVTTWriter.prototype.getRichText = function (syncobject) {
@@ -703,11 +701,11 @@ var SamiTS;
                 return _this.getSimpleText(xsync);
             };
             if (xsyncs.length > 0) {
-                text = getText(xsyncs[0].syncElement);
+                text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0)
                     write(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = getText(xsyncs[i].syncElement);
+                    text = this.absorbAir(getText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -740,6 +738,11 @@ var SamiTS;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         };
 
+        SubRipWriter.prototype.absorbAir = function (target) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
+        };
+
         SubRipWriter.prototype.getSimpleText = function (syncobject) {
             var _this = this;
             var result = '';
@@ -757,7 +760,7 @@ var SamiTS;
                         }
                     }
 else
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
         };
@@ -797,7 +800,7 @@ else
                         }
                     }
                 } else
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
         };
@@ -825,7 +828,7 @@ var SamiTS;
         if (typeof options === "undefined") { options = null; }
         var reader = new FileReader();
         reader.onload = function (ev) {
-            onread(convertToWebVTTFromString(ev.target.result, options));
+            onread(convertToWebVTTFromString(reader.result, options));
         };
         reader.readAsText(samiFile);
     }
@@ -835,7 +838,7 @@ var SamiTS;
         if (typeof options === "undefined") { options = null; }
         var reader = new FileReader();
         reader.onload = function (ev) {
-            onread(convertToSubRipFromString(ev.target.result, options));
+            onread(convertToSubRipFromString(reader.result, options));
         };
         reader.readAsText(samiFile);
     }

@@ -20,10 +20,10 @@ module SamiTS {
             var syncindex = 1;
             var getText = (options && options.useTextStyles) ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
             if (xsyncs.length > 0) {
-                text = getText(xsyncs[0].syncElement);
+                text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0) write(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = getText(xsyncs[i].syncElement);
+                    text = this.absorbAir(getText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -52,6 +52,11 @@ module SamiTS {
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         }
 
+        private absorbAir(target: string) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
+        }
+
         private getSimpleText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
@@ -68,7 +73,7 @@ module SamiTS {
                         }
                     }
                 else //text
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
         }
@@ -107,7 +112,7 @@ module SamiTS {
                     }
                 }
                 else //text
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
         }
