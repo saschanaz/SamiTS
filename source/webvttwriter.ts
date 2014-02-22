@@ -1,36 +1,38 @@
 ﻿"use strict";
 
 module SamiTS {
+    export interface WebVTTWriterOptions {
+        onstyleload?: (style: HTMLStyleElement) => void;
+    }
+
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
-        private domparser = new DOMParser();
-        write(xsyncs: HTMLElement[], styleOutput: (style: HTMLStyleElement) => void = null) {
-            this.getRichText(xsyncs[0]);
+        write(xsyncs: SamiCue[], options: WebVTTWriterOptions = null) {
             var subHeader = "WEBVTT";
             var subDocument = '';
-            var write = (i: number, text: string) => {
-                subDocument += this.getWebVTTTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].getAttribute("start")));
+            var writeText = (i: number, text: string) => {
+                subDocument += this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text: string;
-            var syncindex = 0;
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0]);
-                if (text.length > 0) write(0, text);
+                text = this.getRichText(xsyncs[0].syncElement);
+                if (text.length > 0) writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));//prevents cues consists of a single &nbsp;
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
-                        write(i, text);
+                        writeText(i, text);
                     }
                 }
             }
 
-            if (styleOutput)
-                styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
+            if (options && options.onstyleload)
+                options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
         }
@@ -59,11 +61,9 @@ module SamiTS {
                 return minstr + ':' + secstr + '.' + msstr;
         }
 
-        private cleanVacuum(uncleaned: string) {
-            var result = uncleaned.trim();
-            while (result.lastIndexOf('\r\n\r\n') > -1)
-                result = result.replace('\r\n\r\n', '\r\n');
-            return result;
+        private absorbAir(target: string) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
         }
         
         private getRichText(syncobject: Node) {
@@ -95,21 +95,17 @@ module SamiTS {
                                 result += this.getRichText(node);
                             break;
                         }
-                        case "ruby": {
-                            result += "<ruby>" + this.getRichText(node) + "</ruby>";
-                            break;
-                        }
-                        case "rt": {
-                            result += "<rt>" + this.getRichText(node) + "</rt>";
-                            break;
-                        }
                         case "rp": {
                             break;
                         }
+                        case "ruby":
+                        case "rt":
                         case "b":
                         case "i":
                         case "u": {
-                            result += '<' + tagname + '>' + this.getRichText(node) + '</' + tagname + '>';
+                            var innertext = this.getRichText(node);
+                            if (innertext.length > 0)
+                                result += '<' + tagname + '>' + innertext + '</' + tagname + '>';
                             break;
                         }
                     }
@@ -172,11 +168,11 @@ module SamiTS {
             });
             for (var rule in this.ruledictionary)
                 result += "video" + <string>this.ruledictionary[rule];
-            if (styleSheet.sheet)
-                (<any>styleSheet.sheet).cssText = result;
-            else
-                styleSheet.appendChild(document.createTextNode(result));
+            styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
+        }
+        clear() {
+            this.ruledictionary = {};
         }
     }
 }

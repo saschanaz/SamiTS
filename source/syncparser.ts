@@ -2,6 +2,12 @@
 "use strict";
 
 module SamiTS {
+    export interface SamiLanguage {
+        className: string;
+        languageName: string;
+        languageCode: string;
+    }
+
     export class SamiCue {
         syncElement: HTMLElement;
         constructor(syncElement: HTMLElement) {
@@ -12,43 +18,162 @@ module SamiTS {
 
         }
 
-        filterByLanguageClass(lang: string) {
-            var newsync = <HTMLElement>this.syncElement.cloneNode(true);
-            Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        /*
+        TODO: filter 말고 split으로 교체
+        language 코드가 발견되면 그 노드의 language에 대응하는 syncElement를 만들어 {}에 추가하고, 그 syncElement에 노드를 넣음
+        코드가 없으면 모든 노드에... 코드 없는 거 뒤에 코드 있는 게 나오면 안된다. 음
+        먼저 스캔 싹 하고 language 목록 만듦?
+        */
+        //splitByLanguageCode() {
+        //    var languages = {};
+        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        //        if (child.nodeType == 1) {
+        //            var langData = <string>(<HTMLElement>child).dataset["language"];
+        //            if (langData)
+        //                languages[langData] = <HTMLElement>this.syncElement.cloneNode();
+        //        }
+        //    });
+        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        //        if (child.nodeType == 1) {
+        //            var langData = <string>(<HTMLElement>child).dataset["language"];
+        //            if (!langData) {
+        //                for (var newsync in languages)
+        //                    (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+        //            }
+        //            else
+        //                (<HTMLElement>languages[langData]).appendChild(child.cloneNode(true));
+        //        }
+        //        else
+        //            for (var newsync in languages)
+        //                (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+        //    });
+        //    return languages;
+        //}
+
+        filterByLanguageCode(lang: string) {
+            var newsync = <HTMLElement>this.syncElement.cloneNode();
+            Array.prototype.forEach.call(this.syncElement.children, (child: Node) => {
                 if (child.nodeType == 1) {
-                    var className = (<HTMLElement>child).getAttribute("class");
-                    if (!className || className === lang)
+                    var langData = <string>(<HTMLElement>child).dataset["language"];
+                    if (!langData || langData === lang)//no language code or specific language code
                         newsync.appendChild(child.cloneNode(true));
                 }
-                else
+                else//text node
                     newsync.appendChild(child.cloneNode());
             });
+            return new SamiCue(newsync);
         }
     }
 
-    export class SamiParser {
-        static Parse(samiDocument: string) {
-            var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
-            var syncs = HTMLTagFinder.FindStartTags('sync', samiDocument);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, bodyendindex);
-            var syncElements: HTMLElement[] = [];
-            syncs.forEach((sync) => {
-                syncElements.push(this.fixIncorrectRubyNodes(sync.element));
+    export class SamiDocument {
+        samiCues: SamiCue[] = [];
+        languages: SamiLanguage[] = [];
+
+        static parse(samistr: string): SamiDocument {
+            var samiDocument = new SamiDocument();
+            var domparser = new DOMParser();
+
+            var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
+            var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
+
+            var samicontainer = <Element>domparser.parseFromString(
+                (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
+                    .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() }), "text/xml").firstChild;
+            var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
+
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
+                if (text.data) stylestr += text.data;
             });
-            return syncElements;
+            samiDocument.languages = this.extractClassSelectors(stylestr);
+
+            var samistyle = <CSSStyleSheet>domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+
+            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
+            for (var i = 0; i < syncs.length - 1; i++)
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            if (i > 0)
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+
+            syncs.forEach((sync) => {
+                samiDocument.samiCues.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
+            });
+            samiDocument.samiCues.forEach((cue: SamiCue) => {
+                this.giveLanguageData(cue, samiDocument.languages);
+            });
+
+            return samiDocument;
+        }
+
+        splitByLanguage() {
+            var samiDocuments: SamiDocument[] = [];
+            this.languages.forEach((value: SamiLanguage) => {
+                var newDocument = new SamiDocument();
+                newDocument.languages.push(value);
+                this.samiCues.forEach((cue: SamiCue) => {
+                    var filtered = cue.filterByLanguageCode(value.languageCode);
+                    if (filtered.syncElement.hasChildNodes())
+                        newDocument.samiCues.push(filtered);
+                });
+                samiDocuments.push(newDocument);
+            });
+            return samiDocuments;
+        }
+
+        private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
+            Array.prototype.forEach.call(cue.syncElement.children, (child: Node) => {
+                for (var i = 0; i < languages.length; i++) {
+                    if (child.nodeType == 1) {
+                        var classCode = <string>(<HTMLElement>child).className;
+                        if (!classCode || classCode === languages[i].className)
+                            (<HTMLElement>child).dataset['language'] = languages[i].languageCode;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
+                    }
+                }
+            });
+        }
+
+        private static extractClassSelectors(stylestr: string) {
+            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
+            var languages: SamiLanguage[] = [];
+            classes.forEach((classstr) => {
+                var classselector = classstr.match(/\.\w+{/);
+                if (classselector.length != 1)
+                    return;
+                var stylebody = classstr.slice(classselector[0].length).split(';');
+                var name: string;
+                var lang: string;
+                for (var i = 0; i < stylebody.length; i++) {
+                    var stylename = stylebody[i].match(/\w+:/);
+                    if (stylename.length == 1) {
+                        var stylevalue = stylebody[i].slice(stylename[0].length);
+                        if (!name && stylename[0].toLowerCase() === "name:")
+                            name = stylevalue;
+                        else if (!lang && stylename[0].toLowerCase() === "lang:")
+                            lang = stylevalue;
+                        if (name && lang)
+                            break;
+                    }
+                }
+
+                if (name && lang)
+                    languages.push({
+                        className: classselector[0].slice(1, classselector[0].length - 1),
+                        languageName: name,
+                        languageCode: lang
+                    });
+            });
+            return languages;
         }
 
         private static fixIncorrectRubyNodes(syncobject: HTMLElement) {
-            //수정하기: rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱하고, 그 뒤에 font를 다시 적용한다
-            //WebVTTWriter에서 빼서 SamiParser로 옮기기
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
+            //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
                 var fontdeleted = this.exchangeFontWithTemp(syncobject);
                 var fontextracted = this.extractFontAndText(syncobject);
@@ -94,11 +219,11 @@ module SamiTS {
         }
         //private static deleteRPs(syncobject: HTMLElement) {
         //    var newsync = <HTMLElement>syncobject.cloneNode(false);
-        //    var newsyncstr = <string>newsync.dataset['originalstring'];
+        //    var newsyncstr = <string>newsync.dataset['originalString'];
         //    HTMLTagFinder.FindStartTags('rp', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
         //        newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
         //    });
-        //    newsync.dataset['originalstring'] = newsyncstr.replace(/<\/rp>/g, '');
+        //    newsync.dataset['originalString'] = newsyncstr.replace(/<\/rp>/g, '');
         //    return newsync;
         //}
 
@@ -136,7 +261,7 @@ module SamiTS {
 
         private static exchangeFontWithTemp(syncobject: HTMLElement) {//<temp /> will be ignored by parsers
             var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['originalstring'];
+            var newsyncstr = <string>newsync.dataset['originalString'];
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -146,8 +271,8 @@ module SamiTS {
 
         private static extractFontAndText(syncobject: HTMLElement) {
             var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['originalstring'];
-            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            var newsyncstr = <string>newsync.dataset['originalString'];
+            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalString']);
             tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":

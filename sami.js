@@ -4,6 +4,34 @@ var SamiTS;
     var HTMLTagFinder = (function () {
         function HTMLTagFinder() {
         }
+        HTMLTagFinder.FindStartTag = function (tagname, entirestr) {
+            var tag;
+            var position = 0;
+            var startPosition = 0;
+            while (!tag) {
+                position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
+                if (position != -1) {
+                    startPosition = position;
+                    position += tagname.length + 1;
+                    var xe = document.createElement(tagname);
+                    while (true) {
+                        var attrAndPos = this.getAttribute(entirestr, position);
+                        position = attrAndPos.nextPosition;
+                        if (attrAndPos.attributeName === null) {
+                            position++;
+                            tag = { element: xe, startPosition: startPosition, endPosition: position };
+                            break;
+                        } else if (xe.getAttribute(attrAndPos.attributeName) !== null)
+                            continue;
+                        xe.setAttribute(attrAndPos.attributeName, attrAndPos.attributeValue);
+                    }
+                } else
+                    break;
+            }
+
+            return tag;
+        };
+
         HTMLTagFinder.FindStartTags = function (tagname, entirestr) {
             var list = [];
             var position = 0;
@@ -42,7 +70,7 @@ var SamiTS;
                     startPosition = position;
                     position++;
                     var tagname = '';
-                    while ((entirestr[position]).search(/[A-z]/) === 0) {
+                    while (entirestr[position].search(/[A-z]/) === 0) {
                         tagname += entirestr[position];
                         position++;
                     }
@@ -70,12 +98,12 @@ var SamiTS;
             while (true) {
                 if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F'))
                     position++;
-else
+                else
                     break;
             }
             if (entirestr[position] == '>')
                 return { attributeName: null, attributeValue: null, nextPosition: position };
-else {
+            else {
                 var namestr = '';
                 var valuestr = '';
 
@@ -83,12 +111,12 @@ else {
                     while (true) {
                         if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
-else
+                        else
                             break;
                     }
                     if (entirestr[position] != '=')
                         return parsefinish();
-else
+                    else
                         while (entirestr[position] != '=')
                             position++;
                     return valueparse();
@@ -97,7 +125,7 @@ else
                     while (true) {
                         if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
-else
+                        else
                             break;
                     }
                     if (_this.charCompare(entirestr[position], '\'', '\"')) {
@@ -112,7 +140,7 @@ else
                         }
                     } else if (entirestr[position] == '>')
                         return parsefinish();
-else {
+                    else {
                         valuestr += entirestr[position];
                         position++;
                     }
@@ -120,7 +148,7 @@ else {
                     while (true) {
                         if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u003E'))
                             return parsefinish();
-else
+                        else
                             valuestr += entirestr[position];
                         position++;
                     }
@@ -129,7 +157,7 @@ else
                 var parsefinish = function () {
                     if (namestr.length === 0)
                         return { attributeName: null, attributeValue: null, nextPosition: position };
-else
+                    else
                         return { attributeName: namestr, attributeValue: valuestr, nextPosition: position };
                 };
 
@@ -139,11 +167,11 @@ else
                         return valueparse();
                     } else if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                         return spaceparse();
-else if (this.charCompare(entirestr[position], '/', '>'))
+                    else if (this.charCompare(entirestr[position], '/', '>'))
                         return parsefinish();
-else if (entirestr[position] >= 'A' && entirestr[position] <= 'Z')
-                        namestr += (entirestr[position]).toLowerCase();
-else
+                    else if (entirestr[position] >= 'A' && entirestr[position] <= 'Z')
+                        namestr += entirestr[position].toLowerCase();
+                    else
                         namestr += entirestr[position];
                     position++;
                 }
@@ -181,34 +209,132 @@ var SamiTS;
         function SamiCue(syncElement) {
             if (syncElement.tagName.toLowerCase() !== "sync")
                 throw new Error("SamiCue can only accept sync element");
-else
+            else
                 this.syncElement = syncElement;
         }
-        SamiCue.prototype.filterByLanguageClass = function (lang) {
+        SamiCue.prototype.filterByLanguageCode = function (lang) {
+            var newsync = this.syncElement.cloneNode();
+            Array.prototype.forEach.call(this.syncElement.children, function (child) {
+                if (child.nodeType == 1) {
+                    var langData = child.dataset["language"];
+                    if (!langData || langData === lang)
+                        newsync.appendChild(child.cloneNode(true));
+                } else
+                    newsync.appendChild(child.cloneNode());
+            });
+            return new SamiCue(newsync);
         };
         return SamiCue;
     })();
     SamiTS.SamiCue = SamiCue;
 
-    var SamiParser = (function () {
-        function SamiParser() {
+    var SamiDocument = (function () {
+        function SamiDocument() {
+            this.samiCues = [];
+            this.languages = [];
         }
-        SamiParser.Parse = function (samiDocument) {
+        SamiDocument.parse = function (samistr) {
             var _this = this;
-            var bodyendindex = this.lastIndexOfInsensitive(samiDocument, "</body>");
-            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samiDocument);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalstring'] = samiDocument.slice(syncs[i].endPosition, bodyendindex);
-            var syncElements = [];
-            syncs.forEach(function (sync) {
-                syncElements.push(_this.fixIncorrectRubyNodes(sync.element));
+            var samiDocument = new SamiDocument();
+            var domparser = new DOMParser();
+
+            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
+            var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
+
+            var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
+                return word.toLowerCase();
+            }), "text/xml").firstChild;
+            var samihead = samicontainer.getElementsByTagName("head")[0];
+
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
+                if (text.data)
+                    stylestr += text.data;
             });
-            return syncElements;
+            samiDocument.languages = this.extractClassSelectors(stylestr);
+
+            var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+
+            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
+            for (var i = 0; i < syncs.length - 1; i++)
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            if (i > 0)
+                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+
+            syncs.forEach(function (sync) {
+                samiDocument.samiCues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
+            });
+            samiDocument.samiCues.forEach(function (cue) {
+                _this.giveLanguageData(cue, samiDocument.languages);
+            });
+
+            return samiDocument;
         };
 
-        SamiParser.fixIncorrectRubyNodes = function (syncobject) {
+        SamiDocument.prototype.splitByLanguage = function () {
+            var _this = this;
+            var samiDocuments = [];
+            this.languages.forEach(function (value) {
+                var newDocument = new SamiDocument();
+                newDocument.languages.push(value);
+                _this.samiCues.forEach(function (cue) {
+                    var filtered = cue.filterByLanguageCode(value.languageCode);
+                    if (filtered.syncElement.hasChildNodes())
+                        newDocument.samiCues.push(filtered);
+                });
+                samiDocuments.push(newDocument);
+            });
+            return samiDocuments;
+        };
+
+        SamiDocument.giveLanguageData = function (cue, languages) {
+            Array.prototype.forEach.call(cue.syncElement.children, function (child) {
+                for (var i = 0; i < languages.length; i++) {
+                    if (child.nodeType == 1) {
+                        var classCode = child.className;
+                        if (!classCode || classCode === languages[i].className)
+                            child.dataset['language'] = languages[i].languageCode;
+                    }
+                }
+            });
+        };
+
+        SamiDocument.extractClassSelectors = function (stylestr) {
+            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
+            var languages = [];
+            classes.forEach(function (classstr) {
+                var classselector = classstr.match(/\.\w+{/);
+                if (classselector.length != 1)
+                    return;
+                var stylebody = classstr.slice(classselector[0].length).split(';');
+                var name;
+                var lang;
+                for (var i = 0; i < stylebody.length; i++) {
+                    var stylename = stylebody[i].match(/\w+:/);
+                    if (stylename.length == 1) {
+                        var stylevalue = stylebody[i].slice(stylename[0].length);
+                        if (!name && stylename[0].toLowerCase() === "name:")
+                            name = stylevalue;
+                        else if (!lang && stylename[0].toLowerCase() === "lang:")
+                            lang = stylevalue;
+                        if (name && lang)
+                            break;
+                    }
+                }
+
+                if (name && lang)
+                    languages.push({
+                        className: classselector[0].slice(1, classselector[0].length - 1),
+                        languageName: name,
+                        languageCode: lang
+                    });
+            });
+            return languages;
+        };
+
+        SamiDocument.fixIncorrectRubyNodes = function (syncobject) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
@@ -230,7 +356,7 @@ else
                 return syncobject;
         };
 
-        SamiParser.fixIncorrectRPs = function (syncobject) {
+        SamiDocument.fixIncorrectRPs = function (syncobject) {
             var newsync = syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), function (ruby) {
                 var rt = ruby.getElementsByTagName("rt")[0];
@@ -240,7 +366,7 @@ else
                     while (i < ruby.childNodes.length) {
                         var innernode = ruby.childNodes[i];
                         if (rtdetected === false) {
-                            if (innernode.nodeType == 1 && (innernode).tagName.toLowerCase() === "rt") {
+                            if (innernode.nodeType == 1 && innernode.tagName.toLowerCase() === "rt") {
                                 rtdetected = true;
                                 i++;
                                 continue;
@@ -256,7 +382,7 @@ else
             return newsync;
         };
 
-        SamiParser.wrapWith = function (targetNode, newParentNode) {
+        SamiDocument.wrapWith = function (targetNode, newParentNode) {
             var currentParentNode = targetNode.parentNode;
             var currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
@@ -264,21 +390,21 @@ else
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
         };
 
-        SamiParser.isRubyParentExist = function (rtelement) {
+        SamiDocument.isRubyParentExist = function (rtelement) {
             if (rtelement.parentElement) {
                 if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
                     return true;
-else
+                else
                     return this.isRubyParentExist(rtelement.parentElement);
             } else
                 return false;
         };
 
-        SamiParser.getFontFromNode = function (text) {
+        SamiDocument.getFontFromNode = function (text) {
             if (text.parentNode) {
                 var parent = text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
-                    if ((parent).getAttribute("color"))
+                    if (parent.getAttribute("color"))
                         return parent.cloneNode(false);
                 }
                 return this.getFontFromNode(parent);
@@ -286,9 +412,9 @@ else
                 return null;
         };
 
-        SamiParser.exchangeFontWithTemp = function (syncobject) {
+        SamiDocument.exchangeFontWithTemp = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['originalstring'];
+            var newsyncstr = newsync.dataset['originalString'];
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -296,10 +422,10 @@ else
             return newsync;
         };
 
-        SamiParser.extractFontAndText = function (syncobject) {
+        SamiDocument.extractFontAndText = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['originalstring'];
-            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalstring']);
+            var newsyncstr = newsync.dataset['originalString'];
+            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalString']);
             tags.filter(function (foundtag) {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
@@ -320,7 +446,7 @@ else
             return newsync;
         };
 
-        SamiParser.extractReadableTextNodes = function (syncobject) {
+        SamiDocument.extractReadableTextNodes = function (syncobject) {
             var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
             var node;
             var textNodes = [];
@@ -333,22 +459,22 @@ else
             return textNodes;
         };
 
-        SamiParser.lastIndexOfInsensitive = function (target, searchString, position) {
+        SamiDocument.lastIndexOfInsensitive = function (target, searchString, position) {
             if (typeof position === "undefined") { position = target.length - searchString.length; }
             if (!searchString)
                 return -1;
-else if (searchString.length == 0)
+            else if (searchString.length == 0)
                 return 0;
             var lowersearch = searchString.toLowerCase();
             for (var i = Math.min(target.length - searchString.length, position); i >= 0; i--) {
-                if ((target[i]).toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
+                if (target[i].toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
                     return i;
             }
             return -1;
         };
-        return SamiParser;
+        return SamiDocument;
     })();
-    SamiTS.SamiParser = SamiParser;
+    SamiTS.SamiDocument = SamiDocument;
 })(SamiTS || (SamiTS = {}));
 "use strict";
 var SamiTS;
@@ -356,37 +482,35 @@ var SamiTS;
     var WebVTTWriter = (function () {
         function WebVTTWriter() {
             this.webvttStyleSheet = new WebVTTStyleSheet();
-            this.domparser = new DOMParser();
         }
-        WebVTTWriter.prototype.write = function (xsyncs, styleOutput) {
-            if (typeof styleOutput === "undefined") { styleOutput = null; }
+        WebVTTWriter.prototype.write = function (xsyncs, options) {
+            if (typeof options === "undefined") { options = null; }
             var _this = this;
-            this.getRichText(xsyncs[0]);
             var subHeader = "WEBVTT";
             var subDocument = '';
-            var write = function (i, text) {
-                subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].getAttribute("start")));
+            var writeText = function (i, text) {
+                subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
-            var syncindex = 0;
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0]);
+                text = this.getRichText(xsyncs[0].syncElement);
                 if (text.length > 0)
-                    write(0, text);
+                    writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.cleanVacuum(this.getRichText(xsyncs[i]));
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
-                        write(i, text);
+                        writeText(i, text);
                     }
                 }
             }
 
-            if (styleOutput)
-                styleOutput(this.webvttStyleSheet.getCSSStyleSheetNode());
+            if (options && options.onstyleload)
+                options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
 
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
             return subDocument;
         };
@@ -418,11 +542,9 @@ var SamiTS;
                 return minstr + ':' + secstr + '.' + msstr;
         };
 
-        WebVTTWriter.prototype.cleanVacuum = function (uncleaned) {
-            var result = uncleaned.trim();
-            while (result.lastIndexOf('\r\n\r\n') > -1)
-                result = result.replace('\r\n\r\n', '\r\n');
-            return result;
+        WebVTTWriter.prototype.absorbAir = function (target) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
         };
 
         WebVTTWriter.prototype.getRichText = function (syncobject) {
@@ -430,7 +552,7 @@ var SamiTS;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
-                    var tagname = (node).tagName.toLowerCase();
+                    var tagname = node.tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
                         default: {
@@ -454,21 +576,17 @@ var SamiTS;
                                 result += _this.getRichText(node);
                             break;
                         }
-                        case "ruby": {
-                            result += "<ruby>" + _this.getRichText(node) + "</ruby>";
-                            break;
-                        }
-                        case "rt": {
-                            result += "<rt>" + _this.getRichText(node) + "</rt>";
-                            break;
-                        }
                         case "rp": {
                             break;
                         }
+                        case "ruby":
+                        case "rt":
                         case "b":
                         case "i":
                         case "u": {
-                            result += '<' + tagname + '>' + _this.getRichText(node) + '</' + tagname + '>';
+                            var innertext = _this.getRichText(node);
+                            if (innertext.length > 0)
+                                result += '<' + tagname + '>' + innertext + '</' + tagname + '>';
                             break;
                         }
                     }
@@ -533,11 +651,11 @@ var SamiTS;
             });
             for (var rule in this.ruledictionary)
                 result += "video" + this.ruledictionary[rule];
-            if (styleSheet.sheet)
-                (styleSheet.sheet).cssText = result;
-else
-                styleSheet.appendChild(document.createTextNode(result));
+            styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
+        };
+        WebVTTStyleSheet.prototype.clear = function () {
+            this.ruledictionary = {};
         };
         return WebVTTStyleSheet;
     })();
@@ -548,31 +666,32 @@ var SamiTS;
     var SubRipWriter = (function () {
         function SubRipWriter() {
         }
-        SubRipWriter.prototype.write = function (xsyncs, useTags) {
+        SubRipWriter.prototype.write = function (xsyncs, options) {
+            if (typeof options === "undefined") { options = null; }
             var _this = this;
             var subDocument = "";
-            var write = function (i, syncindex, text) {
+            var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
-                subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].getAttribute("start")));
+                subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
             var syncindex = 1;
-            var getText = useTags ? function (xsync) {
+            var getText = (options && options.useTextStyles) ? function (xsync) {
                 return _this.getRichText(xsync);
             } : function (xsync) {
                 return _this.getSimpleText(xsync);
             };
             if (xsyncs.length > 0) {
-                text = getText(xsyncs[0]);
+                text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0)
-                    write(0, syncindex, text);
+                    writeText(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = getText(xsyncs[i]);
+                    text = this.absorbAir(getText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
-                        write(i, syncindex, text);
+                        writeText(i, syncindex, text);
                     }
                 }
             }
@@ -601,12 +720,17 @@ var SamiTS;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         };
 
+        SubRipWriter.prototype.absorbAir = function (target) {
+            var trimmed = target.trim();
+            return trimmed.length != 0 ? target : trimmed;
+        };
+
         SubRipWriter.prototype.getSimpleText = function (syncobject) {
             var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1)
-                    switch ((node).tagName.toLowerCase()) {
+                    switch (node.tagName.toLowerCase()) {
                         case "p":
                         default: {
                             result += _this.getSimpleText(node);
@@ -617,8 +741,8 @@ var SamiTS;
                             break;
                         }
                     }
-else
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                else
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
         };
@@ -628,7 +752,7 @@ else
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
-                    var tagname = (node).tagName.toLowerCase();
+                    var tagname = node.tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
                         default: {
@@ -641,12 +765,12 @@ else
                         }
                         case "font": {
                             var fontelement = document.createElement("font");
-                            var color = (node).getAttribute("color");
+                            var color = node.getAttribute("color");
                             if (color)
                                 fontelement.setAttribute("color", color);
                             if (fontelement.attributes.length > 0)
                                 result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
-else
+                            else
                                 result += _this.getRichText(node);
                             break;
                         }
@@ -658,7 +782,7 @@ else
                         }
                     }
                 } else
-                    result += node.nodeValue.replace(/[\r\n]/g, '').trim();
+                    result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
         };
@@ -668,33 +792,35 @@ else
 })(SamiTS || (SamiTS = {}));
 var SamiTS;
 (function (SamiTS) {
-    function convertToWebVTTFromString(samiString, styleOutput) {
-        if (typeof styleOutput === "undefined") { styleOutput = null; }
-        var xsyncs = SamiTS.SamiParser.Parse(samiString);
-        return (new SamiTS.WebVTTWriter()).write(xsyncs, styleOutput);
+    function convertToWebVTTFromString(samiString, options) {
+        if (typeof options === "undefined") { options = null; }
+        var samiDocument = SamiTS.SamiDocument.parse(samiString);
+        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
     }
     SamiTS.convertToWebVTTFromString = convertToWebVTTFromString;
 
-    function convertToSubRipFromString(samiString, useTextStyles) {
-        var xsyncs = SamiTS.SamiParser.Parse(samiString);
-        return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
+    function convertToSubRipFromString(samiString, options) {
+        if (typeof options === "undefined") { options = null; }
+        var samiDocument = SamiTS.SamiDocument.parse(samiString);
+        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
     }
     SamiTS.convertToSubRipFromString = convertToSubRipFromString;
 
-    function convertToWebVTTFromFile(samiFile, read, styleOutput) {
-        if (typeof styleOutput === "undefined") { styleOutput = null; }
+    function convertToWebVTTFromFile(samiFile, onread, options) {
+        if (typeof options === "undefined") { options = null; }
         var reader = new FileReader();
         reader.onload = function (ev) {
-            read(convertToWebVTTFromString(ev.target.result, styleOutput));
+            onread(convertToWebVTTFromString(reader.result, options));
         };
         reader.readAsText(samiFile);
     }
     SamiTS.convertToWebVTTFromFile = convertToWebVTTFromFile;
 
-    function convertToSubRipFromFile(samiFile, read, useTextStyles) {
+    function convertToSubRipFromFile(samiFile, onread, options) {
+        if (typeof options === "undefined") { options = null; }
         var reader = new FileReader();
         reader.onload = function (ev) {
-            read(convertToSubRipFromString(ev.target.result, useTextStyles));
+            onread(convertToSubRipFromString(reader.result, options));
         };
         reader.readAsText(samiFile);
     }
@@ -713,16 +839,35 @@ var SamiTS;
             this.sdpusNamespaceURI = "http://www.w3.org/ns/ttml/profile/sdp-us";
         }
         SDPUSWriter.prototype.write = function (xsyncs) {
-            var sdpusdoc = document.implementation.createDocument(this.ttmlNamespaceURI, "tt", null);
-            sdpusdoc.documentElement.setAttributeNS(this.xmlNamespaceURI, "xml:lang", "en-us");
-            sdpusdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:s", this.ttmlStyleNamespaceURI);
-            sdpusdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:p", this.ttmlParameterNamespaceURI);
-            var body = sdpusdoc.createElementNS(this.ttmlNamespaceURI, "head");
-            var profile = sdpusdoc.createElementNS(this.ttmlParameterNamespaceURI, "profile");
-            profile.setAttributeNS(this.ttmlParameterNamespaceURI, "use", this.sdpusNamespaceURI);
-            this.stylingElement = sdpusdoc.createElementNS(this.ttmlNamespaceURI, "styling");
+            var ttdoc = document.implementation.createDocument(this.ttmlNamespaceURI, "tt", null);
+            ttdoc.documentElement.setAttributeNS(this.xmlNamespaceURI, "xml:lang", "en-us");
+            ttdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:s", this.ttmlStyleNamespaceURI);
+            ttdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:p", this.ttmlParameterNamespaceURI);
 
-            return (new XMLSerializer()).serializeToString(sdpusdoc);
+            var head = ttdoc.createElementNS(this.ttmlNamespaceURI, "head");
+            ttdoc.appendChild(head);
+
+            var profile = ttdoc.createElementNS(this.ttmlParameterNamespaceURI, "profile");
+            profile.setAttributeNS(this.ttmlParameterNamespaceURI, "use", this.sdpusNamespaceURI);
+            head.appendChild(profile);
+
+            this.stylingElement = ttdoc.createElementNS(this.ttmlNamespaceURI, "styling");
+            head.appendChild(this.stylingElement);
+
+            var regionStyle = ttdoc.createElementNS(this.ttmlNamespaceURI, "style");
+            regionStyle.setAttributeNS(this.xmlNamespaceURI, "xml:id", "bottomMidStyle");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:textAlign", "center");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:textOutline", "#000000ff");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:color", "#ffffffff");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:origin", "20% 58%");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:extent", "60% 18%");
+            this.stylingElement.appendChild(regionStyle);
+
+            var layout = ttdoc.createElementNS(this.ttmlNamespaceURI, "layout");
+            head.appendChild(layout);
+            var region = ttdoc.createElementNS(this.ttmlNamespaceURI, "region");
+
+            return '<?xml version="1.0" encoding="utf-8"?>' + (new XMLSerializer()).serializeToString(ttdoc);
         };
         return SDPUSWriter;
     })();

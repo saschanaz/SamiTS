@@ -2,31 +2,33 @@
 ///<reference path='webvttwriter.ts' />
 ///<reference path='subripwriter.ts' />
 module SamiTS {
-    export function convertToWebVTTFromString(samiString: string, styleOutput: (style: HTMLStyleElement) => void = null) {
-        var xsyncs = SamiParser.Parse(samiString);
-        return (new SamiTS.WebVTTWriter()).write(xsyncs, styleOutput);
+    export function convertToWebVTTFromString(samiString: string, options: WebVTTWriterOptions = null) {
+        var samiDocument = SamiDocument.parse(samiString);
+        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
     }
 
-    export function convertToSubRipFromString(samiString: string, useTextStyles: boolean) {
-        var xsyncs = SamiParser.Parse(samiString);
-        return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
+    export function convertToSubRipFromString(samiString: string, options: SubRipWriterOptions = null) {
+        var samiDocument = SamiDocument.parse(samiString);
+        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
     }
 
-    export function convertToWebVTTFromFile(samiFile: File, read: (convertedString: string) => any, styleOutput: (style: HTMLStyleElement) => void = null) {
+    export function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options: WebVTTWriterOptions = null) {
         var reader = new FileReader();
         reader.onload = (ev: any) => {
-            read(convertToWebVTTFromString(<string>ev.target.result, styleOutput));
+            onread(convertToWebVTTFromString(<string>reader.result, options));
         }
         reader.readAsText(samiFile);
     }
 
-    export function convertToSubRipFromFile(samiFile: File, read: (convertedString: string) => any, useTextStyles: boolean) {
+    export function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options: SubRipWriterOptions = null) {
         var reader = new FileReader();
-        reader.onload = (ev: any) => {
-            read(convertToSubRipFromString(<string>ev.target.result, useTextStyles));
+        reader.onload = (ev: Event) => {
+            onread(convertToSubRipFromString(<string>reader.result, options));
         }
         reader.readAsText(samiFile);
     }
+
+    //export function convertToSubRip
 
     //export function convertFromString(samiString: string, targetSubType: SubType, useTextStyles: boolean) {
     //    var xsyncs = SamiParser.Parse(samiString);
