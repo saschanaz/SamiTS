@@ -14,15 +14,21 @@
     }
 }
 declare module SamiTS {
+    interface SamiLanguage {
+        className: string;
+        languageName: string;
+        languageCode: string;
+    }
     class SamiCue {
         public syncElement: HTMLElement;
         constructor(syncElement: HTMLElement);
-        public filterByLanguageCode(lang: string): HTMLElement;
+        public filterByLanguageCode(lang: string): SamiCue;
     }
     class SamiDocument {
         public samiCues: SamiCue[];
-        public languages: string[];
+        public languages: SamiLanguage[];
         static parse(samistr: string): SamiDocument;
+        public splitByLanguage(): SamiDocument[];
         private static giveLanguageData(cue, languages);
         private static extractClassSelectors(stylestr);
         private static fixIncorrectRubyNodes(syncobject);
@@ -37,40 +43,46 @@ declare module SamiTS {
     }
 }
 declare module SamiTS {
+    interface WebVTTWriterOptions {
+        onstyleload?: (style: HTMLStyleElement) => void;
+    }
     class WebVTTWriter {
         private webvttStyleSheet;
-        private domparser;
-        public write(xsyncs: SamiTS.SamiCue[], options?: {
-            onstyleload: (style: HTMLStyleElement) => void;
-        }): string;
+        public write(xsyncs: SamiTS.SamiCue[], options?: WebVTTWriterOptions): string;
         private getWebVTTTime(ms);
-        private cleanVacuum(uncleaned);
+        private absorbAir(target);
         private getRichText(syncobject);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);
     }
 }
 declare module SamiTS {
+    interface SubRipWriterOptions {
+        useTextStyles?: boolean;
+    }
     class SubRipWriter {
-        public write(xsyncs: SamiTS.SamiCue[], options?: {
-            useTextStyles: boolean;
-        }): string;
+        public write(xsyncs: SamiTS.SamiCue[], options?: SubRipWriterOptions): string;
         private getSubRipTime(ms);
+        private absorbAir(target);
         private getSimpleText(syncobject);
         private getRichText(syncobject);
     }
 }
 declare module SamiTS {
-    function convertToWebVTTFromString(samiString: string, options?: {
-        onstyleload: (style: HTMLStyleElement) => void;
-    }): string;
-    function convertToSubRipFromString(samiString: string, options?: {
-        useTextStyles: boolean;
-    }): string;
-    function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options?: {
-        onstyleload: (style: HTMLStyleElement) => void;
-    }): void;
-    function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options?: {
-        useTextStyles: boolean;
-    }): void;
+    function convertToWebVTTFromString(samiString: string, options?: WebVTTWriterOptions): string;
+    function convertToSubRipFromString(samiString: string, options?: SubRipWriterOptions): string;
+    function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options?: WebVTTWriterOptions): void;
+    function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options?: SubRipWriterOptions): void;
+}
+declare module SamiTS {
+    class SDPUSWriter {
+        private xmlNamespaceURI;
+        private xmlnsNamespaceURI;
+        private ttmlNamespaceURI;
+        private ttmlStyleNamespaceURI;
+        private ttmlParameterNamespaceURI;
+        private sdpusNamespaceURI;
+        private stylingElement;
+        public write(xsyncs: HTMLElement[]): string;
+    }
 }

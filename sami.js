@@ -70,7 +70,7 @@ var SamiTS;
                     startPosition = position;
                     position++;
                     var tagname = '';
-                    while ((entirestr[position]).search(/[A-z]/) === 0) {
+                    while (entirestr[position].search(/[A-z]/) === 0) {
                         tagname += entirestr[position];
                         position++;
                     }
@@ -98,12 +98,12 @@ var SamiTS;
             while (true) {
                 if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F'))
                     position++;
-else
+                else
                     break;
             }
             if (entirestr[position] == '>')
                 return { attributeName: null, attributeValue: null, nextPosition: position };
-else {
+            else {
                 var namestr = '';
                 var valuestr = '';
 
@@ -111,12 +111,12 @@ else {
                     while (true) {
                         if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
-else
+                        else
                             break;
                     }
                     if (entirestr[position] != '=')
                         return parsefinish();
-else
+                    else
                         while (entirestr[position] != '=')
                             position++;
                     return valueparse();
@@ -125,7 +125,7 @@ else
                     while (true) {
                         if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
-else
+                        else
                             break;
                     }
                     if (_this.charCompare(entirestr[position], '\'', '\"')) {
@@ -140,7 +140,7 @@ else
                         }
                     } else if (entirestr[position] == '>')
                         return parsefinish();
-else {
+                    else {
                         valuestr += entirestr[position];
                         position++;
                     }
@@ -148,7 +148,7 @@ else {
                     while (true) {
                         if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u003E'))
                             return parsefinish();
-else
+                        else
                             valuestr += entirestr[position];
                         position++;
                     }
@@ -157,7 +157,7 @@ else
                 var parsefinish = function () {
                     if (namestr.length === 0)
                         return { attributeName: null, attributeValue: null, nextPosition: position };
-else
+                    else
                         return { attributeName: namestr, attributeValue: valuestr, nextPosition: position };
                 };
 
@@ -167,11 +167,11 @@ else
                         return valueparse();
                     } else if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                         return spaceparse();
-else if (this.charCompare(entirestr[position], '/', '>'))
+                    else if (this.charCompare(entirestr[position], '/', '>'))
                         return parsefinish();
-else if (entirestr[position] >= 'A' && entirestr[position] <= 'Z')
-                        namestr += (entirestr[position]).toLowerCase();
-else
+                    else if (entirestr[position] >= 'A' && entirestr[position] <= 'Z')
+                        namestr += entirestr[position].toLowerCase();
+                    else
                         namestr += entirestr[position];
                     position++;
                 }
@@ -209,14 +209,14 @@ var SamiTS;
         function SamiCue(syncElement) {
             if (syncElement.tagName.toLowerCase() !== "sync")
                 throw new Error("SamiCue can only accept sync element");
-else
+            else
                 this.syncElement = syncElement;
         }
         SamiCue.prototype.filterByLanguageCode = function (lang) {
             var newsync = this.syncElement.cloneNode();
             Array.prototype.forEach.call(this.syncElement.children, function (child) {
                 if (child.nodeType == 1) {
-                    var langData = (child).dataset["language"];
+                    var langData = child.dataset["language"];
                     if (!langData || langData === lang)
                         newsync.appendChild(child.cloneNode(true));
                 } else
@@ -293,9 +293,9 @@ else
             Array.prototype.forEach.call(cue.syncElement.children, function (child) {
                 for (var i = 0; i < languages.length; i++) {
                     if (child.nodeType == 1) {
-                        var classCode = (child).className;
+                        var classCode = child.className;
                         if (!classCode || classCode === languages[i].className)
-                            (child).dataset['language'] = languages[i].languageCode;
+                            child.dataset['language'] = languages[i].languageCode;
                     }
                 }
             });
@@ -317,7 +317,7 @@ else
                         var stylevalue = stylebody[i].slice(stylename[0].length);
                         if (!name && stylename[0].toLowerCase() === "name:")
                             name = stylevalue;
-else if (!lang && stylename[0].toLowerCase() === "lang:")
+                        else if (!lang && stylename[0].toLowerCase() === "lang:")
                             lang = stylevalue;
                         if (name && lang)
                             break;
@@ -366,7 +366,7 @@ else if (!lang && stylename[0].toLowerCase() === "lang:")
                     while (i < ruby.childNodes.length) {
                         var innernode = ruby.childNodes[i];
                         if (rtdetected === false) {
-                            if (innernode.nodeType == 1 && (innernode).tagName.toLowerCase() === "rt") {
+                            if (innernode.nodeType == 1 && innernode.tagName.toLowerCase() === "rt") {
                                 rtdetected = true;
                                 i++;
                                 continue;
@@ -394,7 +394,7 @@ else if (!lang && stylename[0].toLowerCase() === "lang:")
             if (rtelement.parentElement) {
                 if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
                     return true;
-else
+                else
                     return this.isRubyParentExist(rtelement.parentElement);
             } else
                 return false;
@@ -404,7 +404,7 @@ else
             if (text.parentNode) {
                 var parent = text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
-                    if ((parent).getAttribute("color"))
+                    if (parent.getAttribute("color"))
                         return parent.cloneNode(false);
                 }
                 return this.getFontFromNode(parent);
@@ -463,11 +463,11 @@ else
             if (typeof position === "undefined") { position = target.length - searchString.length; }
             if (!searchString)
                 return -1;
-else if (searchString.length == 0)
+            else if (searchString.length == 0)
                 return 0;
             var lowersearch = searchString.toLowerCase();
             for (var i = Math.min(target.length - searchString.length, position); i >= 0; i--) {
-                if ((target[i]).toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
+                if (target[i].toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
                     return i;
             }
             return -1;
@@ -493,7 +493,6 @@ var SamiTS;
                 subDocument += "\r\n" + text;
             };
             var text;
-            var syncindex = 0;
             if (xsyncs.length > 0) {
                 text = this.getRichText(xsyncs[0].syncElement);
                 if (text.length > 0)
@@ -553,7 +552,7 @@ var SamiTS;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
-                    var tagname = (node).tagName.toLowerCase();
+                    var tagname = node.tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
                         default: {
@@ -731,7 +730,7 @@ var SamiTS;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1)
-                    switch ((node).tagName.toLowerCase()) {
+                    switch (node.tagName.toLowerCase()) {
                         case "p":
                         default: {
                             result += _this.getSimpleText(node);
@@ -742,7 +741,7 @@ var SamiTS;
                             break;
                         }
                     }
-else
+                else
                     result += node.nodeValue.replace(/[\r\n]/g, '');
             });
             return result;
@@ -753,7 +752,7 @@ else
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
-                    var tagname = (node).tagName.toLowerCase();
+                    var tagname = node.tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
                         default: {
@@ -766,12 +765,12 @@ else
                         }
                         case "font": {
                             var fontelement = document.createElement("font");
-                            var color = (node).getAttribute("color");
+                            var color = node.getAttribute("color");
                             if (color)
                                 fontelement.setAttribute("color", color);
                             if (fontelement.attributes.length > 0)
                                 result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
-else
+                            else
                                 result += _this.getRichText(node);
                             break;
                         }
@@ -840,16 +839,35 @@ var SamiTS;
             this.sdpusNamespaceURI = "http://www.w3.org/ns/ttml/profile/sdp-us";
         }
         SDPUSWriter.prototype.write = function (xsyncs) {
-            var sdpusdoc = document.implementation.createDocument(this.ttmlNamespaceURI, "tt", null);
-            sdpusdoc.documentElement.setAttributeNS(this.xmlNamespaceURI, "xml:lang", "en-us");
-            sdpusdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:s", this.ttmlStyleNamespaceURI);
-            sdpusdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:p", this.ttmlParameterNamespaceURI);
-            var body = sdpusdoc.createElementNS(this.ttmlNamespaceURI, "head");
-            var profile = sdpusdoc.createElementNS(this.ttmlParameterNamespaceURI, "profile");
-            profile.setAttributeNS(this.ttmlParameterNamespaceURI, "use", this.sdpusNamespaceURI);
-            this.stylingElement = sdpusdoc.createElementNS(this.ttmlNamespaceURI, "styling");
+            var ttdoc = document.implementation.createDocument(this.ttmlNamespaceURI, "tt", null);
+            ttdoc.documentElement.setAttributeNS(this.xmlNamespaceURI, "xml:lang", "en-us");
+            ttdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:s", this.ttmlStyleNamespaceURI);
+            ttdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:p", this.ttmlParameterNamespaceURI);
 
-            return (new XMLSerializer()).serializeToString(sdpusdoc);
+            var head = ttdoc.createElementNS(this.ttmlNamespaceURI, "head");
+            ttdoc.appendChild(head);
+
+            var profile = ttdoc.createElementNS(this.ttmlParameterNamespaceURI, "profile");
+            profile.setAttributeNS(this.ttmlParameterNamespaceURI, "use", this.sdpusNamespaceURI);
+            head.appendChild(profile);
+
+            this.stylingElement = ttdoc.createElementNS(this.ttmlNamespaceURI, "styling");
+            head.appendChild(this.stylingElement);
+
+            var regionStyle = ttdoc.createElementNS(this.ttmlNamespaceURI, "style");
+            regionStyle.setAttributeNS(this.xmlNamespaceURI, "xml:id", "bottomMidStyle");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:textAlign", "center");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:textOutline", "#000000ff");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:color", "#ffffffff");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:origin", "20% 58%");
+            regionStyle.setAttributeNS(this.ttmlStyleNamespaceURI, "s:extent", "60% 18%");
+            this.stylingElement.appendChild(regionStyle);
+
+            var layout = ttdoc.createElementNS(this.ttmlNamespaceURI, "layout");
+            head.appendChild(layout);
+            var region = ttdoc.createElementNS(this.ttmlNamespaceURI, "region");
+
+            return '<?xml version="1.0" encoding="utf-8"?>' + (new XMLSerializer()).serializeToString(ttdoc);
         };
         return SDPUSWriter;
     })();

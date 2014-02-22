@@ -49,7 +49,7 @@ module SamiTS {
             var layout = ttdoc.createElementNS(this.ttmlNamespaceURI, "layout");
             head.appendChild(layout);
             var region = ttdoc.createElementNS(this.ttmlNamespaceURI, "region");
-            region.setAttributeNS(this.xmlNamespaceURI
+            //region.setAttributeNS(this.xmlNamespaceURI
 
             //var layout = sdpusdoc.
 
