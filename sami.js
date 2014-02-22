@@ -479,13 +479,6 @@ else if (searchString.length == 0)
 "use strict";
 var SamiTS;
 (function (SamiTS) {
-    (function (WebVTTLanguageSplitMode) {
-        WebVTTLanguageSplitMode[WebVTTLanguageSplitMode["Split"] = 0] = "Split";
-        WebVTTLanguageSplitMode[WebVTTLanguageSplitMode["ApplyLanguageTag"] = 1] = "ApplyLanguageTag";
-        WebVTTLanguageSplitMode[WebVTTLanguageSplitMode["ShowAllTogether"] = 2] = "ShowAllTogether";
-    })(SamiTS.WebVTTLanguageSplitMode || (SamiTS.WebVTTLanguageSplitMode = {}));
-    var WebVTTLanguageSplitMode = SamiTS.WebVTTLanguageSplitMode;
-
     var WebVTTWriter = (function () {
         function WebVTTWriter() {
             this.webvttStyleSheet = new WebVTTStyleSheet();
@@ -495,7 +488,7 @@ var SamiTS;
             var _this = this;
             var subHeader = "WEBVTT";
             var subDocument = '';
-            var write = function (i, text) {
+            var writeText = function (i, text) {
                 subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
@@ -504,12 +497,12 @@ var SamiTS;
             if (xsyncs.length > 0) {
                 text = this.getRichText(xsyncs[0].syncElement);
                 if (text.length > 0)
-                    write(0, text);
+                    writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
                     text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
-                        write(i, text);
+                        writeText(i, text);
                     }
                 }
             }
@@ -671,12 +664,6 @@ var SamiTS;
 "use strict";
 var SamiTS;
 (function (SamiTS) {
-    (function (SubRipLanguageSplitMode) {
-        SubRipLanguageSplitMode[SubRipLanguageSplitMode["Split"] = 0] = "Split";
-        SubRipLanguageSplitMode[SubRipLanguageSplitMode["ShowAllTogether"] = 1] = "ShowAllTogether";
-    })(SamiTS.SubRipLanguageSplitMode || (SamiTS.SubRipLanguageSplitMode = {}));
-    var SubRipLanguageSplitMode = SamiTS.SubRipLanguageSplitMode;
-
     var SubRipWriter = (function () {
         function SubRipWriter() {
         }
@@ -684,7 +671,7 @@ var SamiTS;
             if (typeof options === "undefined") { options = null; }
             var _this = this;
             var subDocument = "";
-            var write = function (i, syncindex, text) {
+            var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
                 subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
@@ -699,13 +686,13 @@ var SamiTS;
             if (xsyncs.length > 0) {
                 text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0)
-                    write(0, syncindex, text);
+                    writeText(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
                     text = this.absorbAir(getText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
-                        write(i, syncindex, text);
+                        writeText(i, syncindex, text);
                     }
                 }
             }

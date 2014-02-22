@@ -1,12 +1,8 @@
 ﻿"use strict";
 
 module SamiTS {
-    export enum WebVTTLanguageSplitMode {
-        Split, ApplyLanguageTag, ShowAllTogether
-    }
     export interface WebVTTWriterOptions {
         onstyleload?: (style: HTMLStyleElement) => void;
-        languageSplitMode?: WebVTTLanguageSplitMode;
     }
 
     export class WebVTTWriter {
@@ -14,20 +10,19 @@ module SamiTS {
         write(xsyncs: SamiCue[], options: WebVTTWriterOptions = null) {
             var subHeader = "WEBVTT";
             var subDocument = '';
-            var write = (i: number, text: string) => {
+            var writeText = (i: number, text: string) => {
                 subDocument += this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text: string;
-            var syncindex = 0;
             if (xsyncs.length > 0) {
                 text = this.getRichText(xsyncs[0].syncElement);
-                if (text.length > 0) write(0, text);
+                if (text.length > 0) writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
                     text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
-                        write(i, text);
+                        writeText(i, text);
                     }
                 }
             }

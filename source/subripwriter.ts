@@ -1,9 +1,6 @@
 "use strict";
 
 module SamiTS {
-    export enum SubRipLanguageSplitMode {
-        Split, ShowAllTogether
-    }
     export interface SubRipWriterOptions {
         useTextStyles?: boolean
     }
@@ -11,7 +8,7 @@ module SamiTS {
     export class SubRipWriter {
         write(xsyncs: SamiCue[], options: SubRipWriterOptions = null) {
             var subDocument = "";
-            var write = (i: number, syncindex: number, text: string) => {
+            var writeText = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
                 subDocument += "\r\n" + this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
@@ -21,13 +18,13 @@ module SamiTS {
             var getText = (options && options.useTextStyles) ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
             if (xsyncs.length > 0) {
                 text = this.absorbAir(getText(xsyncs[0].syncElement));
-                if (text.length > 0) write(0, syncindex, text);
+                if (text.length > 0) writeText(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
                     text = this.absorbAir(getText(xsyncs[i].syncElement));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
-                        write(i, syncindex, text);
+                        writeText(i, syncindex, text);
                     }
                 }
             }
