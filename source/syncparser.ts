@@ -7,6 +7,18 @@ module SamiTS {
         languageName: string;
         languageCode: string;
     }
+    interface SyncChildDataset extends DOMStringMap {
+        language: string;
+    }
+    interface SyncDataset extends DOMStringMap {
+        originalString: string;
+    }
+    interface SyncChildElement extends HTMLElement {
+        dataset: SyncChildDataset
+    }
+    interface SyncElement extends HTMLElement {
+        dataset: SyncDataset;
+    }
 
     export class SamiCue {
         syncElement: HTMLElement;
@@ -52,9 +64,9 @@ module SamiTS {
 
         filterByLanguageCode(lang: string) {
             var newsync = <HTMLElement>this.syncElement.cloneNode();
-            Array.prototype.forEach.call(this.syncElement.children, (child: Node) => {
+            Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
                 if (child.nodeType == 1) {
-                    var langData = <string>(<HTMLElement>child).dataset["language"];
+                    var langData = (<SyncChildElement>child).dataset.language;
                     if (!langData || langData === lang)//no language code or specific language code
                         newsync.appendChild(child.cloneNode(true));
                 }
@@ -78,7 +90,9 @@ module SamiTS {
 
             var samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
-                    .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() }), "text/xml").firstChild;
+                    .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
+                    .replace(/<!--(.+)?-->/g, '')//XML and HTML differs in comment processing, so delete them to prevent error
+                , "text/xml").firstChild;
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
 
             var stylestr = '';
@@ -93,12 +107,12 @@ module SamiTS {
 
             var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach((sync) => {
-                samiDocument.samiCues.push(new SamiCue(this.fixIncorrectRubyNodes(sync.element)));
+                samiDocument.samiCues.push(new SamiCue(this.fixIncorrectRubyNodes(<SyncElement>sync.element)));
             });
             samiDocument.samiCues.forEach((cue: SamiCue) => {
                 this.giveLanguageData(cue, samiDocument.languages);
@@ -123,13 +137,11 @@ module SamiTS {
         }
 
         private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
-            Array.prototype.forEach.call(cue.syncElement.children, (child: Node) => {
+            Array.prototype.forEach.call(cue.syncElement.children, (child: SyncChildElement) => {
                 for (var i = 0; i < languages.length; i++) {
-                    if (child.nodeType == 1) {
-                        var classCode = <string>(<HTMLElement>child).className;
-                        if (!classCode || classCode === languages[i].className)
-                            (<HTMLElement>child).dataset['language'] = languages[i].languageCode;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
-                    }
+                    var classCode = child.className;
+                    if (!classCode || classCode === languages[i].className)
+                        child.dataset.language = languages[i].languageCode;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
                 }
             });
         }
@@ -167,7 +179,7 @@ module SamiTS {
             return languages;
         }
 
-        private static fixIncorrectRubyNodes(syncobject: HTMLElement) {
+        private static fixIncorrectRubyNodes(syncobject: SyncElement) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
@@ -259,9 +271,9 @@ module SamiTS {
                 return null;
         }
 
-        private static exchangeFontWithTemp(syncobject: HTMLElement) {//<temp /> will be ignored by parsers
-            var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['originalString'];
+        private static exchangeFontWithTemp(syncobject: SyncElement) {//<temp /> will be ignored by parsers
+            var newsync = <SyncElement>syncobject.cloneNode(false);
+            var newsyncstr = newsync.dataset.originalString;
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -269,10 +281,10 @@ module SamiTS {
             return newsync;
         }
 
-        private static extractFontAndText(syncobject: HTMLElement) {
-            var newsync = <HTMLElement>syncobject.cloneNode(false);
-            var newsyncstr = <string>newsync.dataset['originalString'];
-            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalString']);
+        private static extractFontAndText(syncobject: SyncElement) {
+            var newsync = <SyncElement>syncobject.cloneNode(false);
+            var newsyncstr = newsync.dataset.originalString;
+            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
             tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":

@@ -214,9 +214,9 @@ var SamiTS;
         }
         SamiCue.prototype.filterByLanguageCode = function (lang) {
             var newsync = this.syncElement.cloneNode();
-            Array.prototype.forEach.call(this.syncElement.children, function (child) {
+            Array.prototype.forEach.call(this.syncElement.childNodes, function (child) {
                 if (child.nodeType == 1) {
-                    var langData = child.dataset["language"];
+                    var langData = child.dataset.language;
                     if (!langData || langData === lang)
                         newsync.appendChild(child.cloneNode(true));
                 } else
@@ -243,7 +243,7 @@ var SamiTS;
 
             var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
                 return word.toLowerCase();
-            }), "text/xml").firstChild;
+            }).replace(/<!--(.+)?-->/g, ''), "text/xml").firstChild;
             var samihead = samicontainer.getElementsByTagName("head")[0];
 
             var stylestr = '';
@@ -259,9 +259,9 @@ var SamiTS;
 
             var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset['originalString'] = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach(function (sync) {
                 samiDocument.samiCues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
@@ -292,11 +292,9 @@ var SamiTS;
         SamiDocument.giveLanguageData = function (cue, languages) {
             Array.prototype.forEach.call(cue.syncElement.children, function (child) {
                 for (var i = 0; i < languages.length; i++) {
-                    if (child.nodeType == 1) {
-                        var classCode = child.className;
-                        if (!classCode || classCode === languages[i].className)
-                            child.dataset['language'] = languages[i].languageCode;
-                    }
+                    var classCode = child.className;
+                    if (!classCode || classCode === languages[i].className)
+                        child.dataset.language = languages[i].languageCode;
                 }
             });
         };
@@ -414,7 +412,7 @@ var SamiTS;
 
         SamiDocument.exchangeFontWithTemp = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['originalString'];
+            var newsyncstr = newsync.dataset.originalString;
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
             });
@@ -424,8 +422,8 @@ var SamiTS;
 
         SamiDocument.extractFontAndText = function (syncobject) {
             var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset['originalString'];
-            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset['originalString']);
+            var newsyncstr = newsync.dataset.originalString;
+            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
             tags.filter(function (foundtag) {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
@@ -484,8 +482,8 @@ var SamiTS;
             this.webvttStyleSheet = new WebVTTStyleSheet();
         }
         WebVTTWriter.prototype.write = function (xsyncs, options) {
-            if (typeof options === "undefined") { options = null; }
             var _this = this;
+            if (typeof options === "undefined") { options = null; }
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = function (i, text) {
@@ -667,8 +665,8 @@ var SamiTS;
         function SubRipWriter() {
         }
         SubRipWriter.prototype.write = function (xsyncs, options) {
-            if (typeof options === "undefined") { options = null; }
             var _this = this;
+            if (typeof options === "undefined") { options = null; }
             var subDocument = "";
             var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();

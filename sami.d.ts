@@ -48,7 +48,7 @@ declare module SamiTS {
     }
     class WebVTTWriter {
         private webvttStyleSheet;
-        public write(xsyncs: SamiTS.SamiCue[], options?: WebVTTWriterOptions): string;
+        public write(xsyncs: SamiCue[], options?: WebVTTWriterOptions): string;
         private getWebVTTTime(ms);
         private absorbAir(target);
         private getRichText(syncobject);
@@ -61,7 +61,7 @@ declare module SamiTS {
         useTextStyles?: boolean;
     }
     class SubRipWriter {
-        public write(xsyncs: SamiTS.SamiCue[], options?: SubRipWriterOptions): string;
+        public write(xsyncs: SamiCue[], options?: SubRipWriterOptions): string;
         private getSubRipTime(ms);
         private absorbAir(target);
         private getSimpleText(syncobject);

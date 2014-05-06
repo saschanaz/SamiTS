@@ -140,7 +140,7 @@ module SamiTS {
     }
 
     class WebVTTStyleSheet {
-        private ruledictionary = {};
+        private ruledictionary: any = {};
         private conventionalStyle: string[] = [
             "::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }",
             "::cue-region { font: 0.077vh sans-serif; line-height: 0.1vh; }"
