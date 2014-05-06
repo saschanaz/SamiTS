@@ -91,10 +91,10 @@ module SamiTS {
             var samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
-                    .replace(/<!--(?:(?!-->)[\s\S])*-->/g, '')
+                    .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4).replace(/(?!<!)-+$/gm, '') })
                 , "text/xml").firstChild;
             /*
-            XML and HTML differs in comment processing, so delete them to prevent error
+            Delete hyphens at the end of line breaks to prevent XML parser error
             regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
             */
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
