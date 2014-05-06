@@ -94,7 +94,7 @@ module SamiTS {
                     .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4); })
                 , "text/xml").firstChild;
             /*
-            Delete hyphens at the end of line breaks to prevent XML parser error
+            Delete double hyphens and line end single hyphens to prevent XML parser error
             regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
             */
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
