@@ -91,7 +91,7 @@ module SamiTS {
             var samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
-                    .replace(/<!--(.+)?-->/g, '')//XML and HTML differs in comment processing, so delete them to prevent error
+                    .replace(/<!--([\s\S]+)?-->/g, '')//XML and HTML differs in comment processing, so delete them to prevent error
                 , "text/xml").firstChild;
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
 
