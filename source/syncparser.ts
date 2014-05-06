@@ -91,8 +91,12 @@ module SamiTS {
             var samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
-                    .replace(/<!--([\s\S]+)?-->/g, '')//XML and HTML differs in comment processing, so delete them to prevent error
+                    .replace(/<!--(?:(?!-->)[\s\S])*-->/g, '')
                 , "text/xml").firstChild;
+            /*
+            XML and HTML differs in comment processing, so delete them to prevent error
+            regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
+            */
             var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
 
             var stylestr = '';
