@@ -244,7 +244,7 @@ var SamiTS;
             var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
                 return word.toLowerCase();
             }).replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) {
-                return comment.slice(0, 4) + comment.slice(4).replace(/(?!<!)-+$/gm, '');
+                return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4);
             }), "text/xml").firstChild;
 
             var samihead = samicontainer.getElementsByTagName("head")[0];
