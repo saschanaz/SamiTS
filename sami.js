@@ -719,13 +719,13 @@ var SamiTS;
             }
 
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
-            this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
 
             var result = { subtitle: subDocument };
             if (options && options.createStyleElement)
                 result.stylesheet = this.webvttStyleSheet.getCSSStyleSheetNode();
 
+            this.webvttStyleSheet.clear();
             return result;
         };
 

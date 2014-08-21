@@ -51,13 +51,13 @@ module SamiTS {
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
-            this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
 
             var result: SamiTSResult = { subtitle: subDocument };
             if (options && options.createStyleElement)
                 result.stylesheet = this.webvttStyleSheet.getCSSStyleSheetNode();
 
+            this.webvttStyleSheet.clear();
             return result;
         }
 
