@@ -1,7 +1,7 @@
 SamiTS
 ======
 
-Let's read SAMI subtitle popular in Korea with web browsers! This library converts SAMI-formatted file into more popular formats including WebVTT and SubRip.
+Microsoft SAMI subtitle format is popular in Korea, but unfortunately our web browsers do not support them. This library converts SAMI-formatted file into more popular standard formats, which includes WebVTT and SubRip.
 
 SamiTS extracts styles and reprocess it to make standard CSS stylesheets.
 
