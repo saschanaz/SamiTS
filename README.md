@@ -3,7 +3,7 @@ SamiTS
 
 Microsoft SAMI subtitle format is popular in Korea, but unfortunately our web browsers do not support them. This library converts SAMI-formatted file into more popular standard formats, which includes WebVTT and SubRip.
 
-SamiTS extracts styles and reprocess it to make standard CSS stylesheets.
+SamiTS extracts styles and reprocess it to make a standard CSS stylesheet.
 
 Get a sneak peak at it in [a sample](http://saschanaz.github.io/SamiTS/sample/) here.
 
