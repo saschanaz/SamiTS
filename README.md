@@ -13,6 +13,8 @@ Get a sneak peak at it in [a sample](http://saschanaz.github.io/SamiTS/sample/) 
 declare module SamiTS {
   interface WebVTTWriterOptions {
     createStyleElement?: boolean;
+    disableDefaultStyle?: boolean;
+    selector?: string; // "video" by default
   }
   interface SubRipWriterOptions {
     useTextStyles?: boolean

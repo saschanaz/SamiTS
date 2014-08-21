@@ -22,9 +22,17 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 "use strict";
 
+/*
+TODO:
+option: exclude default styles
+custom video element CSS selector support
+ */
+
 module SamiTS {
     export interface WebVTTWriterOptions {
         createStyleElement?: boolean;
+        disableDefaultStyle?: boolean;
+        selector?: string;
     }
 
     export class WebVTTWriter {
@@ -50,12 +58,12 @@ module SamiTS {
             }
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
-            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStylesheet(options);
             subDocument = subHeader + "\r\n\r\n" + subDocument;
 
             var result: SamiTSResult = { subtitle: subDocument };
             if (options && options.createStyleElement)
-                result.stylesheet = this.webvttStyleSheet.getCSSStyleSheetNode();
+                result.stylesheet = this.webvttStyleSheet.getStylesheetNode(options);
 
             this.webvttStyleSheet.clear();
             return result;
@@ -175,23 +183,27 @@ module SamiTS {
         insertRuleForName(targetname: string, rule: string) {
             this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
         }
-        getStyleSheetString() {
+        getStylesheet(options?: WebVTTWriterOptions) {
             var resultarray: string[] = [];
-            this.conventionalStyle.forEach((rule: string) => {
-                resultarray.push(rule);
-            });
+            if (!options || !options.disableDefaultStyle)
+                this.conventionalStyle.forEach((rule: string) => {
+                    resultarray.push(rule);
+                });
             for (var rule in this.ruledictionary)
                 resultarray.push(<string>this.ruledictionary[rule]);
             return resultarray.join('\r\n');
         }
-        getCSSStyleSheetNode() {
+        getStylesheetNode(options?: WebVTTWriterOptions) {
+            var selector = (options && options.selector) ? options.selector : "video";
+
             var styleSheet = document.createElement("style");
             var result = '';
-            this.conventionalStyle.forEach((rule: string) => {
-                result += "video" + rule;
-            });
+            if (!options || !options.disableDefaultStyle)
+                this.conventionalStyle.forEach((rule: string) => {
+                    result += selector + rule;
+                });
             for (var rule in this.ruledictionary)
-                result += "video" + <string>this.ruledictionary[rule];
+                result += selector + <string>this.ruledictionary[rule];
             styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
         }

@@ -79,6 +79,8 @@ declare module SamiTS {
 declare module SamiTS {
     interface WebVTTWriterOptions {
         createStyleElement?: boolean;
+        disableDefaultStyle?: boolean;
+        selector?: string;
     }
     class WebVTTWriter {
         private webvttStyleSheet;

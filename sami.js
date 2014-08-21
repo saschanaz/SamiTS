@@ -718,12 +718,12 @@ var SamiTS;
                 }
             }
 
-            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
+            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStylesheet(options);
             subDocument = subHeader + "\r\n\r\n" + subDocument;
 
             var result = { subtitle: subDocument };
             if (options && options.createStyleElement)
-                result.stylesheet = this.webvttStyleSheet.getCSSStyleSheetNode();
+                result.stylesheet = this.webvttStyleSheet.getStylesheetNode(options);
 
             this.webvttStyleSheet.clear();
             return result;
@@ -848,23 +848,27 @@ var SamiTS;
         WebVTTStyleSheet.prototype.insertRuleForName = function (targetname, rule) {
             this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
         };
-        WebVTTStyleSheet.prototype.getStyleSheetString = function () {
+        WebVTTStyleSheet.prototype.getStylesheet = function (options) {
             var resultarray = [];
-            this.conventionalStyle.forEach(function (rule) {
-                resultarray.push(rule);
-            });
+            if (!options || !options.disableDefaultStyle)
+                this.conventionalStyle.forEach(function (rule) {
+                    resultarray.push(rule);
+                });
             for (var rule in this.ruledictionary)
                 resultarray.push(this.ruledictionary[rule]);
             return resultarray.join('\r\n');
         };
-        WebVTTStyleSheet.prototype.getCSSStyleSheetNode = function () {
+        WebVTTStyleSheet.prototype.getStylesheetNode = function (options) {
+            var selector = (options && options.selector) ? options.selector : "video";
+
             var styleSheet = document.createElement("style");
             var result = '';
-            this.conventionalStyle.forEach(function (rule) {
-                result += "video" + rule;
-            });
+            if (!options || !options.disableDefaultStyle)
+                this.conventionalStyle.forEach(function (rule) {
+                    result += selector + rule;
+                });
             for (var rule in this.ruledictionary)
-                result += "video" + this.ruledictionary[rule];
+                result += selector + this.ruledictionary[rule];
             styleSheet.appendChild(document.createTextNode(result));
             return styleSheet;
         };
