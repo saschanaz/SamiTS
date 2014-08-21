@@ -1,0 +1,1 @@
+tsc -t ES5 --noImplicitAny app.ts
