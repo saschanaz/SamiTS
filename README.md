@@ -5,7 +5,7 @@ Let's read SAMI subtitle popular in Korea with web browsers! This library conver
 
 SamiTS extracts styles and reprocess it to make standard CSS stylesheets.
 
-Get a sneak peak of [a sample](http://saschanaz.github.io/SamiTS/sample/) here.
+Get a sneak peak at it in [a sample](http://saschanaz.github.io/SamiTS/sample/) here.
 
 # API
 
