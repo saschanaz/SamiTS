@@ -14,6 +14,40 @@
     }
 }
 declare module SamiTS {
+    interface SamiTSResult {
+        subtitle: string;
+        stylesheet?: HTMLStyleElement;
+    }
+    function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+}
+declare module SamiTS {
+    class SDPUSWriter {
+        private xmlNamespaceURI;
+        private xmlnsNamespaceURI;
+        private ttmlNamespaceURI;
+        private ttmlStyleNamespaceURI;
+        private ttmlParameterNamespaceURI;
+        private sdpusNamespaceURI;
+        private stylingElement;
+        public write(xsyncs: HTMLElement[]): string;
+    }
+}
+declare module SamiTS {
+    interface SubRipWriterOptions {
+        useTextStyles?: boolean;
+    }
+    class SubRipWriter {
+        public write(xsyncs: SamiCue[], options?: SubRipWriterOptions): SamiTSResult;
+        private getSubRipTime(ms);
+        private absorbAir(target);
+        private getSimpleText(syncobject);
+        private getRichText(syncobject);
+    }
+}
+declare module SamiTS {
     interface SamiLanguage {
         className: string;
         languageName: string;
@@ -54,39 +88,5 @@ declare module SamiTS {
         private getRichText(syncobject);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);
-    }
-}
-declare module SamiTS {
-    interface SubRipWriterOptions {
-        useTextStyles?: boolean;
-    }
-    class SubRipWriter {
-        public write(xsyncs: SamiCue[], options?: SubRipWriterOptions): SamiTSResult;
-        private getSubRipTime(ms);
-        private absorbAir(target);
-        private getSimpleText(syncobject);
-        private getRichText(syncobject);
-    }
-}
-declare module SamiTS {
-    interface SamiTSResult {
-        subtitle: string;
-        stylesheet?: HTMLStyleElement;
-    }
-    function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-}
-declare module SamiTS {
-    class SDPUSWriter {
-        private xmlNamespaceURI;
-        private xmlnsNamespaceURI;
-        private ttmlNamespaceURI;
-        private ttmlStyleNamespaceURI;
-        private ttmlParameterNamespaceURI;
-        private sdpusNamespaceURI;
-        private stylingElement;
-        public write(xsyncs: HTMLElement[]): string;
     }
 }

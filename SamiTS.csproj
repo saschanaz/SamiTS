@@ -73,9 +73,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TypeScriptTarget>ES5</TypeScriptTarget>
-    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
+    <TypeScriptRemoveComments>True</TypeScriptRemoveComments>
     <TypeScriptSourceMap>True</TypeScriptSourceMap>
-    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptModuleKind>amd</TypeScriptModuleKind>
     <TypeScriptOutFile>sami.js</TypeScriptOutFile>
     <TypeScriptNoImplicitAny>true</TypeScriptNoImplicitAny>
     <TypeScriptGeneratesDeclarations>True</TypeScriptGeneratesDeclarations>
