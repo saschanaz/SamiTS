@@ -2,49 +2,46 @@
 ///<reference path='webvttwriter.ts' />
 ///<reference path='subripwriter.ts' />
 module SamiTS {
-    export function convertToWebVTTFromString(samiString: string, options: WebVTTWriterOptions = null) {
-        var samiDocument = SamiDocument.parse(samiString);
-        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
+    export interface SamiTSResult {
+        subtitle: string;
+        stylesheet?: HTMLStyleElement;
     }
 
-    export function convertToSubRipFromString(samiString: string, options: SubRipWriterOptions = null) {
-        var samiDocument = SamiDocument.parse(samiString);
-        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
+    export function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    export function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    export function createWebVTT(input: any, options?: WebVTTWriterOptions) {
+        var sequence = getString(input);
+
+        return sequence.then((samistr) => {
+            var samiDocument = SamiDocument.parse(samistr);
+            return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options)
+        });
     }
 
-    export function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options: WebVTTWriterOptions = null) {
-        var reader = new FileReader();
-        reader.onload = (ev: any) => {
-            onread(convertToWebVTTFromString(<string>reader.result, options));
+    export function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    export function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    export function createSubrip(input: any, options?: SubRipWriterOptions) {
+        var sequence = getString(input);
+
+        return sequence.then((samistr) => {
+            var samiDocument = SamiDocument.parse(samistr);
+            return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options)
+        });
+    }
+
+    function getString(input: Blob): Promise<string>;
+    function getString(input: string): Promise<string>;
+    function getString(input: any) {
+        if (typeof input === "string")
+            return Promise.resolve(<string>input);
+        else if (input instanceof Blob) {
+            return new Promise<string>((resolve, reject) => {
+                var reader = new FileReader();
+                reader.onload = (ev: any) => {
+                    resolve(<string>reader.result);
+                };
+                reader.readAsText(input);
+            });
         }
-        reader.readAsText(samiFile);
     }
-
-    export function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options: SubRipWriterOptions = null) {
-        var reader = new FileReader();
-        reader.onload = (ev: Event) => {
-            onread(convertToSubRipFromString(<string>reader.result, options));
-        }
-        reader.readAsText(samiFile);
-    }
-
-    //export function convertToSubRip
-
-    //export function convertFromString(samiString: string, targetSubType: SubType, useTextStyles: boolean) {
-    //    var xsyncs = SamiParser.Parse(samiString);
-    //    switch (targetSubType) {
-    //        case SubType.WebVTT:
-    //            return (new SamiTS.WebVTTWriter()).write(xsyncs);
-    //        case SubType.SRT:
-    //            return (new SamiTS.SubRipWriter()).write(xsyncs, useTextStyles);
-    //    }
-    //}
-
-    //export function convertFromFile(samiFile: File, targetSubType: SubType, useTextStyles: boolean, read: (convertedString: string) => any) {
-    //    var reader = new FileReader();
-    //    reader.onload = (ev: any) => {
-    //        read(convertFromString(<string>ev.target.result, targetSubType, useTextStyles));
-    //    }
-    //    reader.readAsText(samiFile);
-    //}
 }

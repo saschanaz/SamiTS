@@ -44,11 +44,11 @@ declare module SamiTS {
 }
 declare module SamiTS {
     interface WebVTTWriterOptions {
-        onstyleload?: (style: HTMLStyleElement) => void;
+        createStyleElement?: boolean;
     }
     class WebVTTWriter {
         private webvttStyleSheet;
-        public write(xsyncs: SamiCue[], options?: WebVTTWriterOptions): string;
+        public write(xsyncs: SamiCue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
         private absorbAir(target);
         private getRichText(syncobject);
@@ -61,7 +61,7 @@ declare module SamiTS {
         useTextStyles?: boolean;
     }
     class SubRipWriter {
-        public write(xsyncs: SamiCue[], options?: SubRipWriterOptions): string;
+        public write(xsyncs: SamiCue[], options?: SubRipWriterOptions): SamiTSResult;
         private getSubRipTime(ms);
         private absorbAir(target);
         private getSimpleText(syncobject);
@@ -69,10 +69,14 @@ declare module SamiTS {
     }
 }
 declare module SamiTS {
-    function convertToWebVTTFromString(samiString: string, options?: WebVTTWriterOptions): string;
-    function convertToSubRipFromString(samiString: string, options?: SubRipWriterOptions): string;
-    function convertToWebVTTFromFile(samiFile: File, onread: (convertedString: string) => any, options?: WebVTTWriterOptions): void;
-    function convertToSubRipFromFile(samiFile: File, onread: (convertedString: string) => any, options?: SubRipWriterOptions): void;
+    interface SamiTSResult {
+        subtitle: string;
+        stylesheet?: HTMLStyleElement;
+    }
+    function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
 }
 declare module SamiTS {
     class SDPUSWriter {

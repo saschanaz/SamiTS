@@ -2,12 +2,12 @@
 
 module SamiTS {
     export interface WebVTTWriterOptions {
-        onstyleload?: (style: HTMLStyleElement) => void;
+        createStyleElement?: boolean;
     }
 
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
-        write(xsyncs: SamiCue[], options: WebVTTWriterOptions = null) {
+        write(xsyncs: SamiCue[], options?: WebVTTWriterOptions) {
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = (i: number, text: string) => {
@@ -27,14 +27,16 @@ module SamiTS {
                 }
             }
 
-            if (options && options.onstyleload)
-                options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
-
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
             this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
-            return subDocument;
+
+            var result: SamiTSResult = { subtitle: subDocument };
+            if (options && options.createStyleElement)
+                result.stylesheet = this.webvttStyleSheet.getCSSStyleSheetNode();
+
+            return result;
         }
 
         private getWebVTTTime(ms: number) {

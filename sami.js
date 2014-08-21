@@ -91,6 +91,7 @@ var SamiTS;
             }
 
             return list;
+            //return [];//RegExp로 모든 start tag의 시작부를 찾아낼 수 있다. /<\/?\w+/g
         };
 
         HTMLTagFinder.getAttribute = function (entirestr, position) {
@@ -202,6 +203,7 @@ var SamiTS;
     })();
     SamiTS.HTMLTagFinder = HTMLTagFinder;
 })(SamiTS || (SamiTS = {}));
+///<reference path='htmltagfinder.ts' />
 "use strict";
 var SamiTS;
 (function (SamiTS) {
@@ -212,6 +214,37 @@ var SamiTS;
             else
                 this.syncElement = syncElement;
         }
+        /*
+        TODO: filter 말고 split으로 교체
+        language 코드가 발견되면 그 노드의 language에 대응하는 syncElement를 만들어 {}에 추가하고, 그 syncElement에 노드를 넣음
+        코드가 없으면 모든 노드에... 코드 없는 거 뒤에 코드 있는 게 나오면 안된다. 음
+        먼저 스캔 싹 하고 language 목록 만듦?
+        */
+        //splitByLanguageCode() {
+        //    var languages = {};
+        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        //        if (child.nodeType == 1) {
+        //            var langData = <string>(<HTMLElement>child).dataset["language"];
+        //            if (langData)
+        //                languages[langData] = <HTMLElement>this.syncElement.cloneNode();
+        //        }
+        //    });
+        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
+        //        if (child.nodeType == 1) {
+        //            var langData = <string>(<HTMLElement>child).dataset["language"];
+        //            if (!langData) {
+        //                for (var newsync in languages)
+        //                    (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+        //            }
+        //            else
+        //                (<HTMLElement>languages[langData]).appendChild(child.cloneNode(true));
+        //        }
+        //        else
+        //            for (var newsync in languages)
+        //                (<HTMLElement>newsync).appendChild(child.cloneNode(true));
+        //    });
+        //    return languages;
+        //}
         SamiCue.prototype.filterByLanguageCode = function (lang) {
             var newsync = this.syncElement.cloneNode();
             Array.prototype.forEach.call(this.syncElement.childNodes, function (child) {
@@ -247,6 +280,10 @@ var SamiTS;
                 return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4);
             }), "text/xml").firstChild;
 
+            /*
+            Delete double hyphens and line end single hyphens to prevent XML parser error
+            regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
+            */
             var samihead = samicontainer.getElementsByTagName("head")[0];
 
             var stylestr = '';
@@ -297,7 +334,7 @@ var SamiTS;
                 for (var i = 0; i < languages.length; i++) {
                     var classCode = child.className;
                     if (!classCode || classCode === languages[i].className)
-                        child.dataset.language = languages[i].languageCode;
+                        child.dataset.language = languages[i].languageCode; //so that we can easily use it to convert to WebVTT lang tag which requires BCP47
                 }
             });
         };
@@ -341,6 +378,7 @@ var SamiTS;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
+            //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
             if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
                 var fontdeleted = this.exchangeFontWithTemp(syncobject);
                 var fontextracted = this.extractFontAndText(syncobject);
@@ -383,11 +421,20 @@ var SamiTS;
             return newsync;
         };
 
+        //private static deleteRPs(syncobject: HTMLElement) {
+        //    var newsync = <HTMLElement>syncobject.cloneNode(false);
+        //    var newsyncstr = <string>newsync.dataset['originalString'];
+        //    HTMLTagFinder.FindStartTags('rp', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
+        //        newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
+        //    });
+        //    newsync.dataset['originalString'] = newsyncstr.replace(/<\/rp>/g, '');
+        //    return newsync;
+        //}
         SamiDocument.wrapWith = function (targetNode, newParentNode) {
             var currentParentNode = targetNode.parentNode;
             var currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
-            newParentNode.appendChild(targetNode);
+            newParentNode.appendChild(targetNode); //will be inserted end of the list when .nextSibling is null
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
         };
 
@@ -486,7 +533,6 @@ var SamiTS;
         }
         WebVTTWriter.prototype.write = function (xsyncs, options) {
             var _this = this;
-            if (typeof options === "undefined") { options = null; }
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = function (i, text) {
@@ -499,7 +545,7 @@ var SamiTS;
                 if (text.length > 0)
                     writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement)); //prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         writeText(i, text);
@@ -507,13 +553,16 @@ var SamiTS;
                 }
             }
 
-            if (options && options.onstyleload)
-                options.onstyleload(this.webvttStyleSheet.getCSSStyleSheetNode());
-
+            //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStyleSheetString();
             this.webvttStyleSheet.clear();
             subDocument = subHeader + "\r\n\r\n" + subDocument;
-            return subDocument;
+
+            var result = { subtitle: subDocument };
+            if (options && options.createStyleElement)
+                result.stylesheet = this.webvttStyleSheet.getCSSStyleSheetNode();
+
+            return result;
         };
 
         WebVTTWriter.prototype.getWebVTTTime = function (ms) {
@@ -669,7 +718,6 @@ var SamiTS;
         }
         SubRipWriter.prototype.write = function (xsyncs, options) {
             var _this = this;
-            if (typeof options === "undefined") { options = null; }
             var subDocument = "";
             var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
@@ -696,7 +744,7 @@ var SamiTS;
                     }
                 }
             }
-            return subDocument;
+            return { subtitle: subDocument };
         };
 
         SubRipWriter.prototype.getSubRipTime = function (ms) {
@@ -791,41 +839,44 @@ var SamiTS;
     })();
     SamiTS.SubRipWriter = SubRipWriter;
 })(SamiTS || (SamiTS = {}));
+///<reference path='syncparser.ts' />
+///<reference path='webvttwriter.ts' />
+///<reference path='subripwriter.ts' />
 var SamiTS;
 (function (SamiTS) {
-    function convertToWebVTTFromString(samiString, options) {
-        if (typeof options === "undefined") { options = null; }
-        var samiDocument = SamiTS.SamiDocument.parse(samiString);
-        return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
-    }
-    SamiTS.convertToWebVTTFromString = convertToWebVTTFromString;
+    function createWebVTT(input, options) {
+        var sequence = getString(input);
 
-    function convertToSubRipFromString(samiString, options) {
-        if (typeof options === "undefined") { options = null; }
-        var samiDocument = SamiTS.SamiDocument.parse(samiString);
-        return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
+        return sequence.then(function (samistr) {
+            var samiDocument = SamiTS.SamiDocument.parse(samistr);
+            return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
+        });
     }
-    SamiTS.convertToSubRipFromString = convertToSubRipFromString;
+    SamiTS.createWebVTT = createWebVTT;
 
-    function convertToWebVTTFromFile(samiFile, onread, options) {
-        if (typeof options === "undefined") { options = null; }
-        var reader = new FileReader();
-        reader.onload = function (ev) {
-            onread(convertToWebVTTFromString(reader.result, options));
-        };
-        reader.readAsText(samiFile);
-    }
-    SamiTS.convertToWebVTTFromFile = convertToWebVTTFromFile;
+    function createSubrip(input, options) {
+        var sequence = getString(input);
 
-    function convertToSubRipFromFile(samiFile, onread, options) {
-        if (typeof options === "undefined") { options = null; }
-        var reader = new FileReader();
-        reader.onload = function (ev) {
-            onread(convertToSubRipFromString(reader.result, options));
-        };
-        reader.readAsText(samiFile);
+        return sequence.then(function (samistr) {
+            var samiDocument = SamiTS.SamiDocument.parse(samistr);
+            return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
+        });
     }
-    SamiTS.convertToSubRipFromFile = convertToSubRipFromFile;
+    SamiTS.createSubrip = createSubrip;
+
+    function getString(input) {
+        if (typeof input === "string")
+            return Promise.resolve(input);
+        else if (input instanceof Blob) {
+            return new Promise(function (resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function (ev) {
+                    resolve(reader.result);
+                };
+                reader.readAsText(input);
+            });
+        }
+    }
 })(SamiTS || (SamiTS = {}));
 "use strict";
 var SamiTS;
@@ -840,6 +891,18 @@ var SamiTS;
             this.sdpusNamespaceURI = "http://www.w3.org/ns/ttml/profile/sdp-us";
         }
         SDPUSWriter.prototype.write = function (xsyncs) {
+            /*
+            example using
+            http://msmvps.com/blogs/martin_honnen/archive/2009/04/13/creating-xml-with-namespaces-with-javascript-and-the-w3c-dom.aspx
+            var ttmlns = "http://www.w3.org/ns/ttml";
+            var ttmlsns = "http://www.w3.org/ns/ttml#styling";
+            var ttmlpns = "http://www.w3.org/ns/ttml#parameter";
+            var doc = document.implementation.createDocument(ttmlns, "tt", null);
+            doc.documentElement.setAttributeNS('http://www.w3.org/2000/xmlns/', "xmlns:s", ttmlsns);
+            doc.documentElement.setAttributeNS('http://www.w3.org/2000/xmlns/', "xmlns:p", ttmlpns);
+            (new XMLSerializer()).serializeToString(doc);
+            이 다음엔 child node 추가 넣기
+            */
             var ttdoc = document.implementation.createDocument(this.ttmlNamespaceURI, "tt", null);
             ttdoc.documentElement.setAttributeNS(this.xmlNamespaceURI, "xml:lang", "en-us");
             ttdoc.documentElement.setAttributeNS(this.xmlnsNamespaceURI, "xmlns:s", this.ttmlStyleNamespaceURI);
@@ -868,9 +931,24 @@ var SamiTS;
             head.appendChild(layout);
             var region = ttdoc.createElementNS(this.ttmlNamespaceURI, "region");
 
+            //region.setAttributeNS(this.xmlNamespaceURI
+            //var layout = sdpusdoc.
+            //var text: string;
+            //if (xsyncs.length > 0) {
+            //    text = this.getRichText(xsyncs[0].syncElement);
+            //    if (text.length > 0) writeText(0, text);
+            //    for (var i = 1; i < xsyncs.length - 1; i++) {
+            //        text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));//prevents cues consists of a single &nbsp;
+            //        if (text.length > 0) {
+            //            subDocument += "\r\n\r\n";
+            //            writeText(i, text);
+            //        }
+            //    }
+            //}
             return '<?xml version="1.0" encoding="utf-8"?>' + (new XMLSerializer()).serializeToString(ttdoc);
         };
         return SDPUSWriter;
     })();
     SamiTS.SDPUSWriter = SDPUSWriter;
 })(SamiTS || (SamiTS = {}));
+//# sourceMappingURL=sami.js.map

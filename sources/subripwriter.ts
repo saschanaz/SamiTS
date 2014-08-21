@@ -6,7 +6,7 @@ module SamiTS {
     }
 
     export class SubRipWriter {
-        write(xsyncs: SamiCue[], options: SubRipWriterOptions = null) {
+        write(xsyncs: SamiCue[], options?: SubRipWriterOptions) {
             var subDocument = "";
             var writeText = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
@@ -28,7 +28,7 @@ module SamiTS {
                     }
                 }
             }
-            return subDocument;
+            return <SamiTSResult>{ subtitle: subDocument };
         }
 
         private getSubRipTime(ms: number) {
