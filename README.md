@@ -17,11 +17,11 @@ declare module SamiTS {
   interface SubRipWriterOptions {
     useTextStyles?: boolean
   }
-  
   interface SamiTSResult {
     subtitle: string;
     stylesheet?: HTMLStyleElement;
   }
+  
   function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
   function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
   function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
