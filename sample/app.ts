@@ -52,8 +52,10 @@ function load(evt: Event) {
     switch (getTargetSubType()) {
         case SubType.WebVTT:
             sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true });
+            break;
         case SubType.SRT:
             sequence = SamiTS.createSubrip(subfile, { useTextStyles: getTagUse() });
+            break;
     }
     return sequence.then((result) => resultOutput(videofile, result));
 }
@@ -73,7 +75,7 @@ var resultOutput = (videoFile: Blob, result: SamiTS.SamiTSResult) => {
         track.label = "日本語";
         track.kind = "subtitles";
         track.srclang = "ja";
-        track.src = URL.createObjectURL(new Blob([result], { type: "text/vtt" }));
+        track.src = URL.createObjectURL(new Blob([result.subtitle], { type: "text/vtt" }));
         track.default = true;
         player.appendChild(track);
         showAreaSelector();
