@@ -101,8 +101,9 @@ module SamiTS {
 
             // Filter
             Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
+                var language: string;
                 if (child.nodeType == 1) {
-                    var language = (<SyncChildElement>child).dataset.language;
+                    language = (<SyncChildElement>child).dataset.language;
                     if (languages.indexOf(language) >= 0) {
                         (<SamiCue>cues[language]).syncElement.appendChild(child.cloneNode(true));
                         return;
@@ -111,8 +112,9 @@ module SamiTS {
 
                 // Nodes with no language code, including text nodes
                 // Add them to all cue objects
-                for (var cue in cues)
-                    (<SamiCue>cue).syncElement.appendChild(child.cloneNode(true));
+                if (!language)
+                    for (var language in cues)
+                        (<SamiCue>cues[language]).syncElement.appendChild(child.cloneNode(true));
             });
             return cues;
         }
@@ -191,6 +193,16 @@ module SamiTS {
             }
 
             return samiDocuments;
+        }
+
+        /**
+        @param increment Delay in microseconds
+        */
+        delay(increment: number) {
+            for (var i in this.cues) {
+                var cue = this.cues[i];
+                cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
+            }
         }
 
         private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {

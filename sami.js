@@ -205,21 +205,31 @@ var SamiTS;
 var SamiTS;
 (function (SamiTS) {
     function createWebVTT(input, options) {
-        var sequence = getString(input);
+        var sequence;
+        if (input instanceof SamiTS.SamiDocument)
+            sequence = Promise.resolve(input);
+        else
+            sequence = getString(input).then(function (samistr) {
+                return SamiTS.SamiDocument.parse(samistr);
+            });
 
-        return sequence.then(function (samistr) {
-            var samiDocument = SamiTS.SamiDocument.parse(samistr);
-            return (new SamiTS.WebVTTWriter()).write(samiDocument.cues, options);
+        return sequence.then(function (sami) {
+            return (new SamiTS.WebVTTWriter()).write(sami.cues, options);
         });
     }
     SamiTS.createWebVTT = createWebVTT;
 
     function createSubrip(input, options) {
-        var sequence = getString(input);
+        var sequence;
+        if (input instanceof SamiTS.SamiDocument)
+            sequence = Promise.resolve(input);
+        else
+            sequence = getString(input).then(function (samistr) {
+                return SamiTS.SamiDocument.parse(samistr);
+            });
 
-        return sequence.then(function (samistr) {
-            var samiDocument = SamiTS.SamiDocument.parse(samistr);
-            return (new SamiTS.SubRipWriter()).write(samiDocument.cues, options);
+        return sequence.then(function (sami) {
+            return (new SamiTS.SubRipWriter()).write(sami.cues, options);
         });
     }
     SamiTS.createSubrip = createSubrip;
@@ -379,6 +389,9 @@ var SamiTS;
                     var tagname = node.tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
+                            if (result)
+                                result += "\r\n";
+
                         default: {
                             result += _this.getRichText(node);
                             break;
@@ -434,16 +447,18 @@ var SamiTS;
                 cues[languages[i]] = new SamiCue(this.syncElement.cloneNode());
 
             Array.prototype.forEach.call(this.syncElement.childNodes, function (child) {
+                var language;
                 if (child.nodeType == 1) {
-                    var language = child.dataset.language;
+                    language = child.dataset.language;
                     if (languages.indexOf(language) >= 0) {
                         cues[language].syncElement.appendChild(child.cloneNode(true));
                         return;
                     }
                 }
 
-                for (var cue in cues)
-                    cue.syncElement.appendChild(child.cloneNode(true));
+                if (!language)
+                    for (var language in cues)
+                        cues[language].syncElement.appendChild(child.cloneNode(true));
             });
             return cues;
         };
@@ -524,6 +539,13 @@ var SamiTS;
             }
 
             return samiDocuments;
+        };
+
+        SamiDocument.prototype.delay = function (increment) {
+            for (var i in this.cues) {
+                var cue = this.cues[i];
+                cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
+            }
         };
 
         SamiDocument.giveLanguageData = function (cue, languages) {
@@ -799,6 +821,9 @@ var SamiTS;
                     var tagname = node.tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
+                            if (result)
+                                result += "\r\n";
+
                         default: {
                             result += _this.getRichText(node);
                             break;

@@ -104,6 +104,9 @@ module SamiTS {
                     var tagname = (<HTMLElement>node).tagName.toLowerCase();
                     switch (tagname) {
                         case "p":
+                            if (result)
+                                result += "\r\n";
+                            //nobreak
                         default: {
                             result += this.getRichText(node);
                             break;

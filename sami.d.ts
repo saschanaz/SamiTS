@@ -20,8 +20,10 @@ declare module SamiTS {
     }
     function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createWebVTT(input: SamiDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubrip(input: SamiDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
 }
 declare module SamiTS {
     class SDPUSWriter {
@@ -63,6 +65,7 @@ declare module SamiTS {
         public languages: SamiLanguage[];
         static parse(samistr: string): SamiDocument;
         public splitByLanguage(): any;
+        public delay(increment: number): void;
         private static giveLanguageData(cue, languages);
         private static extractClassSelectors(stylestr);
         private static fixIncorrectRubyNodes(syncobject);

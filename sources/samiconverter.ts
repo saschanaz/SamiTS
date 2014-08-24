@@ -28,24 +28,28 @@ module SamiTS {
 
     export function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    export function createWebVTT(input: SamiDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: any, options?: WebVTTWriterOptions) {
-        var sequence = getString(input);
+        var sequence: Promise<SamiDocument>;
+        if (input instanceof SamiDocument)
+            sequence = Promise.resolve(input);
+        else
+            sequence = getString(input).then((samistr) => SamiDocument.parse(samistr));
 
-        return sequence.then((samistr) => {
-            var samiDocument = SamiDocument.parse(samistr);
-            return (new SamiTS.WebVTTWriter()).write(samiDocument.cues, options)
-        });
+        return sequence.then((sami) => (new SamiTS.WebVTTWriter()).write(sami.cues, options));
     }
 
     export function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     export function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    export function createSubrip(input: SamiDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     export function createSubrip(input: any, options?: SubRipWriterOptions) {
-        var sequence = getString(input);
+        var sequence: Promise<SamiDocument>;
+        if (input instanceof SamiDocument)
+            sequence = Promise.resolve(input);
+        else
+            sequence = getString(input).then((samistr) => SamiDocument.parse(samistr));
 
-        return sequence.then((samistr) => {
-            var samiDocument = SamiDocument.parse(samistr);
-            return (new SamiTS.SubRipWriter()).write(samiDocument.cues, options)
-        });
+        return sequence.then((sami) => (new SamiTS.SubRipWriter()).write(sami.cues, options));
     }
 
     function getString(input: Blob): Promise<string>;
