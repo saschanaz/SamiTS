@@ -56,13 +56,13 @@ declare module SamiTS {
     class SamiCue {
         public syncElement: HTMLElement;
         constructor(syncElement: HTMLElement);
-        public filterByLanguageCode(lang: string): SamiCue;
+        public filter(...languages: string[]): any;
     }
     class SamiDocument {
-        public samiCues: SamiCue[];
+        public cues: SamiCue[];
         public languages: SamiLanguage[];
         static parse(samistr: string): SamiDocument;
-        public splitByLanguage(): SamiDocument[];
+        public splitByLanguage(): any;
         private static giveLanguageData(cue, languages);
         private static extractClassSelectors(stylestr);
         private static fixIncorrectRubyNodes(syncobject);
@@ -71,6 +71,7 @@ declare module SamiTS {
         private static isRubyParentExist(rtelement);
         private static getFontFromNode(text);
         private static exchangeFontWithTemp(syncobject);
+        private static _stripTemp(syncobject);
         private static extractFontAndText(syncobject);
         private static extractReadableTextNodes(syncobject);
         private static lastIndexOfInsensitive(target, searchString, position?);

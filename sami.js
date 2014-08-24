@@ -209,7 +209,7 @@ var SamiTS;
 
         return sequence.then(function (samistr) {
             var samiDocument = SamiTS.SamiDocument.parse(samistr);
-            return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options);
+            return (new SamiTS.WebVTTWriter()).write(samiDocument.cues, options);
         });
     }
     SamiTS.createWebVTT = createWebVTT;
@@ -219,7 +219,7 @@ var SamiTS;
 
         return sequence.then(function (samistr) {
             var samiDocument = SamiTS.SamiDocument.parse(samistr);
-            return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options);
+            return (new SamiTS.SubRipWriter()).write(samiDocument.cues, options);
         });
     }
     SamiTS.createSubrip = createSubrip;
@@ -424,17 +424,28 @@ var SamiTS;
             else
                 this.syncElement = syncElement;
         }
-        SamiCue.prototype.filterByLanguageCode = function (lang) {
-            var newsync = this.syncElement.cloneNode();
+        SamiCue.prototype.filter = function () {
+            var languages = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                languages[_i] = arguments[_i + 0];
+            }
+            var cues = {};
+            for (var i in languages)
+                cues[languages[i]] = new SamiCue(this.syncElement.cloneNode());
+
             Array.prototype.forEach.call(this.syncElement.childNodes, function (child) {
                 if (child.nodeType == 1) {
-                    var langData = child.dataset.language;
-                    if (!langData || langData === lang)
-                        newsync.appendChild(child.cloneNode(true));
-                } else
-                    newsync.appendChild(child.cloneNode());
+                    var language = child.dataset.language;
+                    if (languages.indexOf(language) >= 0) {
+                        cues[language].syncElement.appendChild(child.cloneNode(true));
+                        return;
+                    }
+                }
+
+                for (var cue in cues)
+                    cue.syncElement.appendChild(child.cloneNode(true));
             });
-            return new SamiCue(newsync);
+            return cues;
         };
         return SamiCue;
     })();
@@ -442,7 +453,7 @@ var SamiTS;
 
     var SamiDocument = (function () {
         function SamiDocument() {
-            this.samiCues = [];
+            this.cues = [];
             this.languages = [];
         }
         SamiDocument.parse = function (samistr) {
@@ -479,9 +490,9 @@ var SamiTS;
                 syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach(function (sync) {
-                samiDocument.samiCues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
+                samiDocument.cues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
             });
-            samiDocument.samiCues.forEach(function (cue) {
+            samiDocument.cues.forEach(function (cue) {
                 _this.giveLanguageData(cue, samiDocument.languages);
             });
 
@@ -489,18 +500,29 @@ var SamiTS;
         };
 
         SamiDocument.prototype.splitByLanguage = function () {
-            var _this = this;
-            var samiDocuments = [];
-            this.languages.forEach(function (value) {
-                var newDocument = new SamiDocument();
-                newDocument.languages.push(value);
-                _this.samiCues.forEach(function (cue) {
-                    var filtered = cue.filterByLanguageCode(value.languageCode);
-                    if (filtered.syncElement.hasChildNodes())
-                        newDocument.samiCues.push(filtered);
+            var samiDocuments = {};
+            var languageCodes = [];
+            for (var i in this.languages) {
+                var language = this.languages[i];
+                languageCodes.push(language.languageCode);
+
+                var sami = new SamiDocument();
+                sami.languages.push({
+                    className: language.className,
+                    languageCode: language.languageCode,
+                    languageName: language.languageName
                 });
-                samiDocuments.push(newDocument);
-            });
+                samiDocuments[language.languageCode] = sami;
+            }
+
+            for (var i in this.cues) {
+                var cue = this.cues[i];
+                var filtered = cue.filter.apply(cue, languageCodes);
+                languageCodes.forEach(function (code) {
+                    samiDocuments[code].cues.push(filtered[code]);
+                });
+            }
+
             return samiDocuments;
         };
 
@@ -564,7 +586,7 @@ var SamiTS;
                         this.wrapWith(textsFromNoFont[i], font);
                 }
 
-                return this.fixIncorrectRPs(fontdeleted);
+                return this.fixIncorrectRPs(this._stripTemp(fontdeleted));
             } else
                 return syncobject;
         };
@@ -629,10 +651,18 @@ var SamiTS;
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
-                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
+                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
             });
             newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
             return newsync;
+        };
+
+        SamiDocument._stripTemp = function (syncobject) {
+            var temps = syncobject.querySelectorAll("x-samits-temp");
+            Array.prototype.forEach.call(temps, function (temp) {
+                temp.parentNode.removeChild(temp);
+            });
+            return syncobject;
         };
 
         SamiDocument.extractFontAndText = function (syncobject) {

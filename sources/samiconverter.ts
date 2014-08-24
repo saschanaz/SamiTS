@@ -33,7 +33,7 @@ module SamiTS {
 
         return sequence.then((samistr) => {
             var samiDocument = SamiDocument.parse(samistr);
-            return (new SamiTS.WebVTTWriter()).write(samiDocument.samiCues, options)
+            return (new SamiTS.WebVTTWriter()).write(samiDocument.cues, options)
         });
     }
 
@@ -44,7 +44,7 @@ module SamiTS {
 
         return sequence.then((samistr) => {
             var samiDocument = SamiDocument.parse(samistr);
-            return (new SamiTS.SubRipWriter()).write(samiDocument.samiCues, options)
+            return (new SamiTS.SubRipWriter()).write(samiDocument.cues, options)
         });
     }
 

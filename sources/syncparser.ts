@@ -56,6 +56,16 @@ module SamiTS {
         language 코드가 발견되면 그 노드의 language에 대응하는 syncElement를 만들어 {}에 추가하고, 그 syncElement에 노드를 넣음
         코드가 없으면 모든 노드에... 코드 없는 거 뒤에 코드 있는 게 나오면 안된다. 음
         먼저 스캔 싹 하고 language 목록 만듦?
+
+        언어별로 자막 나눌 때 filter 세 번 날리는 것보단 split 한 번 날리는 게 빠르기 때문에...
+
+        그런데 split보다는 filter에 targets: ...string[] 으로 하는 게 함수 재활용면에서 더 나을 것 같다
+        작동은 split과 비슷하나 패러미터에 언어 목록이 미리 주어지므로 따로 매번 스캔할 필요가 없고 언어 코드가 하나도 없을 경우를 신경쓰지 않아도 된다
+        (split하기 전에 그런 경우는 잡아서 split하지 않도록 할 수 있음, .languages.length <= 1 이라든가)
+
+        이거 먼저 마치고 delay 넣자
+
+        언어별 split하고 싶을 때 SamiDocument 써서 split해서 나온 SamiDocument들로 createWebVTT 쓰도록 유도
         */
         //splitByLanguageCode() {
         //    var languages = {};
@@ -83,23 +93,33 @@ module SamiTS {
         //    return languages;
         //}
 
-        filterByLanguageCode(lang: string) {
-            var newsync = <HTMLElement>this.syncElement.cloneNode();
+        filter(...languages: string[]) {
+            // Dictionary initialization
+            var cues = <any>{};
+            for (var i in languages)
+                cues[languages[i]] = new SamiCue(<HTMLElement>this.syncElement.cloneNode());
+
+            // Filter
             Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
                 if (child.nodeType == 1) {
-                    var langData = (<SyncChildElement>child).dataset.language;
-                    if (!langData || langData === lang)//no language code or specific language code
-                        newsync.appendChild(child.cloneNode(true));
+                    var language = (<SyncChildElement>child).dataset.language;
+                    if (languages.indexOf(language) >= 0) {
+                        (<SamiCue>cues[language]).syncElement.appendChild(child.cloneNode(true));
+                        return;
+                    }
                 }
-                else//text node
-                    newsync.appendChild(child.cloneNode());
+
+                // Nodes with no language code, including text nodes
+                // Add them to all cue objects
+                for (var cue in cues)
+                    (<SamiCue>cue).syncElement.appendChild(child.cloneNode(true));
             });
-            return new SamiCue(newsync);
+            return cues;
         }
     }
 
     export class SamiDocument {
-        samiCues: SamiCue[] = [];
+        cues: SamiCue[] = [];
         languages: SamiLanguage[] = [];
 
         static parse(samistr: string): SamiDocument {
@@ -137,9 +157,9 @@ module SamiTS {
                 syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach((sync) => {
-                samiDocument.samiCues.push(new SamiCue(this.fixIncorrectRubyNodes(<SyncElement>sync.element)));
+                samiDocument.cues.push(new SamiCue(this.fixIncorrectRubyNodes(<SyncElement>sync.element)));
             });
-            samiDocument.samiCues.forEach((cue: SamiCue) => {
+            samiDocument.cues.forEach((cue: SamiCue) => {
                 this.giveLanguageData(cue, samiDocument.languages);
             });
 
@@ -147,17 +167,29 @@ module SamiTS {
         }
 
         splitByLanguage() {
-            var samiDocuments: SamiDocument[] = [];
-            this.languages.forEach((value: SamiLanguage) => {
-                var newDocument = new SamiDocument();
-                newDocument.languages.push(value);
-                this.samiCues.forEach((cue: SamiCue) => {
-                    var filtered = cue.filterByLanguageCode(value.languageCode);
-                    if (filtered.syncElement.hasChildNodes())
-                        newDocument.samiCues.push(filtered);
+            var samiDocuments = <any>{};
+            var languageCodes: string[] = [];
+            for (var i in this.languages) {
+                var language = this.languages[i];
+                languageCodes.push(language.languageCode);
+
+                var sami = new SamiDocument();
+                sami.languages.push({
+                    className: language.className,
+                    languageCode: language.languageCode,
+                    languageName: language.languageName
                 });
-                samiDocuments.push(newDocument);
-            });
+                samiDocuments[language.languageCode] = sami;
+            }
+
+            for (var i in this.cues) {
+                var cue = this.cues[i];
+                var filtered = cue.filter.apply(cue, languageCodes);
+                languageCodes.forEach((code) => {
+                    (<SamiDocument>samiDocuments[code]).cues.push(filtered[code]);
+                });
+            }
+
             return samiDocuments;
         }
 
@@ -222,7 +254,7 @@ module SamiTS {
                         this.wrapWith(textsFromNoFont[i], font);
                 }
 
-                return this.fixIncorrectRPs(fontdeleted);
+                return this.fixIncorrectRPs(this._stripTemp(fontdeleted));
             }
             else
                 return syncobject;
@@ -296,14 +328,29 @@ module SamiTS {
                 return null;
         }
 
-        private static exchangeFontWithTemp(syncobject: SyncElement) {//<temp /> will be ignored by parsers
+
+        /**
+        Creates new element that replaces <font> start tags with <x-samits-temp></x-samits-temp> and deletes </font> end tags.
+        */
+        private static exchangeFontWithTemp(syncobject: SyncElement) {
             var newsync = <SyncElement>syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
-                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<temp />" + newsyncstr.slice(fonttag.endPosition);
+                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
             });
             newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
             return newsync;
+        }
+
+        /**
+        Removes all <x-samits-temp> tags in the input element.
+        */
+        private static _stripTemp(syncobject: SyncElement) {
+            var temps = syncobject.querySelectorAll("x-samits-temp");
+            Array.prototype.forEach.call(temps, (temp: HTMLElement) => {
+                temp.parentNode.removeChild(temp);
+            });
+            return syncobject;
         }
 
         private static extractFontAndText(syncobject: SyncElement) {
