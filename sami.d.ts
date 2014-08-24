@@ -20,10 +20,10 @@ declare module SamiTS {
     }
     function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createWebVTT(input: SamiDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    function createSubrip(input: SamiDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createWebVTT(input: SAMIDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createSubRip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
 }
 declare module SamiTS {
     class SDPUSWriter {
@@ -42,7 +42,7 @@ declare module SamiTS {
         useTextStyles?: boolean;
     }
     class SubRipWriter {
-        public write(xsyncs: SamiCue[], options?: SubRipWriterOptions): SamiTSResult;
+        public write(xsyncs: SAMICue[], options?: SubRipWriterOptions): SamiTSResult;
         private getSubRipTime(ms);
         private absorbAir(target);
         private getSimpleText(syncobject);
@@ -50,24 +50,29 @@ declare module SamiTS {
     }
 }
 declare module SamiTS {
-    interface SamiLanguage {
+    interface SAMILanguage {
         className: string;
         languageName: string;
         languageCode: string;
     }
-    class SamiCue {
+    interface SAMIDocumentDictionary {
+        [key: string]: SAMIDocument;
+    }
+    class SAMICue {
         public syncElement: HTMLElement;
         constructor(syncElement: HTMLElement);
-        public filter(...languages: string[]): any;
+        public filter(...languages: string[]): {
+            [key: string]: SAMICue;
+        };
     }
-    class SamiDocument {
-        public cues: SamiCue[];
-        public languages: SamiLanguage[];
-        public splitByLanguage(): any;
+    class SAMIDocument {
+        public cues: SAMICue[];
+        public languages: SAMILanguage[];
+        public splitByLanguage(): SAMIDocumentDictionary;
         public delay(increment: number): void;
     }
-    module SamiDocument {
-        function parse(samistr: string): SamiDocument;
+    module SAMIDocument {
+        function parse(samistr: string): SAMIDocument;
     }
 }
 declare module SamiTS {
@@ -78,7 +83,7 @@ declare module SamiTS {
     }
     class WebVTTWriter {
         private webvttStyleSheet;
-        public write(xsyncs: SamiCue[], options?: WebVTTWriterOptions): SamiTSResult;
+        public write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
         private absorbAir(target);
         private getRichText(syncobject);

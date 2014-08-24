@@ -28,26 +28,26 @@ module SamiTS {
 
     export function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    export function createWebVTT(input: SamiDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    export function createWebVTT(input: SAMIDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: any, options?: WebVTTWriterOptions) {
-        var sequence: Promise<SamiDocument>;
-        if (input instanceof SamiDocument)
+        var sequence: Promise<SAMIDocument>;
+        if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
-            sequence = getString(input).then((samistr) => SamiDocument.parse(samistr));
+            sequence = getString(input).then((samistr) => SAMIDocument.parse(samistr));
 
         return sequence.then((sami) => (new SamiTS.WebVTTWriter()).write(sami.cues, options));
     }
 
-    export function createSubrip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    export function createSubrip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    export function createSubrip(input: SamiDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    export function createSubrip(input: any, options?: SubRipWriterOptions) {
-        var sequence: Promise<SamiDocument>;
-        if (input instanceof SamiDocument)
+    export function createSubRip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    export function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    export function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    export function createSubRip(input: any, options?: SubRipWriterOptions) {
+        var sequence: Promise<SAMIDocument>;
+        if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
-            sequence = getString(input).then((samistr) => SamiDocument.parse(samistr));
+            sequence = getString(input).then((samistr) => SAMIDocument.parse(samistr));
 
         return sequence.then((sami) => (new SamiTS.SubRipWriter()).write(sami.cues, options));
     }

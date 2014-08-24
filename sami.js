@@ -206,11 +206,11 @@ var SamiTS;
 (function (SamiTS) {
     function createWebVTT(input, options) {
         var sequence;
-        if (input instanceof SamiTS.SamiDocument)
+        if (input instanceof SamiTS.SAMIDocument)
             sequence = Promise.resolve(input);
         else
             sequence = getString(input).then(function (samistr) {
-                return SamiTS.SamiDocument.parse(samistr);
+                return SamiTS.SAMIDocument.parse(samistr);
             });
 
         return sequence.then(function (sami) {
@@ -219,20 +219,20 @@ var SamiTS;
     }
     SamiTS.createWebVTT = createWebVTT;
 
-    function createSubrip(input, options) {
+    function createSubRip(input, options) {
         var sequence;
-        if (input instanceof SamiTS.SamiDocument)
+        if (input instanceof SamiTS.SAMIDocument)
             sequence = Promise.resolve(input);
         else
             sequence = getString(input).then(function (samistr) {
-                return SamiTS.SamiDocument.parse(samistr);
+                return SamiTS.SAMIDocument.parse(samistr);
             });
 
         return sequence.then(function (sami) {
             return (new SamiTS.SubRipWriter()).write(sami.cues, options);
         });
     }
-    SamiTS.createSubrip = createSubrip;
+    SamiTS.createSubRip = createSubRip;
 
     function getString(input) {
         if (typeof input === "string")
@@ -430,21 +430,21 @@ var SamiTS;
 "use strict";
 var SamiTS;
 (function (SamiTS) {
-    var SamiCue = (function () {
-        function SamiCue(syncElement) {
+    var SAMICue = (function () {
+        function SAMICue(syncElement) {
             if (syncElement.tagName.toLowerCase() !== "sync")
                 throw new Error("SamiCue can only accept sync element");
             else
                 this.syncElement = syncElement;
         }
-        SamiCue.prototype.filter = function () {
+        SAMICue.prototype.filter = function () {
             var languages = [];
             for (var _i = 0; _i < (arguments.length - 0); _i++) {
                 languages[_i] = arguments[_i + 0];
             }
             var cues = {};
             for (var i in languages)
-                cues[languages[i]] = new SamiCue(this.syncElement.cloneNode());
+                cues[languages[i]] = new SAMICue(this.syncElement.cloneNode());
 
             Array.prototype.forEach.call(this.syncElement.childNodes, function (child) {
                 var language;
@@ -462,23 +462,24 @@ var SamiTS;
             });
             return cues;
         };
-        return SamiCue;
+        return SAMICue;
     })();
-    SamiTS.SamiCue = SamiCue;
+    SamiTS.SAMICue = SAMICue;
 
-    var SamiDocument = (function () {
-        function SamiDocument() {
+    var SAMIDocument = (function () {
+        function SAMIDocument() {
             this.cues = [];
             this.languages = [];
         }
-        SamiDocument.prototype.splitByLanguage = function () {
+        SAMIDocument.prototype.splitByLanguage = function () {
             var samiDocuments = {};
             var languageCodes = [];
+
             for (var i in this.languages) {
                 var language = this.languages[i];
                 languageCodes.push(language.languageCode);
 
-                var sami = new SamiDocument();
+                var sami = new SAMIDocument();
                 sami.languages.push({
                     className: language.className,
                     languageCode: language.languageCode,
@@ -498,19 +499,19 @@ var SamiTS;
             return samiDocuments;
         };
 
-        SamiDocument.prototype.delay = function (increment) {
+        SAMIDocument.prototype.delay = function (increment) {
             for (var i in this.cues) {
                 var cue = this.cues[i];
                 cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
             }
         };
-        return SamiDocument;
+        return SAMIDocument;
     })();
-    SamiTS.SamiDocument = SamiDocument;
+    SamiTS.SAMIDocument = SAMIDocument;
 
-    (function (SamiDocument) {
+    (function (SAMIDocument) {
         function parse(samistr) {
-            var samiDocument = new SamiDocument();
+            var samiDocument = new SAMIDocument();
             var domparser = new DOMParser();
 
             var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
@@ -542,7 +543,7 @@ var SamiTS;
                 syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach(function (sync) {
-                samiDocument.cues.push(new SamiCue(fixIncorrectRubyNodes(sync.element)));
+                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(sync.element)));
             });
             samiDocument.cues.forEach(function (cue) {
                 giveLanguageData(cue, samiDocument.languages);
@@ -550,7 +551,7 @@ var SamiTS;
 
             return samiDocument;
         }
-        SamiDocument.parse = parse;
+        SAMIDocument.parse = parse;
 
         function giveLanguageData(cue, languages) {
             Array.prototype.forEach.call(cue.syncElement.children, function (child) {
@@ -741,8 +742,8 @@ var SamiTS;
             }
             return -1;
         }
-    })(SamiTS.SamiDocument || (SamiTS.SamiDocument = {}));
-    var SamiDocument = SamiTS.SamiDocument;
+    })(SamiTS.SAMIDocument || (SamiTS.SAMIDocument = {}));
+    var SAMIDocument = SamiTS.SAMIDocument;
 })(SamiTS || (SamiTS = {}));
 "use strict";
 var SamiTS;

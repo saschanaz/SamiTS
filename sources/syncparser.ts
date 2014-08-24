@@ -23,10 +23,13 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 "use strict";
 
 module SamiTS {
-    export interface SamiLanguage {
+    export interface SAMILanguage {
         className: string;
         languageName: string;
         languageCode: string;
+    }
+    export interface SAMIDocumentDictionary {
+        [key: string]: SAMIDocument
     }
     interface SAMIContentDataset extends DOMStringMap {
         language: string;
@@ -41,7 +44,7 @@ module SamiTS {
         dataset: SAMISyncDataset;
     }
 
-    export class SamiCue {
+    export class SAMICue {
         syncElement: HTMLElement;
         constructor(syncElement: HTMLElement) {
             if (syncElement.tagName.toLowerCase() !== "sync")
@@ -52,9 +55,9 @@ module SamiTS {
 
         filter(...languages: string[]) {
             // Dictionary initialization
-            var cues = <any>{};
+            var cues: { [key: string]: SAMICue } = {};
             for (var i in languages)
-                cues[languages[i]] = new SamiCue(<HTMLElement>this.syncElement.cloneNode());
+                cues[languages[i]] = new SAMICue(<HTMLElement>this.syncElement.cloneNode());
 
             // Filter
             Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
@@ -62,7 +65,7 @@ module SamiTS {
                 if (child.nodeType == 1) {
                     language = (<SAMIContentElement>child).dataset.language;
                     if (languages.indexOf(language) >= 0) {
-                        (<SamiCue>cues[language]).syncElement.appendChild(child.cloneNode(true));
+                        cues[language].syncElement.appendChild(child.cloneNode(true));
                         return;
                     }
                 }
@@ -71,24 +74,29 @@ module SamiTS {
                 // Add them to all cue objects
                 if (!language)
                     for (var language in cues)
-                        (<SamiCue>cues[language]).syncElement.appendChild(child.cloneNode(true));
+                        cues[language].syncElement.appendChild(child.cloneNode(true));
             });
             return cues;
         }
     }
 
-    export class SamiDocument {
-        cues: SamiCue[] = [];
-        languages: SamiLanguage[] = [];
+    export class SAMIDocument {
+        cues: SAMICue[] = [];
+        languages: SAMILanguage[] = [];
 
+        /**
+        Split SAMI document by its languages. Result may not be strictly ordered by any ways.
+        */
         splitByLanguage() {
-            var samiDocuments = <any>{};
+            var samiDocuments: SAMIDocumentDictionary = {};
             var languageCodes: string[] = [];
+
+            // Dictionary initialization
             for (var i in this.languages) {
                 var language = this.languages[i];
                 languageCodes.push(language.languageCode);
 
-                var sami = new SamiDocument();
+                var sami = new SAMIDocument();
                 sami.languages.push({
                     className: language.className,
                     languageCode: language.languageCode,
@@ -97,11 +105,12 @@ module SamiTS {
                 samiDocuments[language.languageCode] = sami;
             }
 
+            // Cue splitting
             for (var i in this.cues) {
                 var cue = this.cues[i];
                 var filtered = cue.filter.apply(cue, languageCodes);
                 languageCodes.forEach((code) => {
-                    (<SamiDocument>samiDocuments[code]).cues.push(filtered[code]);
+                    samiDocuments[code].cues.push(filtered[code]);
                 });
             }
 
@@ -119,9 +128,9 @@ module SamiTS {
         }
     }
 
-    export module SamiDocument {
-        export function parse(samistr: string): SamiDocument {
-            var samiDocument = new SamiDocument();
+    export module SAMIDocument {
+        export function parse(samistr: string): SAMIDocument {
+            var samiDocument = new SAMIDocument();
             var domparser = new DOMParser();
 
             var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
@@ -155,16 +164,16 @@ module SamiTS {
                 syncs[i].element.innerHTML = (<SAMISyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach((sync) => {
-                samiDocument.cues.push(new SamiCue(fixIncorrectRubyNodes(<SAMISyncElement>sync.element)));
+                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(<SAMISyncElement>sync.element)));
             });
-            samiDocument.cues.forEach((cue: SamiCue) => {
+            samiDocument.cues.forEach((cue: SAMICue) => {
                 giveLanguageData(cue, samiDocument.languages);
             });
 
             return samiDocument;
         }
 
-        function giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
+        function giveLanguageData(cue: SAMICue, languages: SAMILanguage[]) {
             Array.prototype.forEach.call(cue.syncElement.children, (child: SAMIContentElement) => {
                 for (var i = 0; i < languages.length; i++) {
                     var classCode = child.className;
@@ -176,7 +185,7 @@ module SamiTS {
 
         function extractClassSelectors(stylestr: string) {
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
-            var languages: SamiLanguage[] = [];
+            var languages: SAMILanguage[] = [];
             classes.forEach((classstr) => {
                 var classselector = classstr.match(/\.\w+{/);
                 if (classselector.length != 1)

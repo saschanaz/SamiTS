@@ -28,7 +28,7 @@ module SamiTS {
     }
 
     export class SubRipWriter {
-        write(xsyncs: SamiCue[], options?: SubRipWriterOptions) {
+        write(xsyncs: SAMICue[], options?: SubRipWriterOptions) {
             var subDocument = "";
             var writeText = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();

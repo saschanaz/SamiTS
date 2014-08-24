@@ -22,22 +22,17 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 "use strict";
 
-/*
-TODO:
-option: exclude default styles
-custom video element CSS selector support
- */
-
 module SamiTS {
     export interface WebVTTWriterOptions {
         createStyleElement?: boolean;
         disableDefaultStyle?: boolean;
+        /** The default value is "video". */
         selector?: string;
     }
 
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
-        write(xsyncs: SamiCue[], options?: WebVTTWriterOptions) {
+        write(xsyncs: SAMICue[], options?: WebVTTWriterOptions) {
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = (i: number, text: string) => {
