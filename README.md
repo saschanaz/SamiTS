@@ -7,6 +7,36 @@ SamiTS extracts styles and reprocess it to make a standard CSS stylesheet.
 
 Get a sneak peak at it in [a sample](http://saschanaz.github.io/SamiTS/sample/) here.
 
+# Example
+
+### Simple use
+
+```javascript
+var player = document.getElementById("player");
+var input = document.getElementById("loadVideo");
+
+var track = document.createElement("track");
+SamiTS.createWebVTT(input.files[0], { createStyleElement: true })
+  .then(function (result) {
+    track.src = URL.createObjectURL(new Blob([result.subtitle], { type: "text/vtt" }));
+    document.head.appendChild(result.stylesheet);
+  });
+```
+
+### More advanced
+
+```javascript
+SamiTS.createSamiDocument(input.files[0])
+  .then(function (sami) {
+    sami.delay(300);
+	return SamiTS.createWebVTT(sami, { createStyleElement: true })
+  })
+  .then(function (result) {
+    track.src = URL.createObjectURL(new Blob([result.subtitle], { type: "text/vtt" }));
+    document.head.appendChild(result.stylesheet);
+  });;
+```
+
 # API
 
 ```typescript
@@ -54,34 +84,4 @@ declare module SamiTS {
         public delay(increment: number): void;
     }
 }
-```
-
-# Example
-
-### Simple use
-
-```javascript
-var player = document.getElementById("player");
-var input = document.getElementById("loadVideo");
-
-var track = document.createElement("track");
-SamiTS.createWebVTT(input.files[0], { createStyleElement: true })
-  .then(function (result) {
-    track.src = URL.createObjectURL(new Blob([result.subtitle], { type: "text/vtt" }));
-    document.head.appendChild(result.stylesheet);
-  });
-```
-
-### More advanced
-
-```javascript
-SamiTS.createSamiDocument(input.files[0])
-  .then(function (sami) {
-    sami.delay(300);
-	return SamiTS.createWebVTT(sami, { createStyleElement: true })
-  })
-  .then(function (result) {
-    track.src = URL.createObjectURL(new Blob([result.subtitle], { type: "text/vtt" }));
-    document.head.appendChild(result.stylesheet);
-  });;
 ```
