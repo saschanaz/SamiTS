@@ -28,17 +28,17 @@ module SamiTS {
         languageName: string;
         languageCode: string;
     }
-    interface SyncChildDataset extends DOMStringMap {
+    interface SAMIContentDataset extends DOMStringMap {
         language: string;
     }
-    interface SyncDataset extends DOMStringMap {
+    interface SAMISyncDataset extends DOMStringMap {
         originalString: string;
     }
-    interface SyncChildElement extends HTMLElement {
-        dataset: SyncChildDataset
+    interface SAMIContentElement extends HTMLElement {
+        dataset: SAMIContentDataset
     }
-    interface SyncElement extends HTMLElement {
-        dataset: SyncDataset;
+    interface SAMISyncElement extends HTMLElement {
+        dataset: SAMISyncDataset;
     }
 
     export class SamiCue {
@@ -48,50 +48,7 @@ module SamiTS {
                 throw new Error("SamiCue can only accept sync element");
             else
                 this.syncElement = syncElement;
-
         }
-
-        /*
-        TODO: filter 말고 split으로 교체
-        language 코드가 발견되면 그 노드의 language에 대응하는 syncElement를 만들어 {}에 추가하고, 그 syncElement에 노드를 넣음
-        코드가 없으면 모든 노드에... 코드 없는 거 뒤에 코드 있는 게 나오면 안된다. 음
-        먼저 스캔 싹 하고 language 목록 만듦?
-
-        언어별로 자막 나눌 때 filter 세 번 날리는 것보단 split 한 번 날리는 게 빠르기 때문에...
-
-        그런데 split보다는 filter에 targets: ...string[] 으로 하는 게 함수 재활용면에서 더 나을 것 같다
-        작동은 split과 비슷하나 패러미터에 언어 목록이 미리 주어지므로 따로 매번 스캔할 필요가 없고 언어 코드가 하나도 없을 경우를 신경쓰지 않아도 된다
-        (split하기 전에 그런 경우는 잡아서 split하지 않도록 할 수 있음, .languages.length <= 1 이라든가)
-
-        이거 먼저 마치고 delay 넣자
-
-        언어별 split하고 싶을 때 SamiDocument 써서 split해서 나온 SamiDocument들로 createWebVTT 쓰도록 유도
-        */
-        //splitByLanguageCode() {
-        //    var languages = {};
-        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
-        //        if (child.nodeType == 1) {
-        //            var langData = <string>(<HTMLElement>child).dataset["language"];
-        //            if (langData)
-        //                languages[langData] = <HTMLElement>this.syncElement.cloneNode();
-        //        }
-        //    });
-        //    Array.prototype.filter.call(this.syncElement.children, (child: Node) => {
-        //        if (child.nodeType == 1) {
-        //            var langData = <string>(<HTMLElement>child).dataset["language"];
-        //            if (!langData) {
-        //                for (var newsync in languages)
-        //                    (<HTMLElement>newsync).appendChild(child.cloneNode(true));
-        //            }
-        //            else
-        //                (<HTMLElement>languages[langData]).appendChild(child.cloneNode(true));
-        //        }
-        //        else
-        //            for (var newsync in languages)
-        //                (<HTMLElement>newsync).appendChild(child.cloneNode(true));
-        //    });
-        //    return languages;
-        //}
 
         filter(...languages: string[]) {
             // Dictionary initialization
@@ -103,7 +60,7 @@ module SamiTS {
             Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
                 var language: string;
                 if (child.nodeType == 1) {
-                    language = (<SyncChildElement>child).dataset.language;
+                    language = (<SAMIContentElement>child).dataset.language;
                     if (languages.indexOf(language) >= 0) {
                         (<SamiCue>cues[language]).syncElement.appendChild(child.cloneNode(true));
                         return;
@@ -193,12 +150,12 @@ module SamiTS {
 
             var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+                syncs[i].element.innerHTML = (<SAMISyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
-                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
+                syncs[i].element.innerHTML = (<SAMISyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach((sync) => {
-                samiDocument.cues.push(new SamiCue(fixIncorrectRubyNodes(<SyncElement>sync.element)));
+                samiDocument.cues.push(new SamiCue(fixIncorrectRubyNodes(<SAMISyncElement>sync.element)));
             });
             samiDocument.cues.forEach((cue: SamiCue) => {
                 giveLanguageData(cue, samiDocument.languages);
@@ -208,7 +165,7 @@ module SamiTS {
         }
 
         function giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
-            Array.prototype.forEach.call(cue.syncElement.children, (child: SyncChildElement) => {
+            Array.prototype.forEach.call(cue.syncElement.children, (child: SAMIContentElement) => {
                 for (var i = 0; i < languages.length; i++) {
                     var classCode = child.className;
                     if (!classCode || classCode === languages[i].className)
@@ -250,7 +207,7 @@ module SamiTS {
             return languages;
         }
 
-        function fixIncorrectRubyNodes(syncobject: SyncElement) {
+        function fixIncorrectRubyNodes(syncobject: SAMISyncElement) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
@@ -268,7 +225,7 @@ module SamiTS {
                         wrapWith(textsFromNoFont[i], font);
                 }
 
-                return fixIncorrectRPs(_stripTemp(fontdeleted));
+                return fixIncorrectRPs(stripTemp(fontdeleted));
             }
             else
                 return syncobject;
@@ -346,8 +303,8 @@ module SamiTS {
         /**
         Creates new element that replaces <font> start tags with <x-samits-temp></x-samits-temp> and deletes </font> end tags.
         */
-        function exchangeFontWithTemp(syncobject: SyncElement) {
-            var newsync = <SyncElement>syncobject.cloneNode(false);
+        function exchangeFontWithTemp(syncobject: SAMISyncElement) {
+            var newsync = <SAMISyncElement>syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
@@ -359,7 +316,7 @@ module SamiTS {
         /**
         Removes all <x-samits-temp> tags in the input element.
         */
-        function _stripTemp(syncobject: SyncElement) {
+        function stripTemp(syncobject: SAMISyncElement) {
             var temps = syncobject.querySelectorAll("x-samits-temp");
             Array.prototype.forEach.call(temps, (temp: HTMLElement) => {
                 temp.parentNode.removeChild(temp);
@@ -367,8 +324,8 @@ module SamiTS {
             return syncobject;
         }
 
-        function extractFontAndText(syncobject: SyncElement) {
-            var newsync = <SyncElement>syncobject.cloneNode(false);
+        function extractFontAndText(syncobject: SAMISyncElement) {
+            var newsync = <SAMISyncElement>syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
             tags.filter((foundtag: SamiTS.FoundHTMLTag) => {

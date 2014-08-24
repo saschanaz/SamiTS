@@ -612,7 +612,7 @@ var SamiTS;
                         wrapWith(textsFromNoFont[i], font);
                 }
 
-                return fixIncorrectRPs(_stripTemp(fontdeleted));
+                return fixIncorrectRPs(stripTemp(fontdeleted));
             } else
                 return syncobject;
         }
@@ -683,7 +683,7 @@ var SamiTS;
             return newsync;
         }
 
-        function _stripTemp(syncobject) {
+        function stripTemp(syncobject) {
             var temps = syncobject.querySelectorAll("x-samits-temp");
             Array.prototype.forEach.call(temps, function (temp) {
                 temp.parentNode.removeChild(temp);
