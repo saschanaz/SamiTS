@@ -471,49 +471,6 @@ var SamiTS;
             this.cues = [];
             this.languages = [];
         }
-        SamiDocument.parse = function (samistr) {
-            var _this = this;
-            var samiDocument = new SamiDocument();
-            var domparser = new DOMParser();
-
-            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
-            var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
-
-            var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
-                return word.toLowerCase();
-            }).replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) {
-                return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4);
-            }), "text/xml").firstChild;
-
-            var samihead = samicontainer.getElementsByTagName("head")[0];
-
-            var stylestr = '';
-            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
-                if (text.data)
-                    stylestr += text.data;
-            });
-            samiDocument.languages = this.extractClassSelectors(stylestr);
-
-            var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
-
-            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
-
-            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
-
-            syncs.forEach(function (sync) {
-                samiDocument.cues.push(new SamiCue(_this.fixIncorrectRubyNodes(sync.element)));
-            });
-            samiDocument.cues.forEach(function (cue) {
-                _this.giveLanguageData(cue, samiDocument.languages);
-            });
-
-            return samiDocument;
-        };
-
         SamiDocument.prototype.splitByLanguage = function () {
             var samiDocuments = {};
             var languageCodes = [];
@@ -547,8 +504,55 @@ var SamiTS;
                 cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
             }
         };
+        return SamiDocument;
+    })();
+    SamiTS.SamiDocument = SamiDocument;
 
-        SamiDocument.giveLanguageData = function (cue, languages) {
+    (function (SamiDocument) {
+        function parse(samistr) {
+            var samiDocument = new SamiDocument();
+            var domparser = new DOMParser();
+
+            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
+            var bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
+
+            var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex)).replace(/(<\/?)(\w+)[^<]+>/g, function (word) {
+                return word.toLowerCase();
+            }).replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) {
+                return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4);
+            }), "text/xml").firstChild;
+
+            var samihead = samicontainer.getElementsByTagName("head")[0];
+
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
+                if (text.data)
+                    stylestr += text.data;
+            });
+            samiDocument.languages = extractClassSelectors(stylestr);
+
+            var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+
+            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
+            for (var i = 0; i < syncs.length - 1; i++)
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            if (i > 0)
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
+
+            syncs.forEach(function (sync) {
+                samiDocument.cues.push(new SamiCue(fixIncorrectRubyNodes(sync.element)));
+            });
+            samiDocument.cues.forEach(function (cue) {
+                giveLanguageData(cue, samiDocument.languages);
+            });
+
+            return samiDocument;
+        }
+        SamiDocument.parse = parse;
+
+        function giveLanguageData(cue, languages) {
             Array.prototype.forEach.call(cue.syncElement.children, function (child) {
                 for (var i = 0; i < languages.length; i++) {
                     var classCode = child.className;
@@ -556,9 +560,9 @@ var SamiTS;
                         child.dataset.language = languages[i].languageCode;
                 }
             });
-        };
+        }
 
-        SamiDocument.extractClassSelectors = function (stylestr) {
+        function extractClassSelectors(stylestr) {
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
             var languages = [];
             classes.forEach(function (classstr) {
@@ -589,31 +593,31 @@ var SamiTS;
                     });
             });
             return languages;
-        };
+        }
 
-        SamiDocument.fixIncorrectRubyNodes = function (syncobject) {
+        function fixIncorrectRubyNodes(syncobject) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var fontdeleted = this.exchangeFontWithTemp(syncobject);
-                var fontextracted = this.extractFontAndText(syncobject);
-                var textsFromNoFont = this.extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = this.extractReadableTextNodes(fontextracted);
+            if (!isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
+                var fontdeleted = exchangeFontWithTemp(syncobject);
+                var fontextracted = extractFontAndText(syncobject);
+                var textsFromNoFont = extractReadableTextNodes(fontdeleted);
+                var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
                 for (var i = 0; i < textsFromOnlyFont.length; i++) {
-                    var font = this.getFontFromNode(textsFromOnlyFont[i]);
+                    var font = getFontFromNode(textsFromOnlyFont[i]);
                     if (font)
-                        this.wrapWith(textsFromNoFont[i], font);
+                        wrapWith(textsFromNoFont[i], font);
                 }
 
-                return this.fixIncorrectRPs(this._stripTemp(fontdeleted));
+                return fixIncorrectRPs(_stripTemp(fontdeleted));
             } else
                 return syncobject;
-        };
+        }
 
-        SamiDocument.fixIncorrectRPs = function (syncobject) {
+        function fixIncorrectRPs(syncobject) {
             var newsync = syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), function (ruby) {
                 var rt = ruby.getElementsByTagName("rt")[0];
@@ -637,39 +641,39 @@ var SamiTS;
                 }
             });
             return newsync;
-        };
+        }
 
-        SamiDocument.wrapWith = function (targetNode, newParentNode) {
+        function wrapWith(targetNode, newParentNode) {
             var currentParentNode = targetNode.parentNode;
             var currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
             newParentNode.appendChild(targetNode);
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
-        };
+        }
 
-        SamiDocument.isRubyParentExist = function (rtelement) {
+        function isRubyParentExist(rtelement) {
             if (rtelement.parentElement) {
                 if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
                     return true;
                 else
-                    return this.isRubyParentExist(rtelement.parentElement);
+                    return isRubyParentExist(rtelement.parentElement);
             } else
                 return false;
-        };
+        }
 
-        SamiDocument.getFontFromNode = function (text) {
+        function getFontFromNode(text) {
             if (text.parentNode) {
                 var parent = text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
                     if (parent.getAttribute("color"))
                         return parent.cloneNode(false);
                 }
-                return this.getFontFromNode(parent);
+                return getFontFromNode(parent);
             } else
                 return null;
-        };
+        }
 
-        SamiDocument.exchangeFontWithTemp = function (syncobject) {
+        function exchangeFontWithTemp(syncobject) {
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
@@ -677,17 +681,17 @@ var SamiTS;
             });
             newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
             return newsync;
-        };
+        }
 
-        SamiDocument._stripTemp = function (syncobject) {
+        function _stripTemp(syncobject) {
             var temps = syncobject.querySelectorAll("x-samits-temp");
             Array.prototype.forEach.call(temps, function (temp) {
                 temp.parentNode.removeChild(temp);
             });
             return syncobject;
-        };
+        }
 
-        SamiDocument.extractFontAndText = function (syncobject) {
+        function extractFontAndText(syncobject) {
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
@@ -709,9 +713,9 @@ var SamiTS;
             });
             newsync.innerHTML = newsyncstr;
             return newsync;
-        };
+        }
 
-        SamiDocument.extractReadableTextNodes = function (syncobject) {
+        function extractReadableTextNodes(syncobject) {
             var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
             var node;
             var textNodes = [];
@@ -722,9 +726,9 @@ var SamiTS;
                 node = walker.nextNode();
             }
             return textNodes;
-        };
+        }
 
-        SamiDocument.lastIndexOfInsensitive = function (target, searchString, position) {
+        function lastIndexOfInsensitive(target, searchString, position) {
             if (typeof position === "undefined") { position = target.length - searchString.length; }
             if (!searchString)
                 return -1;
@@ -736,10 +740,9 @@ var SamiTS;
                     return i;
             }
             return -1;
-        };
-        return SamiDocument;
-    })();
-    SamiTS.SamiDocument = SamiDocument;
+        }
+    })(SamiTS.SamiDocument || (SamiTS.SamiDocument = {}));
+    var SamiDocument = SamiTS.SamiDocument;
 })(SamiTS || (SamiTS = {}));
 "use strict";
 var SamiTS;

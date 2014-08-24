@@ -109,7 +109,6 @@ module SamiTS {
                                 result += "\r\n";
                             //nobreak
                         default: {
-                            
                             result += this.getRichText(node);
                             break;
                         }

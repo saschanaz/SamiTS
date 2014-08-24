@@ -124,50 +124,6 @@ module SamiTS {
         cues: SamiCue[] = [];
         languages: SamiLanguage[] = [];
 
-        static parse(samistr: string): SamiDocument {
-            var samiDocument = new SamiDocument();
-            var domparser = new DOMParser();
-
-            var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
-            var bodyendindex = this.lastIndexOfInsensitive(samistr, "</body>");
-
-            var samicontainer = <Element>domparser.parseFromString(
-                (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
-                    .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
-                    .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4); })
-                , "text/xml").firstChild;
-            /*
-            Delete double hyphens and line end single hyphens to prevent XML parser error
-            regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
-            */
-            var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
-
-            var stylestr = '';
-            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
-                if (text.data) stylestr += text.data;
-            });
-            samiDocument.languages = this.extractClassSelectors(stylestr);
-
-            var samistyle = <CSSStyleSheet>domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
-
-            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
-
-            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
-
-            syncs.forEach((sync) => {
-                samiDocument.cues.push(new SamiCue(this.fixIncorrectRubyNodes(<SyncElement>sync.element)));
-            });
-            samiDocument.cues.forEach((cue: SamiCue) => {
-                this.giveLanguageData(cue, samiDocument.languages);
-            });
-
-            return samiDocument;
-        }
-
         splitByLanguage() {
             var samiDocuments = <any>{};
             var languageCodes: string[] = [];
@@ -204,8 +160,54 @@ module SamiTS {
                 cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
             }
         }
+    }
 
-        private static giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
+    export module SamiDocument {
+        export function parse(samistr: string): SamiDocument {
+            var samiDocument = new SamiDocument();
+            var domparser = new DOMParser();
+
+            var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
+            var bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
+
+            var samicontainer = <Element>domparser.parseFromString(
+                (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
+                    .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
+                    .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4); })
+                , "text/xml").firstChild;
+            /*
+            Delete double hyphens and line end single hyphens to prevent XML parser error
+            regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
+            */
+            var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
+
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
+                if (text.data) stylestr += text.data;
+            });
+            samiDocument.languages = extractClassSelectors(stylestr);
+
+            var samistyle = <CSSStyleSheet>domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+
+            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
+            for (var i = 0; i < syncs.length - 1; i++)
+                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            if (i > 0)
+                syncs[i].element.innerHTML = (<SyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
+
+            syncs.forEach((sync) => {
+                samiDocument.cues.push(new SamiCue(fixIncorrectRubyNodes(<SyncElement>sync.element)));
+            });
+            samiDocument.cues.forEach((cue: SamiCue) => {
+                giveLanguageData(cue, samiDocument.languages);
+            });
+
+            return samiDocument;
+        }
+
+        function giveLanguageData(cue: SamiCue, languages: SamiLanguage[]) {
             Array.prototype.forEach.call(cue.syncElement.children, (child: SyncChildElement) => {
                 for (var i = 0; i < languages.length; i++) {
                     var classCode = child.className;
@@ -215,7 +217,7 @@ module SamiTS {
             });
         }
 
-        private static extractClassSelectors(stylestr: string) {
+        function extractClassSelectors(stylestr: string) {
             var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
             var languages: SamiLanguage[] = [];
             classes.forEach((classstr) => {
@@ -248,31 +250,31 @@ module SamiTS {
             return languages;
         }
 
-        private static fixIncorrectRubyNodes(syncobject: SyncElement) {
+        function fixIncorrectRubyNodes(syncobject: SyncElement) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
             //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
-            if (!this.isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var fontdeleted = this.exchangeFontWithTemp(syncobject);
-                var fontextracted = this.extractFontAndText(syncobject);
-                var textsFromNoFont = this.extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = this.extractReadableTextNodes(fontextracted);
+            if (!isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
+                var fontdeleted = exchangeFontWithTemp(syncobject);
+                var fontextracted = extractFontAndText(syncobject);
+                var textsFromNoFont = extractReadableTextNodes(fontdeleted);
+                var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
                 for (var i = 0; i < textsFromOnlyFont.length; i++) {
-                    var font = this.getFontFromNode(textsFromOnlyFont[i]);
-                    if (font) 
-                        this.wrapWith(textsFromNoFont[i], font);
+                    var font = getFontFromNode(textsFromOnlyFont[i]);
+                    if (font)
+                        wrapWith(textsFromNoFont[i], font);
                 }
 
-                return this.fixIncorrectRPs(this._stripTemp(fontdeleted));
+                return fixIncorrectRPs(_stripTemp(fontdeleted));
             }
             else
                 return syncobject;
         }
 
-        private static fixIncorrectRPs(syncobject: HTMLElement) {
+        function fixIncorrectRPs(syncobject: HTMLElement) {
             var newsync = <HTMLElement>syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), (ruby: HTMLElement) => {
                 var rt = ruby.getElementsByTagName("rt")[0];
@@ -308,7 +310,7 @@ module SamiTS {
         //    return newsync;
         //}
 
-        private static wrapWith(targetNode: Node, newParentNode: Node) {
+        function wrapWith(targetNode: Node, newParentNode: Node) {
             var currentParentNode = targetNode.parentNode;//shall have one
             var currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
@@ -316,25 +318,25 @@ module SamiTS {
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
         }
 
-        private static isRubyParentExist(rtelement: HTMLElement) {
+        function isRubyParentExist(rtelement: HTMLElement) {
             if (rtelement.parentElement) {
                 if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
                     return true;
                 else
-                    return this.isRubyParentExist(rtelement.parentElement);
+                    return isRubyParentExist(rtelement.parentElement);
             }
             else
                 return false;
         }
 
-        private static getFontFromNode(text: Node): HTMLElement {
+        function  getFontFromNode(text: Node): HTMLElement {
             if (text.parentNode) {
                 var parent = <HTMLElement>text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
                     if ((<HTMLElement>parent).getAttribute("color"))
                         return <HTMLElement>parent.cloneNode(false);
                 }
-                return this.getFontFromNode(parent);
+                return getFontFromNode(parent);
             }
             else
                 return null;
@@ -344,7 +346,7 @@ module SamiTS {
         /**
         Creates new element that replaces <font> start tags with <x-samits-temp></x-samits-temp> and deletes </font> end tags.
         */
-        private static exchangeFontWithTemp(syncobject: SyncElement) {
+        function exchangeFontWithTemp(syncobject: SyncElement) {
             var newsync = <SyncElement>syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
@@ -357,7 +359,7 @@ module SamiTS {
         /**
         Removes all <x-samits-temp> tags in the input element.
         */
-        private static _stripTemp(syncobject: SyncElement) {
+        function _stripTemp(syncobject: SyncElement) {
             var temps = syncobject.querySelectorAll("x-samits-temp");
             Array.prototype.forEach.call(temps, (temp: HTMLElement) => {
                 temp.parentNode.removeChild(temp);
@@ -365,7 +367,7 @@ module SamiTS {
             return syncobject;
         }
 
-        private static extractFontAndText(syncobject: SyncElement) {
+        function extractFontAndText(syncobject: SyncElement) {
             var newsync = <SyncElement>syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
             var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
@@ -386,7 +388,7 @@ module SamiTS {
             return newsync;
         }
 
-        private static extractReadableTextNodes(syncobject: HTMLElement) {
+        function extractReadableTextNodes(syncobject: HTMLElement) {
             var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
             var node: Text;
             var textNodes: Text[] = [];
@@ -399,7 +401,7 @@ module SamiTS {
             return textNodes;
         }
 
-        private static lastIndexOfInsensitive(target: string, searchString: string, position = target.length - searchString.length) {
+        function lastIndexOfInsensitive(target: string, searchString: string, position = target.length - searchString.length) {
             if (!searchString)
                 return -1;
             else if (searchString.length == 0)

@@ -63,21 +63,11 @@ declare module SamiTS {
     class SamiDocument {
         public cues: SamiCue[];
         public languages: SamiLanguage[];
-        static parse(samistr: string): SamiDocument;
         public splitByLanguage(): any;
         public delay(increment: number): void;
-        private static giveLanguageData(cue, languages);
-        private static extractClassSelectors(stylestr);
-        private static fixIncorrectRubyNodes(syncobject);
-        private static fixIncorrectRPs(syncobject);
-        private static wrapWith(targetNode, newParentNode);
-        private static isRubyParentExist(rtelement);
-        private static getFontFromNode(text);
-        private static exchangeFontWithTemp(syncobject);
-        private static _stripTemp(syncobject);
-        private static extractFontAndText(syncobject);
-        private static extractReadableTextNodes(syncobject);
-        private static lastIndexOfInsensitive(target, searchString, position?);
+    }
+    module SamiDocument {
+        function parse(samistr: string): SamiDocument;
     }
 }
 declare module SamiTS {
