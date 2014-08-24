@@ -76,7 +76,7 @@ function load(evt: Event) {
             sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
             break;
         case SubType.SRT:
-            sequence = SamiTS.createSubrip(subfile, { useTextStyles: getTagUse() });
+            sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
             break;
     }
     return sequence.then((result) => resultOutput(videofile, result));

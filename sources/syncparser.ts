@@ -24,10 +24,14 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 module SamiTS {
     export interface SAMILanguage {
-        className: string;
-        languageName: string;
-        languageCode: string;
+        /** The CSS class name defined within SAMI markup. */
+        cssClass: string;
+        /** The display name */
+        displayName: string;
+        /** BCP47 language code */
+        code: string;
     }
+    /** A dictionary which is composed of SAMIDocument objects with BCP47 language code keys. */
     export interface SAMIDocumentDictionary {
         [key: string]: SAMIDocument
     }
@@ -94,15 +98,15 @@ module SamiTS {
             // Dictionary initialization
             for (var i in this.languages) {
                 var language = this.languages[i];
-                languageCodes.push(language.languageCode);
+                languageCodes.push(language.code);
 
                 var sami = new SAMIDocument();
                 sami.languages.push({
-                    className: language.className,
-                    languageCode: language.languageCode,
-                    languageName: language.languageName
+                    cssClass: language.cssClass,
+                    code: language.code,
+                    displayName: language.displayName
                 });
-                samiDocuments[language.languageCode] = sami;
+                samiDocuments[language.code] = sami;
             }
 
             // Cue splitting
@@ -177,8 +181,8 @@ module SamiTS {
             Array.prototype.forEach.call(cue.syncElement.children, (child: SAMIContentElement) => {
                 for (var i = 0; i < languages.length; i++) {
                     var classCode = child.className;
-                    if (!classCode || classCode === languages[i].className)
-                        child.dataset.language = languages[i].languageCode;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
+                    if (!classCode || classCode === languages[i].cssClass)
+                        child.dataset.language = languages[i].code;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
                 }
             });
         }
@@ -208,9 +212,9 @@ module SamiTS {
 
                 if (name && lang)
                     languages.push({
-                        className: classselector[0].slice(1, classselector[0].length - 1),
-                        languageName: name,
-                        languageCode: lang
+                        cssClass: classselector[0].slice(1, classselector[0].length - 1),
+                        displayName: name,
+                        code: lang
                     });
             });
             return languages;

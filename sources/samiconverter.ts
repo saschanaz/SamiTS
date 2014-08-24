@@ -34,7 +34,7 @@ module SamiTS {
         if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
-            sequence = getString(input).then((samistr) => SAMIDocument.parse(samistr));
+            sequence = createSAMIDocument(input);
 
         return sequence.then((sami) => (new SamiTS.WebVTTWriter()).write(sami.cues, options));
     }
@@ -47,10 +47,17 @@ module SamiTS {
         if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
-            sequence = getString(input).then((samistr) => SAMIDocument.parse(samistr));
+            sequence = createSAMIDocument(input);
 
         return sequence.then((sami) => (new SamiTS.SubRipWriter()).write(sami.cues, options));
     }
+
+    export function createSAMIDocument(input: string): Promise<SAMIDocument>;
+    export function createSAMIDocument(input: Blob): Promise<SAMIDocument>;
+    export function createSAMIDocument(input: any) {
+        return getString(input).then((samistr) => SAMIDocument.parse(samistr));
+    }
+
 
     function getString(input: Blob): Promise<string>;
     function getString(input: string): Promise<string>;

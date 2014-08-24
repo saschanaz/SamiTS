@@ -24,6 +24,8 @@ declare module SamiTS {
     function createSubRip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSAMIDocument(input: string): Promise<SAMIDocument>;
+    function createSAMIDocument(input: Blob): Promise<SAMIDocument>;
 }
 declare module SamiTS {
     class SDPUSWriter {
@@ -51,9 +53,9 @@ declare module SamiTS {
 }
 declare module SamiTS {
     interface SAMILanguage {
-        className: string;
-        languageName: string;
-        languageCode: string;
+        cssClass: string;
+        displayName: string;
+        code: string;
     }
     interface SAMIDocumentDictionary {
         [key: string]: SAMIDocument;
