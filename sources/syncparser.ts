@@ -250,37 +250,29 @@ module SamiTS {
             var newsync = <HTMLElement>syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), (ruby: HTMLElement) => {
                 var rt = ruby.getElementsByTagName("rt")[0];
-                if (rt && rt.innerHTML.length == 0 && rt !== ruby.childNodes[ruby.childNodes.length - 1]) {
-                    var rtdetected = false;
-                    var i = 0;
-                    while (i < ruby.childNodes.length) {
-                        var innernode = ruby.childNodes[i];
-                        if (rtdetected === false) {
-                            if (innernode.nodeType == 1 && (<HTMLElement>innernode).tagName.toLowerCase() === "rt") {
-                                rtdetected = true;
-                                i++;
-                                continue;
-                            }
-                            i++;
-                        }
-                        else {
-                            ruby.removeChild(innernode);
-                            rt.appendChild(innernode);
-                        }
-                    }
+                if (!rt || rt.innerHTML.length > 0 || rt === ruby.childNodes[ruby.childNodes.length - 1])
+                    return syncobject;
+
+                var firstRp = ruby.getElementsByTagName("rp")[0]; // First child RP that is in wrong place
+                if (rt.nextElementSibling !== firstRp) // Wrong RP always sit next to its RT sibling
+                    return syncobject;
+
+                var repositionList: Node[] = [];
+                var sibling = firstRp.nextSibling;
+                while (sibling && sibling.nodeName.toLowerCase() !== "rp") { // Catch all nodes that ran away
+                    repositionList.push(sibling);
+                    sibling = sibling.nextSibling;
                 }
+                firstRp.parentNode.removeChild(firstRp); // RP should be left, not right
+                ruby.insertBefore(firstRp, rt);
+
+                repositionList.forEach((node) => { // return nodes in their proper place
+                    node.parentNode.removeChild(node);
+                    rt.appendChild(node);
+                });
             });
             return newsync;
         }
-        //private static deleteRPs(syncobject: HTMLElement) {
-        //    var newsync = <HTMLElement>syncobject.cloneNode(false);
-        //    var newsyncstr = <string>newsync.dataset['originalString'];
-        //    HTMLTagFinder.FindStartTags('rp', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
-        //        newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + newsyncstr.slice(fonttag.endPosition);
-        //    });
-        //    newsync.dataset['originalString'] = newsyncstr.replace(/<\/rp>/g, '');
-        //    return newsync;
-        //}
 
         function wrapWith(targetNode: Node, newParentNode: Node) {
             var currentParentNode = targetNode.parentNode;//shall have one
