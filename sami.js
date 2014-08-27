@@ -607,20 +607,25 @@ var SamiTS;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            if (!isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var fontdeleted = exchangeFontWithTemp(syncobject);
-                var fontextracted = extractFontAndText(syncobject);
-                var textsFromNoFont = extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
-                for (var i = 0; i < textsFromOnlyFont.length; i++) {
-                    var font = getFontFromNode(textsFromOnlyFont[i]);
-                    if (font)
-                        wrapWith(textsFromNoFont[i], font);
-                }
-
-                return fixIncorrectRPs(stripTemp(fontdeleted));
-            } else
+            if (Array.prototype.every.call(rtlist, function (rt) {
+                return isRubyParentExist(rt) && rt.textContent.length > 0;
+            }))
                 return syncobject;
+
+            return fixIncorrectRPs(fixIncorrectFontEnds(syncobject));
+        }
+
+        function fixIncorrectFontEnds(syncobject) {
+            var fontdeleted = exchangeFontWithTemp(syncobject);
+            var fontextracted = extractFontAndText(syncobject);
+            var textsFromNoFont = extractReadableTextNodes(fontdeleted);
+            var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
+            for (var i = 0; i < textsFromOnlyFont.length; i++) {
+                var font = getFontFromNode(textsFromOnlyFont[i]);
+                if (font)
+                    wrapWith(textsFromNoFont[i], font);
+            }
+            return stripTemp(fontdeleted);
         }
 
         function fixIncorrectRPs(syncobject) {

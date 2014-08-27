@@ -226,25 +226,27 @@ module SamiTS {
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
-            if (!isRubyParentExist(rtlist[0]) || rtlist[0].textContent.length == 0) {
-                var fontdeleted = exchangeFontWithTemp(syncobject);
-                var fontextracted = extractFontAndText(syncobject);
-                var textsFromNoFont = extractReadableTextNodes(fontdeleted);
-                var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
-                for (var i = 0; i < textsFromOnlyFont.length; i++) {
-                    var font = getFontFromNode(textsFromOnlyFont[i]);
-                    if (font)
-                        wrapWith(textsFromNoFont[i], font);
-                }
-
-                return fixIncorrectRPs(stripTemp(fontdeleted));
-            }
-            else
+            if (Array.prototype.every.call(rtlist, (rt: HTMLElement) => isRubyParentExist(rt) && rt.textContent.length > 0))
                 return syncobject;
+
+            //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
+            return fixIncorrectRPs(fixIncorrectFontEnds(syncobject));
         }
 
-        function fixIncorrectRPs(syncobject: HTMLElement) {
+        function fixIncorrectFontEnds(syncobject: SAMISyncElement) {
+            var fontdeleted = exchangeFontWithTemp(syncobject);
+            var fontextracted = extractFontAndText(syncobject);
+            var textsFromNoFont = extractReadableTextNodes(fontdeleted);
+            var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
+            for (var i = 0; i < textsFromOnlyFont.length; i++) {
+                var font = getFontFromNode(textsFromOnlyFont[i]);
+                if (font)
+                    wrapWith(textsFromNoFont[i], font);
+            }
+            return stripTemp(fontdeleted);
+        }
+
+        function fixIncorrectRPs(syncobject: SAMISyncElement) {
             var newsync = <HTMLElement>syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), (ruby: HTMLElement) => {
                 var rt = ruby.getElementsByTagName("rt")[0];
