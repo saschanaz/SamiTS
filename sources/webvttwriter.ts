@@ -26,13 +26,14 @@ module SamiTS {
     export interface WebVTTWriterOptions {
         createStyleElement?: boolean;
         disableDefaultStyle?: boolean;
+        enableLanguageTag?: boolean;
         /** The default value is "video". */
         selector?: string;
     }
 
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
-        write(xsyncs: SAMICue[], options?: WebVTTWriterOptions) {
+        write(xsyncs: SAMICue[], options: WebVTTWriterOptions = {}) {
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = (i: number, text: string) => {
@@ -57,7 +58,7 @@ module SamiTS {
             subDocument = subHeader + "\r\n\r\n" + subDocument;
 
             var result: SamiTSResult = { subtitle: subDocument };
-            if (options && options.createStyleElement)
+            if (options.createStyleElement)
                 result.stylesheet = this.webvttStyleSheet.getStylesheetNode(options);
 
             this.webvttStyleSheet.clear();
@@ -181,9 +182,9 @@ module SamiTS {
         insertRuleForName(targetname: string, rule: string) {
             this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
         }
-        getStylesheet(options?: WebVTTWriterOptions) {
+        getStylesheet(options: WebVTTWriterOptions) {
             var resultarray: string[] = [];
-            if (!options || !options.disableDefaultStyle)
+            if (!options.disableDefaultStyle)
                 this.conventionalStyle.forEach((rule: string) => {
                     resultarray.push(rule);
                 });
@@ -191,12 +192,12 @@ module SamiTS {
                 resultarray.push(<string>this.ruledictionary[rule]);
             return resultarray.join('\r\n');
         }
-        getStylesheetNode(options?: WebVTTWriterOptions) {
-            var selector = (options && options.selector) ? options.selector : "video";
+        getStylesheetNode(options: WebVTTWriterOptions) {
+            var selector = options.selector || "video";
 
             var styleSheet = document.createElement("style");
             var result = '';
-            if (!options || !options.disableDefaultStyle)
+            if (!options.disableDefaultStyle)
                 this.conventionalStyle.forEach((rule: string) => {
                     result += selector + rule;
                 });

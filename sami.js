@@ -306,6 +306,7 @@ var SamiTS;
         }
         SubRipWriter.prototype.write = function (xsyncs, options) {
             var _this = this;
+            if (typeof options === "undefined") { options = {}; }
             var subDocument = "";
             var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
@@ -314,7 +315,7 @@ var SamiTS;
             };
             var text;
             var syncindex = 1;
-            var getText = (options && options.useTextStyles) ? function (xsync) {
+            var getText = options.useTextStyles ? function (xsync) {
                 return _this.getRichText(xsync);
             } : function (xsync) {
                 return _this.getSimpleText(xsync);
@@ -369,6 +370,9 @@ var SamiTS;
                 if (node.nodeType === 1)
                     switch (node.tagName.toLowerCase()) {
                         case "p":
+                            if (result)
+                                result += "\r\n";
+
                         default: {
                             result += _this.getSimpleText(node);
                             break;
@@ -766,6 +770,7 @@ var SamiTS;
         }
         WebVTTWriter.prototype.write = function (xsyncs, options) {
             var _this = this;
+            if (typeof options === "undefined") { options = {}; }
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = function (i, text) {
@@ -790,7 +795,7 @@ var SamiTS;
             subDocument = subHeader + "\r\n\r\n" + subDocument;
 
             var result = { subtitle: subDocument };
-            if (options && options.createStyleElement)
+            if (options.createStyleElement)
                 result.stylesheet = this.webvttStyleSheet.getStylesheetNode(options);
 
             this.webvttStyleSheet.clear();
@@ -921,7 +926,7 @@ var SamiTS;
         };
         WebVTTStyleSheet.prototype.getStylesheet = function (options) {
             var resultarray = [];
-            if (!options || !options.disableDefaultStyle)
+            if (!options.disableDefaultStyle)
                 this.conventionalStyle.forEach(function (rule) {
                     resultarray.push(rule);
                 });
@@ -930,11 +935,11 @@ var SamiTS;
             return resultarray.join('\r\n');
         };
         WebVTTStyleSheet.prototype.getStylesheetNode = function (options) {
-            var selector = (options && options.selector) ? options.selector : "video";
+            var selector = options.selector || "video";
 
             var styleSheet = document.createElement("style");
             var result = '';
-            if (!options || !options.disableDefaultStyle)
+            if (!options.disableDefaultStyle)
                 this.conventionalStyle.forEach(function (rule) {
                     result += selector + rule;
                 });

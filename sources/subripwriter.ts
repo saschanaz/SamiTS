@@ -28,7 +28,7 @@ module SamiTS {
     }
 
     export class SubRipWriter {
-        write(xsyncs: SAMICue[], options?: SubRipWriterOptions) {
+        write(xsyncs: SAMICue[], options: SubRipWriterOptions = {}) {
             var subDocument = "";
             var writeText = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
@@ -37,7 +37,7 @@ module SamiTS {
             };
             var text: string;
             var syncindex = 1;
-            var getText = (options && options.useTextStyles) ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
+            var getText = options.useTextStyles ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
             if (xsyncs.length > 0) {
                 text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0) writeText(0, syncindex, text);
@@ -82,6 +82,9 @@ module SamiTS {
                 if (node.nodeType === 1)//element
                     switch ((<HTMLElement>node).tagName.toLowerCase()) {
                         case "p":
+                            if (result)
+                                result += "\r\n";
+                            //nobreak
                         default: {
                             result += this.getSimpleText(node);
                             break;

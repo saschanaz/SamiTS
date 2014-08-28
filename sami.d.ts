@@ -81,6 +81,7 @@ declare module SamiTS {
     interface WebVTTWriterOptions {
         createStyleElement?: boolean;
         disableDefaultStyle?: boolean;
+        enableLanguageTag?: boolean;
         selector?: string;
     }
     class WebVTTWriter {
