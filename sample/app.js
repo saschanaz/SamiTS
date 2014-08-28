@@ -40,10 +40,10 @@ function load(evt) {
     var sequence;
     switch (getTargetSubType()) {
         case 0 /* WebVTT */:
-            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
+            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player', enableLanguageTag: true });
             break;
         case 1 /* SRT */:
-            sequence = SamiTS.createSubrip(subfile, { useTextStyles: getTagUse() });
+            sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
             break;
     }
     return sequence.then(function (result) {

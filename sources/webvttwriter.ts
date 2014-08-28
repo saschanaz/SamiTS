@@ -42,10 +42,10 @@ module SamiTS {
             };
             var text: string;
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0].syncElement);
+                text = this.getRichText(xsyncs[0].syncElement, options);
                 if (text.length > 0) writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));//prevents cues consists of a single &nbsp;
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement, options));//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         writeText(i, text);
@@ -94,36 +94,33 @@ module SamiTS {
             return trimmed.length != 0 ? target : trimmed;
         }
         
-        private getRichText(syncobject: Node) {
+        private getRichText(syncobject: Node, options: WebVTTWriterOptions) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
                 if (node.nodeType === 1) { //element
-                    var tagname = (<HTMLElement>node).tagName.toLowerCase();
+                    var contentNode = <SAMIContentElement>node;
+                    var tagname = contentNode.tagName.toLowerCase();
+                    var content = '';
                     switch (tagname) {
                         case "p":
                             if (result)
                                 result += "\r\n";
                             //nobreak
                         default: {
-                            result += this.getRichText(node);
+                            content += this.getRichText(contentNode, options);
                             break;
                         }
                         case "br": {
-                            result += "\r\n";
+                            content += "\r\n";
                             break;
                         }
                         case "font": {
-                            var stylename = this.registerStyle(<HTMLElement>node);
+                            var stylename = this.registerStyle(contentNode);
                             if (stylename) {
-                                var voiceelement = document.createElement("c");
-                                var outer = voiceelement.outerHTML.replace("<c", "<c." + stylename);
-                                if (outer.substr(0, 5) === "<?XML") {
-                                    outer = outer.substr(outer.indexOf("<c"));
-                                }
-                                result += outer.replace("</c>", this.getRichText(node) + "</c>");
+                                content += "<c." + stylename + ">" + this.getRichText(contentNode, options) + "</c>";
                             }
                             else
-                                result += this.getRichText(node);
+                                content += this.getRichText(contentNode, options);
                             break;
                         }
                         case "rp": {
@@ -134,12 +131,16 @@ module SamiTS {
                         case "b":
                         case "i":
                         case "u": {
-                            var innertext = this.getRichText(node);
+                            var innertext = this.getRichText(contentNode, options);
                             if (innertext.length > 0)
-                                result += '<' + tagname + '>' + innertext + '</' + tagname + '>';
+                                content += '<' + tagname + '>' + innertext + '</' + tagname + '>';
                             break;
                         }
                     }
+                    if (options.enableLanguageTag && contentNode.dataset.language && this.absorbAir(content))
+                        result += "<lang " + contentNode.dataset.language + ">" + content + "</lang>";
+                    else
+                        result += content;
                 }
                 else { //text
                     result += node.nodeValue.replace(/[\r\n]/g, '');

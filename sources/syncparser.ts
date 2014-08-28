@@ -35,22 +35,22 @@ module SamiTS {
     export interface SAMIDocumentDictionary {
         [key: string]: SAMIDocument
     }
-    interface SAMIContentDataset extends DOMStringMap {
+    export interface SAMIContentDataset extends DOMStringMap {
         language: string;
     }
-    interface SAMISyncDataset extends DOMStringMap {
+    export interface SAMISyncDataset extends DOMStringMap {
         originalString: string;
     }
-    interface SAMIContentElement extends HTMLElement {
+    export interface SAMIContentElement extends HTMLElement {
         dataset: SAMIContentDataset
     }
-    interface SAMISyncElement extends HTMLElement {
+    export interface SAMISyncElement extends HTMLElement {
         dataset: SAMISyncDataset;
     }
 
     export class SAMICue {
-        syncElement: HTMLElement;
-        constructor(syncElement: HTMLElement) {
+        syncElement: SAMISyncElement;
+        constructor(syncElement: SAMISyncElement) {
             if (syncElement.tagName.toLowerCase() !== "sync")
                 throw new Error("SamiCue can only accept sync element");
             else
@@ -61,7 +61,7 @@ module SamiTS {
             // Dictionary initialization
             var cues: { [key: string]: SAMICue } = {};
             for (var i in languages)
-                cues[languages[i]] = new SAMICue(<HTMLElement>this.syncElement.cloneNode());
+                cues[languages[i]] = new SAMICue(<SAMISyncElement>this.syncElement.cloneNode());
 
             // Filter
             Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
@@ -247,7 +247,7 @@ module SamiTS {
         }
 
         function fixIncorrectRPs(syncobject: SAMISyncElement) {
-            var newsync = <HTMLElement>syncobject.cloneNode(true);
+            var newsync = <SAMISyncElement>syncobject.cloneNode(true);
             Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), (ruby: HTMLElement) => {
                 var rt = ruby.getElementsByTagName("rt")[0];
                 if (!rt || rt.innerHTML.length > 0 || rt === ruby.childNodes[ruby.childNodes.length - 1])

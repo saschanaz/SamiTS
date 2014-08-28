@@ -60,9 +60,21 @@ declare module SamiTS {
     interface SAMIDocumentDictionary {
         [key: string]: SAMIDocument;
     }
+    interface SAMIContentDataset extends DOMStringMap {
+        language: string;
+    }
+    interface SAMISyncDataset extends DOMStringMap {
+        originalString: string;
+    }
+    interface SAMIContentElement extends HTMLElement {
+        dataset: SAMIContentDataset;
+    }
+    interface SAMISyncElement extends HTMLElement {
+        dataset: SAMISyncDataset;
+    }
     class SAMICue {
-        public syncElement: HTMLElement;
-        constructor(syncElement: HTMLElement);
+        public syncElement: SAMISyncElement;
+        constructor(syncElement: SAMISyncElement);
         public filter(...languages: string[]): {
             [key: string]: SAMICue;
         };
@@ -89,7 +101,7 @@ declare module SamiTS {
         public write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
         private absorbAir(target);
-        private getRichText(syncobject);
+        private getRichText(syncobject, options);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);
     }

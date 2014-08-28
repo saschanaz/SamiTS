@@ -779,11 +779,11 @@ var SamiTS;
             };
             var text;
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0].syncElement);
+                text = this.getRichText(xsyncs[0].syncElement, options);
                 if (text.length > 0)
                     writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement));
+                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement, options));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         writeText(i, text);
@@ -834,36 +834,33 @@ var SamiTS;
             return trimmed.length != 0 ? target : trimmed;
         };
 
-        WebVTTWriter.prototype.getRichText = function (syncobject) {
+        WebVTTWriter.prototype.getRichText = function (syncobject, options) {
             var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
-                    var tagname = node.tagName.toLowerCase();
+                    var contentNode = node;
+                    var tagname = contentNode.tagName.toLowerCase();
+                    var content = '';
                     switch (tagname) {
                         case "p":
                             if (result)
                                 result += "\r\n";
 
                         default: {
-                            result += _this.getRichText(node);
+                            content += _this.getRichText(contentNode, options);
                             break;
                         }
                         case "br": {
-                            result += "\r\n";
+                            content += "\r\n";
                             break;
                         }
                         case "font": {
-                            var stylename = _this.registerStyle(node);
+                            var stylename = _this.registerStyle(contentNode);
                             if (stylename) {
-                                var voiceelement = document.createElement("c");
-                                var outer = voiceelement.outerHTML.replace("<c", "<c." + stylename);
-                                if (outer.substr(0, 5) === "<?XML") {
-                                    outer = outer.substr(outer.indexOf("<c"));
-                                }
-                                result += outer.replace("</c>", _this.getRichText(node) + "</c>");
+                                content += "<c." + stylename + ">" + _this.getRichText(contentNode, options) + "</c>";
                             } else
-                                result += _this.getRichText(node);
+                                content += _this.getRichText(contentNode, options);
                             break;
                         }
                         case "rp": {
@@ -874,12 +871,16 @@ var SamiTS;
                         case "b":
                         case "i":
                         case "u": {
-                            var innertext = _this.getRichText(node);
+                            var innertext = _this.getRichText(contentNode, options);
                             if (innertext.length > 0)
-                                result += '<' + tagname + '>' + innertext + '</' + tagname + '>';
+                                content += '<' + tagname + '>' + innertext + '</' + tagname + '>';
                             break;
                         }
                     }
+                    if (options.enableLanguageTag && contentNode.dataset.language && _this.absorbAir(content))
+                        result += "<lang " + contentNode.dataset.language + ">" + content + "</lang>";
+                    else
+                        result += content;
                 } else {
                     result += node.nodeValue.replace(/[\r\n]/g, '');
                 }

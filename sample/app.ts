@@ -73,7 +73,7 @@ function load(evt: Event) {
     var sequence: Promise<SamiTS.SamiTSResult>;
     switch (getTargetSubType()) {
         case SubType.WebVTT:
-            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
+            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player', enableLanguageTag: true });
             break;
         case SubType.SRT:
             sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
