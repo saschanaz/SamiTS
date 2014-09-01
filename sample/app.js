@@ -40,7 +40,7 @@ function load(evt) {
     var sequence;
     switch (getTargetSubType()) {
         case 0 /* WebVTT */:
-            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player', enableLanguageTag: true });
+            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
             break;
         case 1 /* SRT */:
             sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });

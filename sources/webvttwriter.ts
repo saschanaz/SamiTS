@@ -34,6 +34,7 @@ module SamiTS {
         start: string;
         end: string;
         content: string;
+        language?: string;
         divides?: boolean;
     }
 
@@ -48,10 +49,10 @@ module SamiTS {
             };
             var text: string;
             if (xsyncs.length > 0) {
-                text = this.getRichText(xsyncs[0].syncElement, options);
+                text = this.readSyncElement(xsyncs[0].syncElement, options).content;
                 if (text.length > 0) writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(this.getRichText(xsyncs[i].syncElement, options));//prevents cues consists of a single &nbsp;
+                    text = this.absorbAir(this.readSyncElement(xsyncs[i].syncElement, options).content);//prevents cues consists of a single &nbsp;
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         writeText(i, text);
@@ -109,7 +110,7 @@ module SamiTS {
             var walker = document.createTreeWalker(syncobject, -1, null, false);
             while (true) {
                 if (walker.currentNode.nodeType === 1) {
-                    var element = this.readElement(<HTMLElement>walker.currentNode, options);
+                    var element = this.readElement(<SAMIContentElement>walker.currentNode, options);
                     stack.unshift(element);
 
                     if (element && walker.firstChild())
@@ -127,7 +128,14 @@ module SamiTS {
                     if (zero) {
                         if (zero.divides && stack[0].content)
                             stack[0].content += "\r\n";
-                        stack[0].content += zero.start + zero.content + zero.end;
+
+                        if (zero.content) {
+                            var content = zero.start + zero.content + zero.end;
+                            if (options.enableLanguageTag && zero.language && this.absorbAir(content))
+                                stack[0].content += "<lang " + zero.language + ">" + content + "</lang>";
+                            else
+                                stack[0].content += content;
+                        }
                     }
 
                     if (walker.nextSibling())
@@ -138,73 +146,94 @@ module SamiTS {
             }
         }
 
-        private readElement(element: HTMLElement, options: WebVTTWriterOptions): TagReadResult {
+        private readElement(element: SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
             var template: TagReadResult = { start: '', end: '', content: '' }
+            if (options.enableLanguageTag && element.dataset.language)
+                template.language = element.dataset.language;
             switch (element.tagName.toLowerCase()) {
                 case "p":
                     template.divides = true;
                     break;
                 case "br":
-                    template.start = "\r\n";
+                    template.content = "\r\n";
+                    break;
+                case "font":
+                    var stylename = this.registerStyle(element);
+                    if (stylename) {
+                        template.start = "<c." + stylename + ">";
+                        template.end = "</c>";
+                    }
+                    break;
+                case "rp":
+                    template = null;
+                    break;
+                case "ruby":
+                case "rt":
+                case "b":
+                case "i":
+                case "u":
+                    var tagname = element.tagName.toLowerCase();
+                    template.start = "<" + tagname + ">";
+                    template.end = "</" + tagname + ">";
                     break;
             }
             return template;
         }
         
-        private getRichText(syncobject: Node, options: WebVTTWriterOptions) {
-            var result = '';
-            Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
-                if (node.nodeType === 1) { //element
-                    var contentNode = <SAMIContentElement>node;
-                    var tagname = contentNode.tagName.toLowerCase();
-                    var content = '';
-                    switch (tagname) {
-                        case "p":
-                            if (result)
-                                result += "\r\n";
-                            //nobreak
-                        default: {
-                            content += this.getRichText(contentNode, options);
-                            break;
-                        }
-                        case "br": {
-                            content += "\r\n";
-                            break;
-                        }
-                        case "font": {
-                            var stylename = this.registerStyle(contentNode);
-                            if (stylename) {
-                                content += "<c." + stylename + ">" + this.getRichText(contentNode, options) + "</c>";
-                            }
-                            else
-                                content += this.getRichText(contentNode, options);
-                            break;
-                        }
-                        case "rp": {
-                            break;
-                        }
-                        case "ruby":
-                        case "rt":
-                        case "b":
-                        case "i":
-                        case "u": {
-                            var innertext = this.getRichText(contentNode, options);
-                            if (innertext.length > 0)
-                                content += '<' + tagname + '>' + innertext + '</' + tagname + '>';
-                            break;
-                        }
-                    }
-                    if (options.enableLanguageTag && contentNode.dataset.language && this.absorbAir(content))
-                        result += "<lang " + contentNode.dataset.language + ">" + content + "</lang>";
-                    else
-                        result += content;
-                }
-                else { //text
-                    result += node.nodeValue.replace(/[\r\n]/g, '');
-                }
-            });
-            return result;
-        }
+        //private getRichText(syncobject: Node, options: WebVTTWriterOptions) {
+        //    var result = '';
+        //    Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
+        //        if (node.nodeType === 1) { //element
+        //            var contentNode = <SAMIContentElement>node;
+        //            var tagname = contentNode.tagName.toLowerCase();
+        //            var content = '';
+        //            switch (tagname) {
+        //                case "p":
+        //                    if (result)
+        //                        result += "\r\n";
+        //                    //nobreak
+        //                default: {
+        //                    content += this.getRichText(contentNode, options);
+        //                    break;
+        //                }
+        //                case "br": {
+        //                    content += "\r\n";
+        //                    break;
+        //                }
+        //                case "font": {
+        //                    var stylename = this.registerStyle(contentNode);
+        //                    if (stylename) {
+        //                        content += "<c." + stylename + ">" + this.getRichText(contentNode, options) + "</c>";
+        //                    }
+        //                    else
+        //                        content += this.getRichText(contentNode, options);
+        //                    break;
+        //                }
+        //                case "rp": {
+        //                    break;
+        //                }
+        //                case "ruby":
+        //                case "rt":
+        //                case "b":
+        //                case "i":
+        //                case "u": {
+        //                    var innertext = this.getRichText(contentNode, options);
+        //                    if (innertext.length > 0)
+        //                        content += '<' + tagname + '>' + innertext + '</' + tagname + '>';
+        //                    break;
+        //                }
+        //            }
+        //            if (options.enableLanguageTag && contentNode.dataset.language && this.absorbAir(content))
+        //                result += "<lang " + contentNode.dataset.language + ">" + content + "</lang>";
+        //            else
+        //                result += content;
+        //        }
+        //        else { //text
+        //            result += node.nodeValue.replace(/[\r\n]/g, '');
+        //        }
+        //    });
+        //    return result;
+        //}
 
         private registerStyle(fontelement: HTMLElement) {
             var styleName = '';

@@ -103,7 +103,6 @@ declare module SamiTS {
         private absorbAir(target);
         private readSyncElement(syncobject, options);
         private readElement(element, options);
-        private getRichText(syncobject, options);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);
     }
