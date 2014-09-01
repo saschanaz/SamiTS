@@ -834,6 +834,56 @@ var SamiTS;
             return trimmed.length != 0 ? target : trimmed;
         };
 
+        WebVTTWriter.prototype.readSyncElement = function (syncobject, options) {
+            var clearWhitespace = function (input) {
+                return input.replace(/[ \t\r\n\f]{1,}/g, ' ').replace(/^[ \t\r\n\f]{1,}|[ \t\r\n\f]{1,}$/g, '');
+            };
+
+            var stack = [];
+            var walker = document.createTreeWalker(syncobject, -1, null, false);
+            while (true) {
+                if (walker.currentNode.nodeType === 1) {
+                    var element = this.readElement(walker.currentNode, options);
+                    stack.unshift(element);
+
+                    if (element && walker.firstChild())
+                        continue;
+                } else
+                    stack.unshift({ start: '', end: '', content: clearWhitespace(walker.currentNode.nodeValue) });
+
+                do {
+                    var zero = stack.shift();
+
+                    if (!stack.length)
+                        return zero;
+
+                    if (zero) {
+                        if (zero.divides && stack[0].content)
+                            stack[0].content += "\r\n";
+                        stack[0].content += zero.start + zero.content + zero.end;
+                    }
+
+                    if (walker.nextSibling())
+                        break;
+                    else
+                        walker.parentNode();
+                } while(true);
+            }
+        };
+
+        WebVTTWriter.prototype.readElement = function (element, options) {
+            var template = { start: '', end: '', content: '' };
+            switch (element.tagName.toLowerCase()) {
+                case "p":
+                    template.divides = true;
+                    break;
+                case "br":
+                    template.start = "\r\n";
+                    break;
+            }
+            return template;
+        };
+
         WebVTTWriter.prototype.getRichText = function (syncobject, options) {
             var _this = this;
             var result = '';

@@ -30,6 +30,12 @@ module SamiTS {
         /** The default value is "video". */
         selector?: string;
     }
+    interface TagReadResult {
+        start: string;
+        end: string;
+        content: string;
+        divides?: boolean;
+    }
 
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
@@ -92,6 +98,57 @@ module SamiTS {
         private absorbAir(target: string) {
             var trimmed = target.trim();
             return trimmed.length != 0 ? target : trimmed;
+        }
+
+        private readSyncElement(syncobject: SAMISyncElement, options: WebVTTWriterOptions) {
+            var clearWhitespace =
+                (input: string) =>
+                    input.replace(/[ \t\r\n\f]{1,}/g, ' ').replace(/^[ \t\r\n\f]{1,}|[ \t\r\n\f]{1,}$/g, '');
+
+            var stack: TagReadResult[] = [];
+            var walker = document.createTreeWalker(syncobject, -1, null, false);
+            while (true) {
+                if (walker.currentNode.nodeType === 1) {
+                    var element = this.readElement(<HTMLElement>walker.currentNode, options);
+                    stack.unshift(element);
+
+                    if (element && walker.firstChild())
+                        continue;
+                }
+                else
+                    stack.unshift({ start: '', end: '', content: clearWhitespace(walker.currentNode.nodeValue) });
+    
+                do {
+                    var zero = stack.shift();
+
+                    if (!stack.length)
+                        return zero;
+
+                    if (zero) {
+                        if (zero.divides && stack[0].content)
+                            stack[0].content += "\r\n";
+                        stack[0].content += zero.start + zero.content + zero.end;
+                    }
+
+                    if (walker.nextSibling())
+                        break;
+                    else
+                        walker.parentNode();
+                } while (true)
+            }
+        }
+
+        private readElement(element: HTMLElement, options: WebVTTWriterOptions): TagReadResult {
+            var template: TagReadResult = { start: '', end: '', content: '' }
+            switch (element.tagName.toLowerCase()) {
+                case "p":
+                    template.divides = true;
+                    break;
+                case "br":
+                    template.start = "\r\n";
+                    break;
+            }
+            return template;
         }
         
         private getRichText(syncobject: Node, options: WebVTTWriterOptions) {

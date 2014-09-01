@@ -101,6 +101,8 @@ declare module SamiTS {
         public write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
         private absorbAir(target);
+        private readSyncElement(syncobject, options);
+        private readElement(element, options);
         private getRichText(syncobject, options);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);
