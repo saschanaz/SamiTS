@@ -48,42 +48,6 @@ module SamiTS {
         dataset: SAMISyncDataset;
     }
 
-    export class SAMICue {
-        syncElement: SAMISyncElement;
-        constructor(syncElement: SAMISyncElement) {
-            if (syncElement.tagName.toLowerCase() !== "sync")
-                throw new Error("SamiCue can only accept sync element");
-            else
-                this.syncElement = syncElement;
-        }
-
-        filter(...languages: string[]) {
-            // Dictionary initialization
-            var cues: { [key: string]: SAMICue } = {};
-            for (var i in languages)
-                cues[languages[i]] = new SAMICue(<SAMISyncElement>this.syncElement.cloneNode());
-
-            // Filter
-            Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
-                var language: string;
-                if (child.nodeType == 1) {
-                    language = (<SAMIContentElement>child).dataset.language;
-                    if (languages.indexOf(language) >= 0) {
-                        cues[language].syncElement.appendChild(child.cloneNode(true));
-                        return;
-                    }
-                }
-
-                // Nodes with no language code, including text nodes
-                // Add them to all cue objects
-                if (!language)
-                    for (var language in cues)
-                        cues[language].syncElement.appendChild(child.cloneNode(true));
-            });
-            return cues;
-        }
-    }
-
     export class SAMIDocument {
         cues: SAMICue[] = [];
         languages: SAMILanguage[] = [];
@@ -220,6 +184,32 @@ module SamiTS {
             return languages;
         }
 
+        function minifyWhitespace(head: Node) {
+            var walker = document.createTreeWalker(head, -1, null, false);
+            var text = "";
+            var lastTextNode: Node;
+            while (walker.nextNode()) {
+                if (walker.currentNode.nodeType === 1)
+                    continue;
+
+                // Shrink whitespaces into a single space
+                var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
+                // If cummulated text is empty or ends with whitespace, remove whitespace in front of nodeText
+                if ((!text.length || text[text.length - 1] === ' ') && nodeText[0] === ' ')
+                    nodeText = nodeText.slice(1);
+
+                text += nodeText;
+                walker.currentNode.nodeValue = nodeText;
+
+                if (nodeText.length)
+                    lastTextNode = walker.currentNode;
+            }
+            if (text[text.length - 1] === ' ')
+                lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
+
+            return head;
+        }
+
         function fixIncorrectRubyNodes(syncobject: SAMISyncElement) {
             var rubylist = syncobject.getElementsByTagName("ruby");
             var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
@@ -282,7 +272,7 @@ module SamiTS {
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
         }
 
-        function isRubyParentExist(rtelement: HTMLElement) {
+        function isRubyParentExist(rtelement: HTMLElement): boolean {
             if (rtelement.parentElement) {
                 if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
                     return true;
@@ -293,7 +283,7 @@ module SamiTS {
                 return false;
         }
 
-        function  getFontFromNode(text: Node): HTMLElement {
+        function getFontFromNode(text: Node): HTMLElement {
             if (text.parentNode) {
                 var parent = <HTMLElement>text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {

@@ -30,13 +30,6 @@ module SamiTS {
         /** The default value is "video". */
         selector?: string;
     }
-    export interface TagReadResult {
-        start: string;
-        end: string;
-        content: string;
-        language?: string;
-        divides?: boolean;
-    }
 
     export class WebVTTWriter {
         private webvttStyleSheet = new WebVTTStyleSheet();
