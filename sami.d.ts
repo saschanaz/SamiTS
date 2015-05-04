@@ -28,6 +28,37 @@ declare module SamiTS {
     function createSAMIDocument(input: Blob): Promise<SAMIDocument>;
 }
 declare module SamiTS {
+    interface SAMILanguage {
+        cssClass: string;
+        displayName: string;
+        code: string;
+    }
+    interface SAMIDocumentDictionary {
+        [key: string]: SAMIDocument;
+    }
+    interface SAMIContentDataset extends DOMStringMap {
+        language: string;
+    }
+    interface SAMISyncDataset extends DOMStringMap {
+        originalString: string;
+    }
+    interface SAMIContentElement extends HTMLElement {
+        dataset: SAMIContentDataset;
+    }
+    interface SAMISyncElement extends HTMLElement {
+        dataset: SAMISyncDataset;
+    }
+    class SAMIDocument {
+        cues: SAMICue[];
+        languages: SAMILanguage[];
+        splitByLanguage(): SAMIDocumentDictionary;
+        delay(increment: number): void;
+    }
+    module SAMIDocument {
+        function parse(samistr: string): SAMIDocument;
+    }
+}
+declare module SamiTS {
     interface TagReadResult {
         start: string;
         end: string;
@@ -66,37 +97,6 @@ declare module SamiTS {
         private absorbAir(target);
         private getSimpleText(syncobject);
         private getRichText(syncobject);
-    }
-}
-declare module SamiTS {
-    interface SAMILanguage {
-        cssClass: string;
-        displayName: string;
-        code: string;
-    }
-    interface SAMIDocumentDictionary {
-        [key: string]: SAMIDocument;
-    }
-    interface SAMIContentDataset extends DOMStringMap {
-        language: string;
-    }
-    interface SAMISyncDataset extends DOMStringMap {
-        originalString: string;
-    }
-    interface SAMIContentElement extends HTMLElement {
-        dataset: SAMIContentDataset;
-    }
-    interface SAMISyncElement extends HTMLElement {
-        dataset: SAMISyncDataset;
-    }
-    class SAMIDocument {
-        cues: SAMICue[];
-        languages: SAMILanguage[];
-        splitByLanguage(): SAMIDocumentDictionary;
-        delay(increment: number): void;
-    }
-    module SAMIDocument {
-        function parse(samistr: string): SAMIDocument;
     }
 }
 declare module SamiTS {

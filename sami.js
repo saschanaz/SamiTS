@@ -115,6 +115,7 @@ var SamiTS;
             return list;
         };
         HTMLTagFinder.getAttribute = function (entirestr, position) {
+            var _this = this;
             while (true) {
                 if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F'))
                     position++;
@@ -128,7 +129,7 @@ var SamiTS;
                 var valuestr = '';
                 var spaceparse = function () {
                     while (true) {
-                        if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
+                        if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
                         else
                             break;
@@ -142,12 +143,12 @@ var SamiTS;
                 };
                 var valueparse = function () {
                     while (true) {
-                        if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
+                        if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
                         else
                             break;
                     }
-                    if (this.charCompare(entirestr[position], '\'', '\"')) {
+                    if (_this.charCompare(entirestr[position], '\'', '\"')) {
                         var b = entirestr[position];
                         while (true) {
                             position++;
@@ -166,7 +167,7 @@ var SamiTS;
                         position++;
                     }
                     while (true) {
-                        if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u003E'))
+                        if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u003E'))
                             return parsefinish();
                         else
                             valuestr += entirestr[position];
@@ -246,7 +247,7 @@ var SamiTS;
 (function (SamiTS) {
     function createWebVTT(input, options) {
         var sequence;
-        if (input instanceof SAMIDocument)
+        if (input instanceof SamiTS.SAMIDocument)
             sequence = Promise.resolve(input);
         else
             sequence = createSAMIDocument(input);
@@ -255,7 +256,7 @@ var SamiTS;
     SamiTS.createWebVTT = createWebVTT;
     function createSubRip(input, options) {
         var sequence;
-        if (input instanceof SAMIDocument)
+        if (input instanceof SamiTS.SAMIDocument)
             sequence = Promise.resolve(input);
         else
             sequence = createSAMIDocument(input);
@@ -263,7 +264,7 @@ var SamiTS;
     }
     SamiTS.createSubRip = createSubRip;
     function createSAMIDocument(input) {
-        return getString(input).then(function (samistr) { return SAMIDocument.parse(samistr); });
+        return getString(input).then(function (samistr) { return SamiTS.SAMIDocument.parse(samistr); });
     }
     SamiTS.createSAMIDocument = createSAMIDocument;
     function getString(input) {
@@ -279,6 +280,297 @@ var SamiTS;
             });
         }
     }
+})(SamiTS || (SamiTS = {}));
+/*
+Copyright (c) 2014 SaschaNaz
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+"use strict";
+var SamiTS;
+(function (SamiTS) {
+    var SAMIDocument = (function () {
+        function SAMIDocument() {
+            this.cues = [];
+            this.languages = [];
+        }
+        SAMIDocument.prototype.splitByLanguage = function () {
+            var samiDocuments = {};
+            var languageCodes = [];
+            for (var i in this.languages) {
+                var language = this.languages[i];
+                languageCodes.push(language.code);
+                var sami = new SAMIDocument();
+                sami.languages.push({
+                    cssClass: language.cssClass,
+                    code: language.code,
+                    displayName: language.displayName
+                });
+                samiDocuments[language.code] = sami;
+            }
+            for (var i in this.cues) {
+                var cue = this.cues[i];
+                var filtered = cue.filter.apply(cue, languageCodes);
+                languageCodes.forEach(function (code) {
+                    samiDocuments[code].cues.push(filtered[code]);
+                });
+            }
+            return samiDocuments;
+        };
+        SAMIDocument.prototype.delay = function (increment) {
+            for (var i in this.cues) {
+                var cue = this.cues[i];
+                cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
+            }
+        };
+        return SAMIDocument;
+    })();
+    SamiTS.SAMIDocument = SAMIDocument;
+    var SAMIDocument;
+    (function (SAMIDocument) {
+        function parse(samistr) {
+            var samiDocument = new SAMIDocument();
+            var domparser = new DOMParser();
+            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
+            var bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
+            var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
+                .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase(); })
+                .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4); }), "text/xml").firstChild;
+            var samihead = samicontainer.getElementsByTagName("head")[0];
+            var stylestr = '';
+            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
+                if (text.data)
+                    stylestr += text.data;
+            });
+            samiDocument.languages = extractClassSelectors(stylestr);
+            var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
+            for (var i = 0; i < syncs.length - 1; i++)
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            if (i > 0)
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
+            syncs.forEach(function (sync) {
+                samiDocument.cues.push(new SamiTS.SAMICue(fixIncorrectRubyNodes(sync.element)));
+            });
+            samiDocument.cues.forEach(function (cue) {
+                giveLanguageData(cue, samiDocument.languages);
+            });
+            return samiDocument;
+        }
+        SAMIDocument.parse = parse;
+        function giveLanguageData(cue, languages) {
+            Array.prototype.forEach.call(cue.syncElement.children, function (child) {
+                for (var i = 0; i < languages.length; i++) {
+                    var classCode = child.className;
+                    if (!classCode || classCode === languages[i].cssClass)
+                        child.dataset.language = languages[i].code;
+                }
+            });
+        }
+        function extractClassSelectors(stylestr) {
+            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
+            var languages = [];
+            classes.forEach(function (classstr) {
+                var classselector = classstr.match(/\.\w+{/);
+                if (classselector.length != 1)
+                    return;
+                var stylebody = classstr.slice(classselector[0].length).split(';');
+                var name;
+                var lang;
+                for (var i = 0; i < stylebody.length; i++) {
+                    var stylename = stylebody[i].match(/\w+:/);
+                    if (stylename.length == 1) {
+                        var stylevalue = stylebody[i].slice(stylename[0].length);
+                        if (!name && stylename[0].toLowerCase() === "name:")
+                            name = stylevalue;
+                        else if (!lang && stylename[0].toLowerCase() === "lang:")
+                            lang = stylevalue;
+                        if (name && lang)
+                            break;
+                    }
+                }
+                if (name && lang)
+                    languages.push({
+                        cssClass: classselector[0].slice(1, classselector[0].length - 1),
+                        displayName: name,
+                        code: lang
+                    });
+            });
+            return languages;
+        }
+        function minifyWhitespace(head) {
+            var walker = document.createTreeWalker(head, -1, null, false);
+            var text = "";
+            var lastTextNode;
+            while (walker.nextNode()) {
+                if (walker.currentNode.nodeType === 1)
+                    continue;
+                var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
+                if ((!text.length || text[text.length - 1] === ' ') && nodeText[0] === ' ')
+                    nodeText = nodeText.slice(1);
+                text += nodeText;
+                walker.currentNode.nodeValue = nodeText;
+                if (nodeText.length)
+                    lastTextNode = walker.currentNode;
+            }
+            if (text[text.length - 1] === ' ')
+                lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
+            return head;
+        }
+        function fixIncorrectRubyNodes(syncobject) {
+            var rubylist = syncobject.getElementsByTagName("ruby");
+            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
+            if (!rtlist || rtlist.length == 0)
+                return syncobject;
+            if (Array.prototype.every.call(rtlist, function (rt) { return isRubyParentExist(rt) && rt.textContent.length > 0; }))
+                return syncobject;
+            return fixIncorrectRPs(fixIncorrectFontEnds(syncobject));
+        }
+        function fixIncorrectFontEnds(syncobject) {
+            var fontdeleted = exchangeFontWithTemp(syncobject);
+            var fontextracted = extractFontAndText(syncobject);
+            var textsFromNoFont = extractReadableTextNodes(fontdeleted);
+            var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
+            for (var i = 0; i < textsFromOnlyFont.length; i++) {
+                var font = getFontFromNode(textsFromOnlyFont[i]);
+                if (font)
+                    wrapWith(textsFromNoFont[i], font);
+            }
+            return stripTemp(fontdeleted);
+        }
+        function fixIncorrectRPs(syncobject) {
+            var newsync = syncobject.cloneNode(true);
+            Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), function (ruby) {
+                var rt = ruby.getElementsByTagName("rt")[0];
+                if (!rt || rt.innerHTML.length > 0 || rt === ruby.childNodes[ruby.childNodes.length - 1])
+                    return syncobject;
+                var firstRp = ruby.getElementsByTagName("rp")[0];
+                if (rt.nextElementSibling !== firstRp)
+                    return syncobject;
+                var repositionList = [];
+                var sibling = firstRp.nextSibling;
+                while (sibling && sibling.nodeName.toLowerCase() !== "rp") {
+                    repositionList.push(sibling);
+                    sibling = sibling.nextSibling;
+                }
+                firstRp.parentNode.removeChild(firstRp);
+                ruby.insertBefore(firstRp, rt);
+                repositionList.forEach(function (node) {
+                    node.parentNode.removeChild(node);
+                    rt.appendChild(node);
+                });
+            });
+            return newsync;
+        }
+        function wrapWith(targetNode, newParentNode) {
+            var currentParentNode = targetNode.parentNode;
+            var currentNextSibling = targetNode.nextSibling;
+            currentParentNode.removeChild(targetNode);
+            newParentNode.appendChild(targetNode);
+            currentParentNode.insertBefore(newParentNode, currentNextSibling);
+        }
+        function isRubyParentExist(rtelement) {
+            if (rtelement.parentElement) {
+                if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
+                    return true;
+                else
+                    return isRubyParentExist(rtelement.parentElement);
+            }
+            else
+                return false;
+        }
+        function getFontFromNode(text) {
+            if (text.parentNode) {
+                var parent = text.parentNode;
+                if (parent.tagName.toLowerCase() === "font") {
+                    if (parent.getAttribute("color"))
+                        return parent.cloneNode(false);
+                }
+                return getFontFromNode(parent);
+            }
+            else
+                return null;
+        }
+        function exchangeFontWithTemp(syncobject) {
+            var newsync = syncobject.cloneNode(false);
+            var newsyncstr = newsync.dataset.originalString;
+            SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
+                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
+            });
+            newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
+            return newsync;
+        }
+        function stripTemp(syncobject) {
+            var temps = syncobject.querySelectorAll("x-samits-temp");
+            Array.prototype.forEach.call(temps, function (temp) {
+                temp.parentNode.removeChild(temp);
+            });
+            return syncobject;
+        }
+        function extractFontAndText(syncobject) {
+            var newsync = syncobject.cloneNode(false);
+            var newsyncstr = newsync.dataset.originalString;
+            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
+            tags.filter(function (foundtag) {
+                switch (foundtag.element.tagName.toLowerCase()) {
+                    case "font":
+                    case "p": return false;
+                    default: return true;
+                }
+            }).reverse().forEach(function (foundtag) {
+                newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
+            });
+            ;
+            newsyncstr.match(/<\/\w+>/g).forEach(function (foundendtag) {
+                if (foundendtag !== "</font>")
+                    newsyncstr = newsyncstr.replace(foundendtag, '');
+            });
+            newsync.innerHTML = newsyncstr;
+            return newsync;
+        }
+        function extractReadableTextNodes(syncobject) {
+            var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
+            var node;
+            var textNodes = [];
+            node = walker.nextNode();
+            while (node) {
+                if (node.nodeValue.trim().length > 0)
+                    textNodes.push(node);
+                node = walker.nextNode();
+            }
+            return textNodes;
+        }
+        function lastIndexOfInsensitive(target, searchString, position) {
+            if (position === void 0) { position = target.length - searchString.length; }
+            if (!searchString)
+                return -1;
+            else if (searchString.length == 0)
+                return 0;
+            var lowersearch = searchString.toLowerCase();
+            for (var i = Math.min(target.length - searchString.length, position); i >= 0; i--) {
+                if (target[i].toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
+                    return i;
+            }
+            return -1;
+        }
+    })(SAMIDocument = SamiTS.SAMIDocument || (SamiTS.SAMIDocument = {}));
 })(SamiTS || (SamiTS = {}));
 var SamiTS;
 (function (SamiTS) {
@@ -441,16 +733,17 @@ var SamiTS;
         function SubRipWriter() {
         }
         SubRipWriter.prototype.write = function (xsyncs, options) {
+            var _this = this;
             if (options === void 0) { options = {}; }
             var subDocument = "";
             var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
-                subDocument += "\r\n" + this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
+                subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
             var syncindex = 1;
-            var getText = options.useTextStyles ? function (xsync) { return this.getRichText(xsync); } : function (xsync) { return this.getSimpleText(xsync); };
+            var getText = options.useTextStyles ? function (xsync) { return _this.getRichText(xsync); } : function (xsync) { return _this.getSimpleText(xsync); };
             if (xsyncs.length > 0) {
                 text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0)
@@ -492,6 +785,7 @@ var SamiTS;
             return trimmed.length != 0 ? target : trimmed;
         };
         SubRipWriter.prototype.getSimpleText = function (syncobject) {
+            var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1)
@@ -500,7 +794,7 @@ var SamiTS;
                             if (result)
                                 result += "\r\n";
                         default: {
-                            result += this.getSimpleText(node);
+                            result += _this.getSimpleText(node);
                             break;
                         }
                         case "br": {
@@ -514,6 +808,7 @@ var SamiTS;
             return result;
         };
         SubRipWriter.prototype.getRichText = function (syncobject) {
+            var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
@@ -523,7 +818,7 @@ var SamiTS;
                             if (result)
                                 result += "\r\n";
                         default: {
-                            result += this.getRichText(node);
+                            result += _this.getRichText(node);
                             break;
                         }
                         case "br": {
@@ -536,15 +831,15 @@ var SamiTS;
                             if (color)
                                 fontelement.setAttribute("color", color);
                             if (fontelement.attributes.length > 0)
-                                result += fontelement.outerHTML.replace("</font>", this.getRichText(node) + "</font>");
+                                result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
                             else
-                                result += this.getRichText(node);
+                                result += _this.getRichText(node);
                             break;
                         }
                         case "b":
                         case "i":
                         case "u": {
-                            result += '<' + tagname + '>' + this.getRichText(node) + '</' + tagname + '>';
+                            result += '<' + tagname + '>' + _this.getRichText(node) + '</' + tagname + '>';
                             break;
                         }
                     }
@@ -582,307 +877,17 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 "use strict";
 var SamiTS;
 (function (SamiTS) {
-    var SAMIDocument = (function () {
-        function SAMIDocument() {
-            this.cues = [];
-            this.languages = [];
-        }
-        SAMIDocument.prototype.splitByLanguage = function () {
-            var samiDocuments = {};
-            var languageCodes = [];
-            for (var i in this.languages) {
-                var language = this.languages[i];
-                languageCodes.push(language.code);
-                var sami = new SAMIDocument();
-                sami.languages.push({
-                    cssClass: language.cssClass,
-                    code: language.code,
-                    displayName: language.displayName
-                });
-                samiDocuments[language.code] = sami;
-            }
-            for (var i in this.cues) {
-                var cue = this.cues[i];
-                var filtered = cue.filter.apply(cue, languageCodes);
-                languageCodes.forEach(function (code) {
-                    samiDocuments[code].cues.push(filtered[code]);
-                });
-            }
-            return samiDocuments;
-        };
-        SAMIDocument.prototype.delay = function (increment) {
-            for (var i in this.cues) {
-                var cue = this.cues[i];
-                cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
-            }
-        };
-        return SAMIDocument;
-    })();
-    SamiTS.SAMIDocument = SAMIDocument;
-    var SAMIDocument;
-    (function (SAMIDocument) {
-        function parse(samistr) {
-            var samiDocument = new SAMIDocument();
-            var domparser = new DOMParser();
-            var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
-            var bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
-            var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
-                .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase(); })
-                .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4); }), "text/xml").firstChild;
-            var samihead = samicontainer.getElementsByTagName("head")[0];
-            var stylestr = '';
-            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, function (text) {
-                if (text.data)
-                    stylestr += text.data;
-            });
-            samiDocument.languages = extractClassSelectors(stylestr);
-            var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
-            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
-            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
-            syncs.forEach(function (sync) {
-                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(sync.element)));
-            });
-            samiDocument.cues.forEach(function (cue) {
-                giveLanguageData(cue, samiDocument.languages);
-            });
-            return samiDocument;
-        }
-        SAMIDocument.parse = parse;
-        function giveLanguageData(cue, languages) {
-            Array.prototype.forEach.call(cue.syncElement.children, function (child) {
-                for (var i = 0; i < languages.length; i++) {
-                    var classCode = child.className;
-                    if (!classCode || classCode === languages[i].cssClass)
-                        child.dataset.language = languages[i].code;
-                }
-            });
-        }
-        function extractClassSelectors(stylestr) {
-            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
-            var languages = [];
-            classes.forEach(function (classstr) {
-                var classselector = classstr.match(/\.\w+{/);
-                if (classselector.length != 1)
-                    return;
-                var stylebody = classstr.slice(classselector[0].length).split(';');
-                var name;
-                var lang;
-                for (var i = 0; i < stylebody.length; i++) {
-                    var stylename = stylebody[i].match(/\w+:/);
-                    if (stylename.length == 1) {
-                        var stylevalue = stylebody[i].slice(stylename[0].length);
-                        if (!name && stylename[0].toLowerCase() === "name:")
-                            name = stylevalue;
-                        else if (!lang && stylename[0].toLowerCase() === "lang:")
-                            lang = stylevalue;
-                        if (name && lang)
-                            break;
-                    }
-                }
-                if (name && lang)
-                    languages.push({
-                        cssClass: classselector[0].slice(1, classselector[0].length - 1),
-                        displayName: name,
-                        code: lang
-                    });
-            });
-            return languages;
-        }
-        function minifyWhitespace(head) {
-            var walker = document.createTreeWalker(head, -1, null, false);
-            var text = "";
-            var lastTextNode;
-            while (walker.nextNode()) {
-                if (walker.currentNode.nodeType === 1)
-                    continue;
-                var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
-                if ((!text.length || text[text.length - 1] === ' ') && nodeText[0] === ' ')
-                    nodeText = nodeText.slice(1);
-                text += nodeText;
-                walker.currentNode.nodeValue = nodeText;
-                if (nodeText.length)
-                    lastTextNode = walker.currentNode;
-            }
-            if (text[text.length - 1] === ' ')
-                lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
-            return head;
-        }
-        function fixIncorrectRubyNodes(syncobject) {
-            var rubylist = syncobject.getElementsByTagName("ruby");
-            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
-            if (!rtlist || rtlist.length == 0)
-                return syncobject;
-            if (Array.prototype.every.call(rtlist, function (rt) { return isRubyParentExist(rt) && rt.textContent.length > 0; }))
-                return syncobject;
-            return fixIncorrectRPs(fixIncorrectFontEnds(syncobject));
-        }
-        function fixIncorrectFontEnds(syncobject) {
-            var fontdeleted = exchangeFontWithTemp(syncobject);
-            var fontextracted = extractFontAndText(syncobject);
-            var textsFromNoFont = extractReadableTextNodes(fontdeleted);
-            var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
-            for (var i = 0; i < textsFromOnlyFont.length; i++) {
-                var font = getFontFromNode(textsFromOnlyFont[i]);
-                if (font)
-                    wrapWith(textsFromNoFont[i], font);
-            }
-            return stripTemp(fontdeleted);
-        }
-        function fixIncorrectRPs(syncobject) {
-            var newsync = syncobject.cloneNode(true);
-            Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), function (ruby) {
-                var rt = ruby.getElementsByTagName("rt")[0];
-                if (!rt || rt.innerHTML.length > 0 || rt === ruby.childNodes[ruby.childNodes.length - 1])
-                    return syncobject;
-                var firstRp = ruby.getElementsByTagName("rp")[0];
-                if (rt.nextElementSibling !== firstRp)
-                    return syncobject;
-                var repositionList = [];
-                var sibling = firstRp.nextSibling;
-                while (sibling && sibling.nodeName.toLowerCase() !== "rp") {
-                    repositionList.push(sibling);
-                    sibling = sibling.nextSibling;
-                }
-                firstRp.parentNode.removeChild(firstRp);
-                ruby.insertBefore(firstRp, rt);
-                repositionList.forEach(function (node) {
-                    node.parentNode.removeChild(node);
-                    rt.appendChild(node);
-                });
-            });
-            return newsync;
-        }
-        function wrapWith(targetNode, newParentNode) {
-            var currentParentNode = targetNode.parentNode;
-            var currentNextSibling = targetNode.nextSibling;
-            currentParentNode.removeChild(targetNode);
-            newParentNode.appendChild(targetNode);
-            currentParentNode.insertBefore(newParentNode, currentNextSibling);
-        }
-        function isRubyParentExist(rtelement) {
-            if (rtelement.parentElement) {
-                if (rtelement.parentElement.tagName.toLowerCase() === "ruby")
-                    return true;
-                else
-                    return isRubyParentExist(rtelement.parentElement);
-            }
-            else
-                return false;
-        }
-        function getFontFromNode(text) {
-            if (text.parentNode) {
-                var parent = text.parentNode;
-                if (parent.tagName.toLowerCase() === "font") {
-                    if (parent.getAttribute("color"))
-                        return parent.cloneNode(false);
-                }
-                return getFontFromNode(parent);
-            }
-            else
-                return null;
-        }
-        function exchangeFontWithTemp(syncobject) {
-            var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset.originalString;
-            HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
-                newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
-            });
-            newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
-            return newsync;
-        }
-        function stripTemp(syncobject) {
-            var temps = syncobject.querySelectorAll("x-samits-temp");
-            Array.prototype.forEach.call(temps, function (temp) {
-                temp.parentNode.removeChild(temp);
-            });
-            return syncobject;
-        }
-        function extractFontAndText(syncobject) {
-            var newsync = syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset.originalString;
-            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
-            tags.filter(function (foundtag) {
-                switch (foundtag.element.tagName.toLowerCase()) {
-                    case "font":
-                    case "p": return false;
-                    default: return true;
-                }
-            }).reverse().forEach(function (foundtag) {
-                newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
-            });
-            ;
-            newsyncstr.match(/<\/\w+>/g).forEach(function (foundendtag) {
-                if (foundendtag !== "</font>")
-                    newsyncstr = newsyncstr.replace(foundendtag, '');
-            });
-            newsync.innerHTML = newsyncstr;
-            return newsync;
-        }
-        function extractReadableTextNodes(syncobject) {
-            var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
-            var node;
-            var textNodes = [];
-            node = walker.nextNode();
-            while (node) {
-                if (node.nodeValue.trim().length > 0)
-                    textNodes.push(node);
-                node = walker.nextNode();
-            }
-            return textNodes;
-        }
-        function lastIndexOfInsensitive(target, searchString, position) {
-            if (position === void 0) { position = target.length - searchString.length; }
-            if (!searchString)
-                return -1;
-            else if (searchString.length == 0)
-                return 0;
-            var lowersearch = searchString.toLowerCase();
-            for (var i = Math.min(target.length - searchString.length, position); i >= 0; i--) {
-                if (target[i].toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
-                    return i;
-            }
-            return -1;
-        }
-    })(SAMIDocument = SamiTS.SAMIDocument || (SamiTS.SAMIDocument = {}));
-})(SamiTS || (SamiTS = {}));
-/*
-Copyright (c) 2014 SaschaNaz
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
-OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-"use strict";
-var SamiTS;
-(function (SamiTS) {
     var WebVTTWriter = (function () {
         function WebVTTWriter() {
             this.webvttStyleSheet = new WebVTTStyleSheet();
         }
         WebVTTWriter.prototype.write = function (xsyncs, options) {
+            var _this = this;
             if (options === void 0) { options = {}; }
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = function (i, text) {
-                subDocument += this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
+                subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
