@@ -175,61 +175,6 @@ module SamiTS {
             }
             return template;
         }
-        
-        //private getRichText(syncobject: Node, options: WebVTTWriterOptions) {
-        //    var result = '';
-        //    Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
-        //        if (node.nodeType === 1) { //element
-        //            var contentNode = <SAMIContentElement>node;
-        //            var tagname = contentNode.tagName.toLowerCase();
-        //            var content = '';
-        //            switch (tagname) {
-        //                case "p":
-        //                    if (result)
-        //                        result += "\r\n";
-        //                    //nobreak
-        //                default: {
-        //                    content += this.getRichText(contentNode, options);
-        //                    break;
-        //                }
-        //                case "br": {
-        //                    content += "\r\n";
-        //                    break;
-        //                }
-        //                case "font": {
-        //                    var stylename = this.registerStyle(contentNode);
-        //                    if (stylename) {
-        //                        content += "<c." + stylename + ">" + this.getRichText(contentNode, options) + "</c>";
-        //                    }
-        //                    else
-        //                        content += this.getRichText(contentNode, options);
-        //                    break;
-        //                }
-        //                case "rp": {
-        //                    break;
-        //                }
-        //                case "ruby":
-        //                case "rt":
-        //                case "b":
-        //                case "i":
-        //                case "u": {
-        //                    var innertext = this.getRichText(contentNode, options);
-        //                    if (innertext.length > 0)
-        //                        content += '<' + tagname + '>' + innertext + '</' + tagname + '>';
-        //                    break;
-        //                }
-        //            }
-        //            if (options.enableLanguageTag && contentNode.dataset.language && this.absorbAir(content))
-        //                result += "<lang " + contentNode.dataset.language + ">" + content + "</lang>";
-        //            else
-        //                result += content;
-        //        }
-        //        else { //text
-        //            result += node.nodeValue.replace(/[\r\n]/g, '');
-        //        }
-        //    });
-        //    return result;
-        //}
 
         private registerStyle(fontelement: HTMLElement) {
             var styleName = '';
