@@ -30,7 +30,7 @@ module SamiTS {
         /** The default value is "video". */
         selector?: string;
     }
-    interface TagReadResult {
+    export interface TagReadResult {
         start: string;
         end: string;
         content: string;
@@ -96,16 +96,15 @@ module SamiTS {
                 return minstr + ':' + secstr + '.' + msstr;
         }
 
+        /**
+        Trim the input string if and only if its trimmed result is empty.
+        */
         private absorbAir(target: string) {
             var trimmed = target.trim();
             return trimmed.length != 0 ? target : trimmed;
         }
 
         private readSyncElement(syncobject: SAMISyncElement, options: WebVTTWriterOptions) {
-            var clearWhitespace =
-                (input: string) =>
-                    input.replace(/[ \t\r\n\f]{1,}/g, ' ').replace(/^[ \t\r\n\f]{1,}|[ \t\r\n\f]{1,}$/g, '');
-
             var stack: TagReadResult[] = [];
             var walker = document.createTreeWalker(syncobject, -1, null, false);
             while (true) {
@@ -117,8 +116,8 @@ module SamiTS {
                         continue;
                 }
                 else
-                    stack.unshift({ start: '', end: '', content: clearWhitespace(walker.currentNode.nodeValue) });
-    
+                    stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue });
+
                 do {
                     var zero = stack.shift();
 
@@ -131,7 +130,7 @@ module SamiTS {
 
                         if (zero.content) {
                             var content = zero.start + zero.content + zero.end;
-                            if (options.enableLanguageTag && zero.language && this.absorbAir(content))
+                            if (options.enableLanguageTag && zero.language && content.trim())
                                 stack[0].content += "<lang " + zero.language + ">" + content + "</lang>";
                             else
                                 stack[0].content += content;
@@ -146,8 +145,12 @@ module SamiTS {
             }
         }
 
+        private generateTemplate(content = '') {
+            return <TagReadResult>{ start: '', end: '', content: content, textContent: '' };
+        }
+
         private readElement(element: SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
-            var template: TagReadResult = { start: '', end: '', content: '' }
+            var template = this.generateTemplate();
             if (options.enableLanguageTag && element.dataset.language)
                 template.language = element.dataset.language;
             switch (element.tagName.toLowerCase()) {
