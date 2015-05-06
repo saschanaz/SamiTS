@@ -50,6 +50,7 @@
         readDOM<OptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
             var stack: TagReadResult[] = [];
             var walker = document.createTreeWalker(this.syncElement, -1, null, false);
+            let isBlankNewLine = false;
             while (true) {
                 if (walker.currentNode.nodeType === NodeType.Element) {
                     var element = readElement(<Element>walker.currentNode, options);
@@ -69,11 +70,21 @@
                         return zero;
 
                     if (zero) {
-                        if (zero.divides && stack[0].content)
-                            stack[0].content += "\r\n";
+                        let isEffectiveDivider = zero.divides && stack[0].content;
+                        if (isEffectiveDivider) {
+                            // Ending space in a line should be removed
+                            stack[0].content = util.absorbSpaceEnding(stack[0].content) + "\r\n";
+                            isBlankNewLine = true;
+                        }
 
-                        if (zero.content) 
-                            stack[0].content += zero.start + zero.content + zero.end;
+                        if (zero.content) {
+                            let content = zero.start + zero.content + zero.end;
+                            // Starting space in a line should be removed
+                            if (isBlankNewLine && content[0] === ' ')
+                                content = content.slice(1);
+                            stack[0].content += content;
+                            isBlankNewLine = false;
+                        }
                     }
 
                     if (walker.nextSibling())

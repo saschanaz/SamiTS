@@ -423,15 +423,14 @@ var SamiTS;
                 if (walker.currentNode.nodeType === 1)
                     continue;
                 var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
-                if ((!text.length || text[text.length - 1] === ' ') && nodeText[0] === ' ')
+                if (SamiTS.util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ')
                     nodeText = nodeText.slice(1);
                 text += nodeText;
                 walker.currentNode.nodeValue = nodeText;
                 if (nodeText.length)
                     lastTextNode = walker.currentNode;
             }
-            if (text[text.length - 1] === ' ')
-                lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
+            lastTextNode.nodeValue = SamiTS.util.absorbSpaceEnding(lastTextNode.nodeValue);
             return root;
         }
         function fixIncorrectRubyNodes(syncobject) {
@@ -608,6 +607,7 @@ var SamiTS;
             if (options === void 0) { options = {}; }
             var stack = [];
             var walker = document.createTreeWalker(this.syncElement, -1, null, false);
+            var isBlankNewLine = false;
             while (true) {
                 if (walker.currentNode.nodeType === 1) {
                     var element = readElement(walker.currentNode, options);
@@ -622,10 +622,18 @@ var SamiTS;
                     if (!stack.length)
                         return zero;
                     if (zero) {
-                        if (zero.divides && stack[0].content)
-                            stack[0].content += "\r\n";
-                        if (zero.content)
-                            stack[0].content += zero.start + zero.content + zero.end;
+                        var isEffectiveDivider = zero.divides && stack[0].content;
+                        if (isEffectiveDivider) {
+                            stack[0].content = SamiTS.util.absorbSpaceEnding(stack[0].content) + "\r\n";
+                            isBlankNewLine = true;
+                        }
+                        if (zero.content) {
+                            var content = zero.start + zero.content + zero.end;
+                            if (isBlankNewLine && content[0] === ' ')
+                                content = content.slice(1);
+                            stack[0].content += content;
+                            isBlankNewLine = false;
+                        }
                     }
                     if (walker.nextSibling())
                         break;
@@ -851,17 +859,20 @@ var SamiTS;
 })(SamiTS || (SamiTS = {}));
 var SamiTS;
 (function (SamiTS) {
-    function isEmptyOrEndsWithSpace(input) {
-        return !input.length || input[input.length - 1] === ' ';
-    }
-    SamiTS.isEmptyOrEndsWithSpace = isEmptyOrEndsWithSpace;
-    function absorbSpaceEnding(input) {
-        if (isEmptyOrEndsWithSpace(input))
-            return input.slice(0, -1);
-        else
-            return input;
-    }
-    SamiTS.absorbSpaceEnding = absorbSpaceEnding;
+    var util;
+    (function (util) {
+        function isEmptyOrEndsWithSpace(input) {
+            return !input.length || input[input.length - 1] === ' ';
+        }
+        util.isEmptyOrEndsWithSpace = isEmptyOrEndsWithSpace;
+        function absorbSpaceEnding(input) {
+            if (isEmptyOrEndsWithSpace(input))
+                return input.slice(0, -1);
+            else
+                return input;
+        }
+        util.absorbSpaceEnding = absorbSpaceEnding;
+    })(util = SamiTS.util || (SamiTS.util = {}));
 })(SamiTS || (SamiTS = {}));
 /*
 Copyright (c) 2014 SaschaNaz
@@ -962,10 +973,8 @@ var SamiTS;
                 template.language = element.dataset.language;
             switch (element.tagName.toLowerCase()) {
                 case "p":
-                    template.divides = true;
-                    break;
                 case "br":
-                    template.content = "\r\n";
+                    template.divides = true;
                     break;
                 case "font":
                     var stylename = this.registerStyle(element);

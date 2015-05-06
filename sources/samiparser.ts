@@ -195,7 +195,7 @@ module SamiTS {
                 // Shrink whitespaces into a single space
                 var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
                 // If cummulated text is empty or ends with whitespace, remove whitespace in front of nodeText
-                if ((!text.length || text[text.length - 1] === ' ') && nodeText[0] === ' ')
+                if (util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ')
                     nodeText = nodeText.slice(1);
 
                 text += nodeText;
@@ -204,8 +204,7 @@ module SamiTS {
                 if (nodeText.length)
                     lastTextNode = walker.currentNode;
             }
-            if (text[text.length - 1] === ' ')
-                lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
+            lastTextNode.nodeValue = util.absorbSpaceEnding(lastTextNode.nodeValue);
 
             return root;
         }

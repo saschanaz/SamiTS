@@ -99,7 +99,7 @@ declare module SamiTS {
         private getRichText(syncobject);
     }
 }
-declare module SamiTS {
+declare module SamiTS.util {
     function isEmptyOrEndsWithSpace(input: string): boolean;
     function absorbSpaceEnding(input: string): string;
 }

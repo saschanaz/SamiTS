@@ -150,10 +150,8 @@ module SamiTS {
                 template.language = element.dataset.language;
             switch (element.tagName.toLowerCase()) {
                 case "p":
-                    template.divides = true;
-                    break;
                 case "br":
-                    template.content = "\r\n";
+                    template.divides = true;
                     break;
                 case "font":
                     var stylename = this.registerStyle(element);
