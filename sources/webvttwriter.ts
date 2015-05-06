@@ -99,47 +99,6 @@ module SamiTS {
             return trimmed.length != 0 ? target : trimmed;
         }
 
-        //private readSyncElement(syncobject: SAMISyncElement, options: WebVTTWriterOptions) {
-        //    var stack: TagReadResult[] = [];
-        //    var walker = document.createTreeWalker(syncobject, -1, null, false);
-        //    while (true) {
-        //        if (walker.currentNode.nodeType === 1) {
-        //            var element = this.readElement(<SAMIContentElement>walker.currentNode, options);
-        //            stack.unshift(element);
-
-        //            if (element && walker.firstChild())
-        //                continue;
-        //        }
-        //        else
-        //            stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue });
-
-        //        do {
-        //            var zero = stack.shift();
-
-        //            if (!stack.length)
-        //                return zero;
-
-        //            if (zero) {
-        //                if (zero.divides && stack[0].content)
-        //                    stack[0].content += "\r\n";
-
-        //                if (zero.content) {
-        //                    var content = zero.start + zero.content + zero.end;
-        //                    if (options.enableLanguageTag && zero.language && content.trim())
-        //                        stack[0].content += "<lang " + zero.language + ">" + content + "</lang>";
-        //                    else
-        //                        stack[0].content += content;
-        //                }
-        //            }
-
-        //            if (walker.nextSibling())
-        //                break;
-        //            else
-        //                walker.parentNode();
-        //        } while (true)
-        //    }
-        //}
-
         private generateTemplate(content = '') {
             return <TagReadResult>{ start: '', end: '', content };
         }
