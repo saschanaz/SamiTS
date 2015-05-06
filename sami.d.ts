@@ -72,7 +72,7 @@ declare module SamiTS {
         filter(...languages: string[]): {
             [key: string]: SAMICue;
         };
-        readDOM(readElement: (element: Element) => TagReadResult, enableLanguageTag: boolean): TagReadResult;
+        readDOM<OptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options?: OptionBag): TagReadResult;
     }
 }
 declare module SamiTS {
@@ -100,6 +100,10 @@ declare module SamiTS {
     }
 }
 declare module SamiTS {
+    function isEmptyOrEndsWithSpace(input: string): boolean;
+    function absorbSpaceEnding(input: string): string;
+}
+declare module SamiTS {
     interface WebVTTWriterOptions {
         createStyleElement?: boolean;
         disableDefaultStyle?: boolean;
@@ -111,7 +115,6 @@ declare module SamiTS {
         write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
         private absorbAir(target);
-        private readSyncElement(syncobject, options);
         private generateTemplate(content?);
         private readElement(element, options);
         private registerStyle(fontelement);

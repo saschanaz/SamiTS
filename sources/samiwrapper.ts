@@ -1,4 +1,9 @@
 ﻿module SamiTS {
+    const enum NodeType {
+        Element = 1,
+        Text = 3
+    }
+
     export interface TagReadResult {
         start: string;
         end: string;
@@ -25,7 +30,7 @@
             // Filter
             Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
                 var language: string;
-                if (child.nodeType == 1) {
+                if (child.nodeType === NodeType.Element) {
                     language = (<SAMIContentElement>child).dataset.language;
                     if (languages.indexOf(language) >= 0) {
                         cues[language].syncElement.appendChild(child.cloneNode(true));
@@ -42,14 +47,15 @@
             return cues;
         }
 
-        readDOM(readElement: (element: Element) => TagReadResult, enableLanguageTag: boolean) {
+        readDOM<OptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
             var stack: TagReadResult[] = [];
             var walker = document.createTreeWalker(this.syncElement, -1, null, false);
             while (true) {
-                if (walker.currentNode.nodeType === 1) {
-                    var element = readElement(<Element>walker.currentNode);
+                if (walker.currentNode.nodeType === NodeType.Element) {
+                    var element = readElement(<Element>walker.currentNode, options);
                     stack.unshift(element);
                     
+                    // Read children if there are and if readElement understands current node
                     if (element && walker.firstChild())
                         continue;
                 }
@@ -66,13 +72,8 @@
                         if (zero.divides && stack[0].content)
                             stack[0].content += "\r\n";
 
-                        if (zero.content) {
-                            var content = zero.start + zero.content + zero.end;
-                            if (enableLanguageTag && zero.language && content.trim())
-                                stack[0].content += "<lang " + zero.language + ">" + content + "</lang>";
-                            else
-                                stack[0].content += content;
-                        }
+                        if (zero.content) 
+                            stack[0].content += zero.start + zero.content + zero.end;
                     }
 
                     if (walker.nextSibling())

@@ -22,7 +22,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="sources\htmltagfinder.ts" />
     <TypeScriptCompile Include="sources\samiconverter.ts" />
-    <TypeScriptCompile Include="sources\syncparser.ts" />
+    <TypeScriptCompile Include="sources\samiparser.ts" />
     <TypeScriptCompile Include="sources\samiwrapper.ts" />
     <TypeScriptCompile Include="sources\sdpuswriter.ts" />
     <TypeScriptCompile Include="sources\subripwriter.ts" />

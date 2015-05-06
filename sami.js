@@ -367,7 +367,7 @@ var SamiTS;
             if (i > 0)
                 syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
             syncs.forEach(function (sync) {
-                samiDocument.cues.push(new SamiTS.SAMICue(fixIncorrectRubyNodes(sync.element)));
+                samiDocument.cues.push(new SamiTS.SAMICue(fixIncorrectRubyNodes(minifyWhitespace(sync.element))));
             });
             samiDocument.cues.forEach(function (cue) {
                 giveLanguageData(cue, samiDocument.languages);
@@ -415,8 +415,8 @@ var SamiTS;
             });
             return languages;
         }
-        function minifyWhitespace(head) {
-            var walker = document.createTreeWalker(head, -1, null, false);
+        function minifyWhitespace(root) {
+            var walker = document.createTreeWalker(root, -1, null, false);
             var text = "";
             var lastTextNode;
             while (walker.nextNode()) {
@@ -432,7 +432,7 @@ var SamiTS;
             }
             if (text[text.length - 1] === ' ')
                 lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
-            return head;
+            return root;
         }
         function fixIncorrectRubyNodes(syncobject) {
             var rubylist = syncobject.getElementsByTagName("ruby");
@@ -591,7 +591,7 @@ var SamiTS;
                 cues[languages[i]] = new SAMICue(this.syncElement.cloneNode());
             Array.prototype.forEach.call(this.syncElement.childNodes, function (child) {
                 var language;
-                if (child.nodeType == 1) {
+                if (child.nodeType === 1) {
                     language = child.dataset.language;
                     if (languages.indexOf(language) >= 0) {
                         cues[language].syncElement.appendChild(child.cloneNode(true));
@@ -604,12 +604,13 @@ var SamiTS;
             });
             return cues;
         };
-        SAMICue.prototype.readDOM = function (readElement, enableLanguageTag) {
+        SAMICue.prototype.readDOM = function (readElement, options) {
+            if (options === void 0) { options = {}; }
             var stack = [];
             var walker = document.createTreeWalker(this.syncElement, -1, null, false);
             while (true) {
                 if (walker.currentNode.nodeType === 1) {
-                    var element = readElement(walker.currentNode);
+                    var element = readElement(walker.currentNode, options);
                     stack.unshift(element);
                     if (element && walker.firstChild())
                         continue;
@@ -623,13 +624,8 @@ var SamiTS;
                     if (zero) {
                         if (zero.divides && stack[0].content)
                             stack[0].content += "\r\n";
-                        if (zero.content) {
-                            var content = zero.start + zero.content + zero.end;
-                            if (enableLanguageTag && zero.language && content.trim())
-                                stack[0].content += "<lang " + zero.language + ">" + content + "</lang>";
-                            else
-                                stack[0].content += content;
-                        }
+                        if (zero.content)
+                            stack[0].content += zero.start + zero.content + zero.end;
                     }
                     if (walker.nextSibling())
                         break;
@@ -853,6 +849,20 @@ var SamiTS;
     })();
     SamiTS.SubRipWriter = SubRipWriter;
 })(SamiTS || (SamiTS = {}));
+var SamiTS;
+(function (SamiTS) {
+    function isEmptyOrEndsWithSpace(input) {
+        return !input.length || input[input.length - 1] === ' ';
+    }
+    SamiTS.isEmptyOrEndsWithSpace = isEmptyOrEndsWithSpace;
+    function absorbSpaceEnding(input) {
+        if (isEmptyOrEndsWithSpace(input))
+            return input.slice(0, -1);
+        else
+            return input;
+    }
+    SamiTS.absorbSpaceEnding = absorbSpaceEnding;
+})(SamiTS || (SamiTS = {}));
 /*
 Copyright (c) 2014 SaschaNaz
 
@@ -892,11 +902,12 @@ var SamiTS;
             };
             var text;
             if (xsyncs.length > 0) {
-                text = this.readSyncElement(xsyncs[0].syncElement, options).content;
+                var readElement = this.readElement.bind(this);
+                text = xsyncs[0].readDOM(readElement, options).content;
                 if (text.length > 0)
                     writeText(0, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(this.readSyncElement(xsyncs[i].syncElement, options).content);
+                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options).content);
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         writeText(i, text);
@@ -941,43 +952,9 @@ var SamiTS;
             var trimmed = target.trim();
             return trimmed.length != 0 ? target : trimmed;
         };
-        WebVTTWriter.prototype.readSyncElement = function (syncobject, options) {
-            var stack = [];
-            var walker = document.createTreeWalker(syncobject, -1, null, false);
-            while (true) {
-                if (walker.currentNode.nodeType === 1) {
-                    var element = this.readElement(walker.currentNode, options);
-                    stack.unshift(element);
-                    if (element && walker.firstChild())
-                        continue;
-                }
-                else
-                    stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue });
-                do {
-                    var zero = stack.shift();
-                    if (!stack.length)
-                        return zero;
-                    if (zero) {
-                        if (zero.divides && stack[0].content)
-                            stack[0].content += "\r\n";
-                        if (zero.content) {
-                            var content = zero.start + zero.content + zero.end;
-                            if (options.enableLanguageTag && zero.language && content.trim())
-                                stack[0].content += "<lang " + zero.language + ">" + content + "</lang>";
-                            else
-                                stack[0].content += content;
-                        }
-                    }
-                    if (walker.nextSibling())
-                        break;
-                    else
-                        walker.parentNode();
-                } while (true);
-            }
-        };
         WebVTTWriter.prototype.generateTemplate = function (content) {
             if (content === void 0) { content = ''; }
-            return { start: '', end: '', content: content, textContent: '' };
+            return { start: '', end: '', content: content };
         };
         WebVTTWriter.prototype.readElement = function (element, options) {
             var template = this.generateTemplate();
@@ -1009,6 +986,10 @@ var SamiTS;
                     template.start = "<" + tagname + ">";
                     template.end = "</" + tagname + ">";
                     break;
+            }
+            if (options.enableLanguageTag && element.dataset.language && template.content.trim()) {
+                template.start = "<lang " + element.dataset.language + ">" + template.start;
+                template.end += "</lang>";
             }
             return template;
         };

@@ -132,7 +132,7 @@ module SamiTS {
                 syncs[i].element.innerHTML = (<SAMISyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
 
             syncs.forEach((sync) => {
-                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(<SAMISyncElement>sync.element)));
+                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(<SAMISyncElement>minifyWhitespace(sync.element))));
             });
             samiDocument.cues.forEach((cue: SAMICue) => {
                 giveLanguageData(cue, samiDocument.languages);
@@ -184,8 +184,8 @@ module SamiTS {
             return languages;
         }
 
-        function minifyWhitespace(head: Node) {
-            var walker = document.createTreeWalker(head, -1, null, false);
+        function minifyWhitespace(root: Node) {
+            var walker = document.createTreeWalker(root, -1, null, false);
             var text = "";
             var lastTextNode: Node;
             while (walker.nextNode()) {
@@ -207,7 +207,7 @@ module SamiTS {
             if (text[text.length - 1] === ' ')
                 lastTextNode.nodeValue = lastTextNode.nodeValue.slice(0, -1);
 
-            return head;
+            return root;
         }
 
         function fixIncorrectRubyNodes(syncobject: SAMISyncElement) {
