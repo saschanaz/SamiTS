@@ -41,7 +41,7 @@ module SamiTS {
                 subDocument += this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
-            let readOptions = util.assign(<DOMReadOptionBag>{ preventEmptyLine: true }, options);
+            options = util.assign<any>(<DOMReadOptionBag>{ preventEmptyLine: true }, options);
 
             var text: string;
             if (xsyncs.length > 0) {

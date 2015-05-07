@@ -941,7 +941,7 @@ var SamiTS;
                 subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
-            var readOptions = SamiTS.util.assign({ preventEmptyLine: true }, options);
+            options = SamiTS.util.assign({ preventEmptyLine: true }, options);
             var text;
             if (xsyncs.length > 0) {
                 var readElement = this.readElement.bind(this);
