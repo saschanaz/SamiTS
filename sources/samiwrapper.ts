@@ -8,7 +8,6 @@
         start: string;
         end: string;
         content: string;
-        language?: string;
         divides?: boolean;
         linebreak?: boolean;
     }

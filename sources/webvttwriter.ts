@@ -98,14 +98,8 @@ module SamiTS {
             return trimmed.length != 0 ? target : trimmed;
         }
 
-        private generateTemplate(content = '') {
-            return <TagReadResult>{ start: '', end: '', content };
-        }
-
         private readElement(element: SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
-            var template = this.generateTemplate();
-            if (options.enableLanguageTag && element.dataset.language)
-                template.language = element.dataset.language;
+            var template = util.generateTagReadResultTemplate();
             switch (element.tagName.toLowerCase()) {
                 case "p":
                     template.divides = true;

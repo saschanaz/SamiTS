@@ -29,4 +29,8 @@
         }
         return target;
     }
+    export function generateTagReadResultTemplate(content = '') {
+        return <TagReadResult>{ start: '', end: '', content };
+    }
+    
 }

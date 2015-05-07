@@ -63,7 +63,6 @@ declare module SamiTS {
         start: string;
         end: string;
         content: string;
-        language?: string;
         divides?: boolean;
         linebreak?: boolean;
     }
@@ -99,6 +98,7 @@ declare module SamiTS {
         write(xsyncs: SAMICue[], options?: SubRipWriterOptions): SamiTSResult;
         private getSubRipTime(ms);
         private absorbAir(target);
+        private readElementSimple(element);
         private getSimpleText(syncobject);
         private getRichText(syncobject);
     }
@@ -109,6 +109,7 @@ declare module SamiTS.util {
     function absorbSpaceEnding(input: string): string;
     function manageLastLine(input: string, preventEmptyLine: boolean): string;
     function assign<T>(target: T, ...sources: any[]): T;
+    function generateTagReadResultTemplate(content?: string): TagReadResult;
 }
 declare module SamiTS {
     interface WebVTTWriterOptions {
@@ -122,7 +123,6 @@ declare module SamiTS {
         write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
         private absorbAir(target);
-        private generateTemplate(content?);
         private readElement(element, options);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);

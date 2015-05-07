@@ -115,7 +115,6 @@ var SamiTS;
             return list;
         };
         HTMLTagFinder.getAttribute = function (entirestr, position) {
-            var _this = this;
             while (true) {
                 if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u002F'))
                     position++;
@@ -129,7 +128,7 @@ var SamiTS;
                 var valuestr = '';
                 var spaceparse = function () {
                     while (true) {
-                        if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
+                        if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
                         else
                             break;
@@ -143,12 +142,12 @@ var SamiTS;
                 };
                 var valueparse = function () {
                     while (true) {
-                        if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
+                        if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
                         else
                             break;
                     }
-                    if (_this.charCompare(entirestr[position], '\'', '\"')) {
+                    if (this.charCompare(entirestr[position], '\'', '\"')) {
                         var b = entirestr[position];
                         while (true) {
                             position++;
@@ -167,7 +166,7 @@ var SamiTS;
                         position++;
                     }
                     while (true) {
-                        if (_this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u003E'))
+                        if (this.charCompare(entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020', '\u003E'))
                             return parsefinish();
                         else
                             valuestr += entirestr[position];
@@ -247,7 +246,7 @@ var SamiTS;
 (function (SamiTS) {
     function createWebVTT(input, options) {
         var sequence;
-        if (input instanceof SamiTS.SAMIDocument)
+        if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
             sequence = createSAMIDocument(input);
@@ -256,7 +255,7 @@ var SamiTS;
     SamiTS.createWebVTT = createWebVTT;
     function createSubRip(input, options) {
         var sequence;
-        if (input instanceof SamiTS.SAMIDocument)
+        if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
             sequence = createSAMIDocument(input);
@@ -264,7 +263,7 @@ var SamiTS;
     }
     SamiTS.createSubRip = createSubRip;
     function createSAMIDocument(input) {
-        return getString(input).then(function (samistr) { return SamiTS.SAMIDocument.parse(samistr); });
+        return getString(input).then(function (samistr) { return SAMIDocument.parse(samistr); });
     }
     SamiTS.createSAMIDocument = createSAMIDocument;
     function getString(input) {
@@ -347,7 +346,7 @@ var SamiTS;
         function parse(samistr) {
             var samiDocument = new SAMIDocument();
             var domparser = new DOMParser();
-            var bodystart = SamiTS.HTMLTagFinder.FindStartTag('body', samistr);
+            var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
             var bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
             var samicontainer = domparser.parseFromString((samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                 .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase(); })
@@ -361,13 +360,13 @@ var SamiTS;
             samiDocument.languages = extractClassSelectors(stylestr);
             var samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
             var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
-            var syncs = SamiTS.HTMLTagFinder.FindStartTags('sync', samibody);
+            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
             for (var i = 0; i < syncs.length - 1; i++)
                 syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
             if (i > 0)
                 syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
             syncs.forEach(function (sync) {
-                samiDocument.cues.push(new SamiTS.SAMICue(fixIncorrectRubyNodes(minifyWhitespace(sync.element))));
+                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(minifyWhitespace(sync.element))));
             });
             samiDocument.cues.forEach(function (cue) {
                 giveLanguageData(cue, samiDocument.languages);
@@ -423,14 +422,14 @@ var SamiTS;
                 if (walker.currentNode.nodeType === 1)
                     continue;
                 var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
-                if (SamiTS.util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ')
+                if (util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ')
                     nodeText = nodeText.slice(1);
                 text += nodeText;
                 walker.currentNode.nodeValue = nodeText;
                 if (nodeText.length)
                     lastTextNode = walker.currentNode;
             }
-            lastTextNode.nodeValue = SamiTS.util.absorbSpaceEnding(lastTextNode.nodeValue);
+            lastTextNode.nodeValue = util.absorbSpaceEnding(lastTextNode.nodeValue);
             return root;
         }
         function fixIncorrectRubyNodes(syncobject) {
@@ -510,7 +509,7 @@ var SamiTS;
         function exchangeFontWithTemp(syncobject) {
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
-            SamiTS.HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
+            HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach(function (fonttag) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
             });
             newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
@@ -526,7 +525,7 @@ var SamiTS;
         function extractFontAndText(syncobject) {
             var newsync = syncobject.cloneNode(false);
             var newsyncstr = newsync.dataset.originalString;
-            var tags = SamiTS.HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
+            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
             tags.filter(function (foundtag) {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
@@ -737,17 +736,16 @@ var SamiTS;
         function SubRipWriter() {
         }
         SubRipWriter.prototype.write = function (xsyncs, options) {
-            var _this = this;
             if (options === void 0) { options = {}; }
             var subDocument = "";
             var writeText = function (i, syncindex, text) {
                 subDocument += syncindex.toString();
-                subDocument += "\r\n" + _this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
+                subDocument += "\r\n" + this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
             var text;
             var syncindex = 1;
-            var getText = options.useTextStyles ? function (xsync) { return _this.getRichText(xsync); } : function (xsync) { return _this.getSimpleText(xsync); };
+            var getText = options.useTextStyles ? function (xsync) { return this.getRichText(xsync); } : function (xsync) { return this.getSimpleText(xsync); };
             if (xsyncs.length > 0) {
                 text = this.absorbAir(getText(xsyncs[0].syncElement));
                 if (text.length > 0)
@@ -788,8 +786,9 @@ var SamiTS;
             var trimmed = target.trim();
             return trimmed.length != 0 ? target : trimmed;
         };
+        SubRipWriter.prototype.readElementSimple = function (element) {
+        };
         SubRipWriter.prototype.getSimpleText = function (syncobject) {
-            var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1)
@@ -798,7 +797,7 @@ var SamiTS;
                             if (result)
                                 result += "\r\n";
                         default: {
-                            result += _this.getSimpleText(node);
+                            result += this.getSimpleText(node);
                             break;
                         }
                         case "br": {
@@ -812,7 +811,6 @@ var SamiTS;
             return result;
         };
         SubRipWriter.prototype.getRichText = function (syncobject) {
-            var _this = this;
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, function (node) {
                 if (node.nodeType === 1) {
@@ -822,7 +820,7 @@ var SamiTS;
                             if (result)
                                 result += "\r\n";
                         default: {
-                            result += _this.getRichText(node);
+                            result += this.getRichText(node);
                             break;
                         }
                         case "br": {
@@ -835,15 +833,15 @@ var SamiTS;
                             if (color)
                                 fontelement.setAttribute("color", color);
                             if (fontelement.attributes.length > 0)
-                                result += fontelement.outerHTML.replace("</font>", _this.getRichText(node) + "</font>");
+                                result += fontelement.outerHTML.replace("</font>", this.getRichText(node) + "</font>");
                             else
-                                result += _this.getRichText(node);
+                                result += this.getRichText(node);
                             break;
                         }
                         case "b":
                         case "i":
                         case "u": {
-                            result += '<' + tagname + '>' + _this.getRichText(node) + '</' + tagname + '>';
+                            result += '<' + tagname + '>' + this.getRichText(node) + '</' + tagname + '>';
                             break;
                         }
                     }
@@ -901,6 +899,11 @@ var SamiTS;
             var _a;
         }
         util.assign = assign;
+        function generateTagReadResultTemplate(content) {
+            if (content === void 0) { content = ''; }
+            return { start: '', end: '', content: content };
+        }
+        util.generateTagReadResultTemplate = generateTagReadResultTemplate;
     })(util = SamiTS.util || (SamiTS.util = {}));
 })(SamiTS || (SamiTS = {}));
 /*
@@ -932,16 +935,15 @@ var SamiTS;
             this.webvttStyleSheet = new WebVTTStyleSheet();
         }
         WebVTTWriter.prototype.write = function (xsyncs, options) {
-            var _this = this;
             if (options === void 0) { options = {}; }
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = function (i, text) {
                 subDocument += "\r\n\r\n";
-                subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
+                subDocument += this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
-            options = SamiTS.util.assign({ preventEmptyLine: true }, options);
+            options = util.assign({ preventEmptyLine: true }, options);
             var text;
             if (xsyncs.length > 0) {
                 var readElement = this.readElement.bind(this);
@@ -989,14 +991,8 @@ var SamiTS;
             var trimmed = target.trim();
             return trimmed.length != 0 ? target : trimmed;
         };
-        WebVTTWriter.prototype.generateTemplate = function (content) {
-            if (content === void 0) { content = ''; }
-            return { start: '', end: '', content: content };
-        };
         WebVTTWriter.prototype.readElement = function (element, options) {
-            var template = this.generateTemplate();
-            if (options.enableLanguageTag && element.dataset.language)
-                template.language = element.dataset.language;
+            var template = util.generateTagReadResultTemplate();
             switch (element.tagName.toLowerCase()) {
                 case "p":
                     template.divides = true;

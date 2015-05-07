@@ -76,6 +76,9 @@ module SamiTS {
             return trimmed.length != 0 ? target : trimmed;
         }
 
+        private readElementSimple(element: SAMISyncElement) {
+        }
+
         private getSimpleText(syncobject: Node) {
             var result = '';
             Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
