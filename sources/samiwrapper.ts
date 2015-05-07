@@ -11,6 +11,10 @@
         language?: string;
         divides?: boolean;
     }
+
+    export interface DOMReadOptionBag {
+        preventEmptyLine?: boolean;
+    }
     
     export class SAMICue {
         syncElement: SAMISyncElement;
@@ -47,10 +51,10 @@
             return cues;
         }
 
-        readDOM<OptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
+        readDOM<OptionBag extends DOMReadOptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
             var stack: TagReadResult[] = [];
             var walker = document.createTreeWalker(this.syncElement, -1, null, false);
-            let isBlankNewLine = false;
+            let isBlankNewLine = true;
             while (true) {
                 if (walker.currentNode.nodeType === NodeType.Element) {
                     var element = readElement(<Element>walker.currentNode, options);
@@ -67,13 +71,13 @@
                     var zero = stack.shift();
 
                     if (!stack.length)
-                        return zero;
+                        return util.manageLastLine(zero.content, options.preventEmptyLine);
 
                     if (zero) {
                         let isEffectiveDivider = zero.divides && stack[0].content;
                         if (isEffectiveDivider) {
                             // Ending space in a line should be removed
-                            stack[0].content = util.absorbSpaceEnding(stack[0].content) + "\r\n";
+                            stack[0].content = util.manageLastLine(util.absorbSpaceEnding(stack[0].content), options.preventEmptyLine) + "\r\n";
                             isBlankNewLine = true;
                         }
 

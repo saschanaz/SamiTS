@@ -66,13 +66,16 @@ declare module SamiTS {
         language?: string;
         divides?: boolean;
     }
+    interface DOMReadOptionBag {
+        preventEmptyLine?: boolean;
+    }
     class SAMICue {
         syncElement: SAMISyncElement;
         constructor(syncElement: SAMISyncElement);
         filter(...languages: string[]): {
             [key: string]: SAMICue;
         };
-        readDOM<OptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options?: OptionBag): TagReadResult;
+        readDOM<OptionBag extends DOMReadOptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options?: OptionBag): string;
     }
 }
 declare module SamiTS {
@@ -101,7 +104,10 @@ declare module SamiTS {
 }
 declare module SamiTS.util {
     function isEmptyOrEndsWithSpace(input: string): boolean;
+    function isEmptyOrEndsWithLinefeed(input: string): boolean;
     function absorbSpaceEnding(input: string): string;
+    function manageLastLine(input: string, preventEmptyLine: boolean): string;
+    function assign<T>(target: T, ...sources: any[]): T;
 }
 declare module SamiTS {
     interface WebVTTWriterOptions {

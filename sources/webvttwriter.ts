@@ -37,27 +37,26 @@ module SamiTS {
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = (i: number, text: string) => {
+                subDocument += "\r\n\r\n";
                 subDocument += this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
+            let readOptions = util.assign(<DOMReadOptionBag>{ preventEmptyLine: true }, options);
+
             var text: string;
             if (xsyncs.length > 0) {
                 let readElement = this.readElement.bind(this);
-
-                text = xsyncs[0].readDOM(readElement, options).content;
-                if (text.length > 0) writeText(0, text);
-                for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options).content);//prevents cues consists of a single &nbsp;
-                    if (text.length > 0) {
-                        subDocument += "\r\n\r\n";
+                
+                for (var i = 0; i < xsyncs.length - 1; i++) {
+                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));//prevents cues consists of a single &nbsp;
+                    if (text.length > 0)
                         writeText(i, text);
-                    }
                 }
             }
 
             //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStylesheet(options);
-            subDocument = subHeader + "\r\n\r\n" + subDocument;
+            subDocument = subHeader + subDocument;
 
             var result: SamiTSResult = { subtitle: subDocument };
             if (options.createStyleElement)
