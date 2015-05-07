@@ -99,8 +99,7 @@ declare module SamiTS {
         private getSubRipTime(ms);
         private absorbAir(target);
         private readElementSimple(element);
-        private getSimpleText(syncobject);
-        private getRichText(syncobject);
+        private readElementRich(element);
     }
 }
 declare module SamiTS.util {

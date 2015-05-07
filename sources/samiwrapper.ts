@@ -86,6 +86,7 @@
                             // Starting space in a line should be removed
                             if (isBlankNewLine && content[0] === ' ')
                                 content = content.slice(1);
+                            // Concatenate the result to the top of the stack
                             stack[0].content += content;
                             isBlankNewLine = false;
                         }

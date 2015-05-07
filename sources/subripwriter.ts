@@ -35,14 +35,16 @@ module SamiTS {
                 subDocument += "\r\n" + this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
+            options = util.assign<any>(<DOMReadOptionBag>{ preventEmptyLine: true }, options);
+
             var text: string;
             var syncindex = 1;
-            var getText = options.useTextStyles ? (xsync: Node) => { return this.getRichText(xsync) } : (xsync: Node) => { return this.getSimpleText(xsync) };
+            var readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
             if (xsyncs.length > 0) {
-                text = this.absorbAir(getText(xsyncs[0].syncElement));
+                text = xsyncs[0].readDOM(readElement, options);
                 if (text.length > 0) writeText(0, syncindex, text);
                 for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(getText(xsyncs[i].syncElement));
+                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));
                     if (text.length > 0) {
                         subDocument += "\r\n\r\n";
                         syncindex++;
@@ -77,72 +79,45 @@ module SamiTS {
         }
 
         private readElementSimple(element: SAMISyncElement) {
+            let template = util.generateTagReadResultTemplate();
+            switch (element.tagName.toLowerCase()) {
+                case "p":
+                    template.divides = true;
+                    break;
+                case "br":
+                    template.linebreak = true;
+                    break;
+            }
+            return template;
         }
 
-        private getSimpleText(syncobject: Node) {
-            var result = '';
-            Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
-                if (node.nodeType === 1)//element
-                    switch ((<HTMLElement>node).tagName.toLowerCase()) {
-                        case "p":
-                            if (result)
-                                result += "\r\n";
-                            //nobreak
-                        default: {
-                            result += this.getSimpleText(node);
-                            break;
-                        }
-                        case "br": {
-                            result += "\r\n";
-                            break;
-                        }
+        private readElementRich(element: SAMISyncElement) {
+            let template = util.generateTagReadResultTemplate();
+            switch (element.tagName.toLowerCase()) {
+                case "p":
+                    template.divides = true;
+                    break;
+                case "br":
+                    template.linebreak = true;
+                    break;
+                case "font":
+                    let fontelement = document.createElement("font");
+                    let color = element.getAttribute("color");
+                    if (color) fontelement.setAttribute("color", color);
+                    if (fontelement.attributes.length > 0) {
+                        template.start = fontelement.outerHTML.slice(0, -7);
+                        template.end = "</font>";
                     }
-                else //text
-                    result += node.nodeValue.replace(/[\r\n]/g, '');
-            });
-            return result;
-        }
-
-        private getRichText(syncobject: Node) {
-            var result = '';
-            Array.prototype.forEach.call(syncobject.childNodes, (node: Node) => {
-                if (node.nodeType === 1) { //element
-                    var tagname = (<HTMLElement>node).tagName.toLowerCase();
-                    switch (tagname) {
-                        case "p":
-                            if (result)
-                                result += "\r\n";
-                            //nobreak
-                        default: {
-                            result += this.getRichText(node);
-                            break;
-                        }
-                        case "br": {
-                            result += "\r\n";
-                            break;
-                        }
-                        case "font": {
-                            var fontelement = document.createElement("font");
-                            var color = (<HTMLElement>node).getAttribute("color");
-                            if (color) fontelement.setAttribute("color", color);
-                            if (fontelement.attributes.length > 0)
-                                result += fontelement.outerHTML.replace("</font>", this.getRichText(node) + "</font>");
-                            else
-                                result += this.getRichText(node);
-                            break;
-                        }
-                        case "b":
-                        case "i":
-                        case "u": {
-                            result += '<' + tagname + '>' + this.getRichText(node) + '</' + tagname + '>';
-                            break;
-                        }
-                    }
-                }
-                else //text
-                    result += node.nodeValue.replace(/[\r\n]/g, '');
-            });
-            return result;
+                    break;
+                case "b":
+                case "i":
+                case "u":
+                    let tagname = element.tagName.toLowerCase();
+                    template.start = `<${tagname}>`;
+                    template.end = `</${tagname}>`;
+                    break;
+            }
+            return template;
         }
     }
 }
