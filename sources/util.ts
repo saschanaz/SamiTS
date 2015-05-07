@@ -32,5 +32,11 @@
     export function generateTagReadResultTemplate(content = '') {
         return <TagReadResult>{ start: '', end: '', content };
     }
-    
+    /**
+    Trim the input string if and only if its trimmed result is empty.
+    */
+    export function absorbAir(input: string) {
+        var trimmed = input.trim();
+        return trimmed.length != 0 ? input : trimmed;
+    }
 }

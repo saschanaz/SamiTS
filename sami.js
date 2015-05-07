@@ -747,18 +747,16 @@ var SamiTS;
             };
             options = SamiTS.util.assign({ preventEmptyLine: true }, options);
             var text;
-            var syncindex = 1;
-            var readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
             if (xsyncs.length > 0) {
-                text = xsyncs[0].readDOM(readElement, options);
-                if (text.length > 0)
-                    writeText(0, syncindex, text);
-                for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));
+                var syncindex = 1;
+                var readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
+                for (var i = 0; i < xsyncs.length - 1; i++) {
+                    text = SamiTS.util.absorbAir(xsyncs[i].readDOM(readElement, options));
                     if (text.length > 0) {
-                        subDocument += "\r\n\r\n";
-                        syncindex++;
+                        if (syncindex > 1)
+                            subDocument += "\r\n\r\n";
                         writeText(i, syncindex, text);
+                        syncindex++;
                     }
                 }
             }
@@ -784,10 +782,6 @@ var SamiTS;
             while (msstr.length < 3)
                 msstr = '0' + msstr;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
-        };
-        SubRipWriter.prototype.absorbAir = function (target) {
-            var trimmed = target.trim();
-            return trimmed.length != 0 ? target : trimmed;
         };
         SubRipWriter.prototype.readElementSimple = function (element) {
             var template = SamiTS.util.generateTagReadResultTemplate();
@@ -883,6 +877,11 @@ var SamiTS;
             return { start: '', end: '', content: content };
         }
         util.generateTagReadResultTemplate = generateTagReadResultTemplate;
+        function absorbAir(input) {
+            var trimmed = input.trim();
+            return trimmed.length != 0 ? input : trimmed;
+        }
+        util.absorbAir = absorbAir;
     })(util = SamiTS.util || (SamiTS.util = {}));
 })(SamiTS || (SamiTS = {}));
 /*
@@ -928,7 +927,7 @@ var SamiTS;
             if (xsyncs.length > 0) {
                 var readElement = this.readElement.bind(this);
                 for (var i = 0; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));
+                    text = SamiTS.util.absorbAir(xsyncs[i].readDOM(readElement, options));
                     if (text.length > 0)
                         writeText(i, text);
                 }
@@ -966,10 +965,6 @@ var SamiTS;
             }
             else
                 return minstr + ':' + secstr + '.' + msstr;
-        };
-        WebVTTWriter.prototype.absorbAir = function (target) {
-            var trimmed = target.trim();
-            return trimmed.length != 0 ? target : trimmed;
         };
         WebVTTWriter.prototype.readElement = function (element, options) {
             var template = SamiTS.util.generateTagReadResultTemplate();

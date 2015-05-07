@@ -38,17 +38,17 @@ module SamiTS {
             options = util.assign<any>(<DOMReadOptionBag>{ preventEmptyLine: true }, options);
 
             var text: string;
-            var syncindex = 1;
-            var readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
             if (xsyncs.length > 0) {
-                text = xsyncs[0].readDOM(readElement, options);
-                if (text.length > 0) writeText(0, syncindex, text);
-                for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));
+                let syncindex = 1;
+                let readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
+
+                for (var i = 0; i < xsyncs.length - 1; i++) {
+                    text = util.absorbAir(xsyncs[i].readDOM(readElement, options));
                     if (text.length > 0) {
-                        subDocument += "\r\n\r\n";
-                        syncindex++;
+                        if (syncindex > 1)
+                            subDocument += "\r\n\r\n";
                         writeText(i, syncindex, text);
+                        syncindex++;
                     }
                 }
             }
@@ -71,11 +71,6 @@ module SamiTS {
             var msstr = ms.toString();
             while (msstr.length < 3) msstr = '0' + msstr;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
-        }
-
-        private absorbAir(target: string) {
-            var trimmed = target.trim();
-            return trimmed.length != 0 ? target : trimmed;
         }
 
         private readElementSimple(element: SAMISyncElement) {

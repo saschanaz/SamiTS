@@ -97,7 +97,6 @@ declare module SamiTS {
     class SubRipWriter {
         write(xsyncs: SAMICue[], options?: SubRipWriterOptions): SamiTSResult;
         private getSubRipTime(ms);
-        private absorbAir(target);
         private readElementSimple(element);
         private readElementRich(element);
     }
@@ -109,6 +108,7 @@ declare module SamiTS.util {
     function manageLastLine(input: string, preventEmptyLine: boolean): string;
     function assign<T>(target: T, ...sources: any[]): T;
     function generateTagReadResultTemplate(content?: string): TagReadResult;
+    function absorbAir(input: string): string;
 }
 declare module SamiTS {
     interface WebVTTWriterOptions {
@@ -121,7 +121,6 @@ declare module SamiTS {
         private webvttStyleSheet;
         write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
-        private absorbAir(target);
         private readElement(element, options);
         private registerStyle(fontelement);
         private fixIncorrectColorAttribute(colorstr);

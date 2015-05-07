@@ -48,7 +48,7 @@ module SamiTS {
                 let readElement = this.readElement.bind(this);
                 
                 for (var i = 0; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));//prevents cues consists of a single &nbsp;
+                    text = util.absorbAir(xsyncs[i].readDOM(readElement, options));//prevents cues consists of a single &nbsp;
                     if (text.length > 0)
                         writeText(i, text);
                 }
@@ -88,14 +88,6 @@ module SamiTS {
             }
             else
                 return minstr + ':' + secstr + '.' + msstr;
-        }
-
-        /**
-        Trim the input string if and only if its trimmed result is empty.
-        */
-        private absorbAir(target: string) {
-            var trimmed = target.trim();
-            return trimmed.length != 0 ? target : trimmed;
         }
 
         private readElement(element: SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
