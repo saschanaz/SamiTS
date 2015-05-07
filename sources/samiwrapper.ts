@@ -10,6 +10,7 @@
         content: string;
         language?: string;
         divides?: boolean;
+        linebreak?: boolean;
     }
 
     export interface DOMReadOptionBag {
@@ -74,7 +75,7 @@
                         return util.manageLastLine(zero.content, options.preventEmptyLine);
 
                     if (zero) {
-                        let isEffectiveDivider = zero.divides && stack[0].content;
+                        let isEffectiveDivider = zero.linebreak || (zero.divides && stack[0].content);
                         if (isEffectiveDivider) {
                             // Ending space in a line should be removed
                             stack[0].content = util.manageLastLine(util.absorbSpaceEnding(stack[0].content), options.preventEmptyLine) + "\r\n";

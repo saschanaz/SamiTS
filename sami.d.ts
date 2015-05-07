@@ -65,6 +65,7 @@ declare module SamiTS {
         content: string;
         language?: string;
         divides?: boolean;
+        linebreak?: boolean;
     }
     interface DOMReadOptionBag {
         preventEmptyLine?: boolean;

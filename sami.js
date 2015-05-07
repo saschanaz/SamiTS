@@ -607,7 +607,7 @@ var SamiTS;
             if (options === void 0) { options = {}; }
             var stack = [];
             var walker = document.createTreeWalker(this.syncElement, -1, null, false);
-            var isBlankNewLine = false;
+            var isBlankNewLine = true;
             while (true) {
                 if (walker.currentNode.nodeType === 1) {
                     var element = readElement(walker.currentNode, options);
@@ -620,11 +620,11 @@ var SamiTS;
                 do {
                     var zero = stack.shift();
                     if (!stack.length)
-                        return zero;
+                        return SamiTS.util.manageLastLine(zero.content, options.preventEmptyLine);
                     if (zero) {
-                        var isEffectiveDivider = zero.divides && stack[0].content;
+                        var isEffectiveDivider = zero.linebreak || (zero.divides && stack[0].content);
                         if (isEffectiveDivider) {
-                            stack[0].content = SamiTS.util.absorbSpaceEnding(stack[0].content) + "\r\n";
+                            stack[0].content = SamiTS.util.manageLastLine(SamiTS.util.absorbSpaceEnding(stack[0].content), options.preventEmptyLine) + "\r\n";
                             isBlankNewLine = true;
                         }
                         if (zero.content) {
@@ -865,6 +865,10 @@ var SamiTS;
             return !input.length || input[input.length - 1] === ' ';
         }
         util.isEmptyOrEndsWithSpace = isEmptyOrEndsWithSpace;
+        function isEmptyOrEndsWithLinefeed(input) {
+            return !input.length || input[input.length - 1] === '\n';
+        }
+        util.isEmptyOrEndsWithLinefeed = isEmptyOrEndsWithLinefeed;
         function absorbSpaceEnding(input) {
             if (isEmptyOrEndsWithSpace(input))
                 return input.slice(0, -1);
@@ -872,6 +876,31 @@ var SamiTS;
                 return input;
         }
         util.absorbSpaceEnding = absorbSpaceEnding;
+        function manageLastLine(input, preventEmptyLine) {
+            if (isEmptyOrEndsWithLinefeed(input) && preventEmptyLine)
+                return input + ' ';
+            else
+                return input;
+        }
+        util.manageLastLine = manageLastLine;
+        function assign(target) {
+            var sources = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                sources[_i - 1] = arguments[_i];
+            }
+            if (Object.assign)
+                return (_a = Object).assign.apply(_a, [target].concat(sources));
+            for (var _b = 0; _b < sources.length; _b++) {
+                var source = sources[_b];
+                source = Object(source);
+                for (var property in source) {
+                    target[property] = source[property];
+                }
+            }
+            return target;
+            var _a;
+        }
+        util.assign = assign;
     })(util = SamiTS.util || (SamiTS.util = {}));
 })(SamiTS || (SamiTS = {}));
 /*
@@ -908,25 +937,22 @@ var SamiTS;
             var subHeader = "WEBVTT";
             var subDocument = '';
             var writeText = function (i, text) {
+                subDocument += "\r\n\r\n";
                 subDocument += _this.getWebVTTTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + _this.getWebVTTTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
             };
+            var readOptions = SamiTS.util.assign({ preventEmptyLine: true }, options);
             var text;
             if (xsyncs.length > 0) {
                 var readElement = this.readElement.bind(this);
-                text = xsyncs[0].readDOM(readElement, options).content;
-                if (text.length > 0)
-                    writeText(0, text);
-                for (var i = 1; i < xsyncs.length - 1; i++) {
-                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options).content);
-                    if (text.length > 0) {
-                        subDocument += "\r\n\r\n";
+                for (var i = 0; i < xsyncs.length - 1; i++) {
+                    text = this.absorbAir(xsyncs[i].readDOM(readElement, options));
+                    if (text.length > 0)
                         writeText(i, text);
-                    }
                 }
             }
             subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStylesheet(options);
-            subDocument = subHeader + "\r\n\r\n" + subDocument;
+            subDocument = subHeader + subDocument;
             var result = { subtitle: subDocument };
             if (options.createStyleElement)
                 result.stylesheet = this.webvttStyleSheet.getStylesheetNode(options);
@@ -973,8 +999,10 @@ var SamiTS;
                 template.language = element.dataset.language;
             switch (element.tagName.toLowerCase()) {
                 case "p":
-                case "br":
                     template.divides = true;
+                    break;
+                case "br":
+                    template.linebreak = true;
                     break;
                 case "font":
                     var stylename = this.registerStyle(element);
