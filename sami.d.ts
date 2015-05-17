@@ -51,6 +51,7 @@ declare module SamiTS {
     class SAMIDocument {
         cues: SAMICue[];
         languages: SAMILanguage[];
+        clone(): SAMIDocument;
         splitByLanguage(): SAMIDocumentDictionary;
         delay(increment: number): void;
     }
@@ -72,6 +73,7 @@ declare module SamiTS {
     class SAMICue {
         syncElement: SAMISyncElement;
         constructor(syncElement: SAMISyncElement);
+        clone(): SAMICue;
         filter(...languages: string[]): {
             [key: string]: SAMICue;
         };

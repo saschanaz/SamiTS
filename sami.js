@@ -310,6 +310,15 @@ var SamiTS;
             this.cues = [];
             this.languages = [];
         }
+        SAMIDocument.prototype.clone = function () {
+            var newDocument = new SAMIDocument();
+            for (var _i = 0, _a = this.cues; _i < _a.length; _i++) {
+                var cue = _a[_i];
+                newDocument.cues.push(cue.clone());
+            }
+            newDocument.languages = this.languages.slice();
+            return newDocument;
+        };
         SAMIDocument.prototype.splitByLanguage = function () {
             var samiDocuments = {};
             var languageCodes = [];
@@ -580,6 +589,9 @@ var SamiTS;
             else
                 this.syncElement = syncElement;
         }
+        SAMICue.prototype.clone = function () {
+            return new SAMICue(this.syncElement.cloneNode(true));
+        };
         SAMICue.prototype.filter = function () {
             var languages = [];
             for (var _i = 0; _i < arguments.length; _i++) {

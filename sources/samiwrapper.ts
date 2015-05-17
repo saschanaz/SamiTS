@@ -25,6 +25,10 @@
                 this.syncElement = syncElement;
         }
 
+        clone() {
+            return new SAMICue(<SAMISyncElement>this.syncElement.cloneNode(true));
+        }
+
         filter(...languages: string[]) {
             // Dictionary initialization
             var cues: { [key: string]: SAMICue } = {};

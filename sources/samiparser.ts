@@ -52,6 +52,14 @@ module SamiTS {
         cues: SAMICue[] = [];
         languages: SAMILanguage[] = [];
 
+        clone() {
+            let newDocument = new SAMIDocument();
+            for (let cue of this.cues)
+                newDocument.cues.push(cue.clone());
+            newDocument.languages = this.languages.slice();
+            return newDocument;
+        }
+
         /**
         Split SAMI document by its languages. Result may not be strictly ordered by any ways.
         */
