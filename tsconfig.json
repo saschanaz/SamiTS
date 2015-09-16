@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "declaration": true,
+        "out": "sami.js"
+    },
+    "files": [
+        "submodules/es6-promises.d.ts",
+        "sources/htmltagfinder.ts",
+        "sources/samiconverter.ts",
+        "sources/samiparser.ts",
+        "sources/samiwrapper.ts",
+        "sources/sdpuswriter.ts",
+        "sources/subripwriter.ts",
+        "sources/util.ts",
+        "sources/webvttwriter.ts"
+    ]
+}

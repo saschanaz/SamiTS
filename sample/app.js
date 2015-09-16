@@ -1,9 +1,7 @@
-﻿///<reference path="../sami.d.ts" />
+///<reference path="../sami.d.ts" />
 ///<reference path="../submodules/es6-promises.d.ts" />
-
 // Main
 "use strict";
-
 var subtypechecks;
 var track;
 var style;
@@ -12,13 +10,11 @@ var subtitleFileDisplayName;
 document.addEventListener("DOMContentLoaded", function () {
     subtypechecks = document.getElementsByName("subtype");
 });
-
 var SubType;
 (function (SubType) {
     SubType[SubType["WebVTT"] = 0] = "WebVTT";
     SubType[SubType["SRT"] = 1] = "SRT";
 })(SubType || (SubType = {}));
-
 function load(evt) {
     var files = evt.target.files;
     var videofile;
@@ -34,23 +30,18 @@ function load(evt) {
     }
     if (!subfile)
         return;
-
     subtitleFileDisplayName = getFileDisplayName(subfile);
-
     var sequence;
     switch (getTargetSubType()) {
-        case 0 /* WebVTT */:
+        case SubType.WebVTT:
             sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
             break;
-        case 1 /* SRT */:
+        case SubType.SRT:
             sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
             break;
     }
-    return sequence.then(function (result) {
-        return resultOutput(videofile, result);
-    });
+    return sequence.then(function (result) { return resultOutput(videofile, result); });
 }
-
 var resultOutput = function (videoFile, result) {
     hidePreviewArea();
     hidePlayer();
@@ -72,29 +63,27 @@ var resultOutput = function (videoFile, result) {
         player.appendChild(track);
         showAreaSelector();
         showPlayer();
-    } else
+    }
+    else
         showPreviewArea();
-
     loadStyle(result.stylesheet);
 };
-
 var loadStyle = function (stylesheet) {
     if (style)
         document.head.removeChild(style);
     style = stylesheet;
     document.head.appendChild(stylesheet);
 };
-
 function selectArea() {
     if (isPreviewAreaShown) {
         hidePreviewArea();
         showPlayer();
-    } else {
+    }
+    else {
         hidePlayer();
         showPreviewArea();
     }
 }
-
 function showAreaSelector() {
     areaselector.style.display = "inline-block";
 }
@@ -117,46 +106,39 @@ function showPlayer() {
 function hidePlayer() {
     player.style.display = "none";
 }
-
 function download() {
     var blob = new Blob([output.value], { type: getMIMETypeForSubType(), endings: "transparent" });
     saveAs(blob, subtitleFileDisplayName + getExtensionForSubType());
 }
-
 function getExtensionForSubType() {
     switch (getTargetSubType()) {
-        case 0 /* WebVTT */:
+        case SubType.WebVTT:
             return ".vtt";
-        case 1 /* SRT */:
+        case SubType.SRT:
             return ".srt";
     }
 }
-
 function getMIMETypeForSubType() {
     switch (getTargetSubType()) {
-        case 0 /* WebVTT */:
+        case SubType.WebVTT:
             return "text/vtt";
-        case 1 /* SRT */:
+        case SubType.SRT:
             return "text/plain";
     }
 }
-
 function getTargetSubType() {
     if (subtypechecks[0].checked)
-        return 0 /* WebVTT */;
+        return SubType.WebVTT;
     else if (subtypechecks[1].checked)
-        return 1 /* SRT */;
+        return SubType.SRT;
 }
-
 function getTagUse() {
     return taguse.checked;
 }
-
 function getFileExtension(file) {
     var splitted = file.name.split('.');
     return splitted[splitted.length - 1].toLowerCase();
 }
-
 function getFileDisplayName(file) {
     var splitted = file.name.split('.');
     splitted = splitted.slice(0, splitted.length - 1);
