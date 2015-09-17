@@ -1,0 +1,12 @@
+{
+    "version": "0.1.0",
+    // List of configurations. Add new configurations or edit existing ones.
+    // ONLY "node" and "mono" are supported, change "type" to switch.
+    "configurations": [
+        {
+            "name": "Launch test file server",
+            "type": "node",
+            "program": "../test/fileserver.js"
+        }
+    ]
+}
