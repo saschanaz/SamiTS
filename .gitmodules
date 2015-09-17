@@ -4,3 +4,6 @@
 [submodule "submodules/filesaver"]
 	path = submodules/filesaver
 	url = https://github.com/eligrey/FileSaver.js.git
+[submodule "submodules/fetch"]
+	path = submodules/fetch
+	url = https://github.com/github/fetch.git
