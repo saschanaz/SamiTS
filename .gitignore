@@ -1,2 +1,5 @@
 node_modules/
 sources/*.js
+
+# temporarily ignore them until we get license-free test sets
+test/data
