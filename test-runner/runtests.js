@@ -1145,7 +1145,6 @@ var SamiTS;
         return WebVTTStyleSheet;
     })();
 })(SamiTS || (SamiTS = {}));
-var assert = chai.assert;
 function loadFiles() {
     var names = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -1155,21 +1154,31 @@ function loadFiles() {
         .all(names.map(function (name) { return fetch("../test/data/" + name); }))
         .then(function (results) { return Promise.all(results.map(function (result) { return result.text(); })); });
 }
+function assertDiff(first, second) {
+    var dmp = new diff_match_patch();
+    var diff = dmp.diff_main(first, second);
+    if (diff.length > 2) {
+        dmp.diff_cleanupSemantic(diff);
+    }
+    var patchList = dmp.patch_make(first, second, diff);
+    var patchText = dmp.patch_toText(patchList);
+    if (patchText) {
+        return new Error(decodeURI(patchText));
+    }
+}
 describe("Conversion diff test", function () {
-    this.timeout(10000);
+    this.timeout(5000);
     it("should be same as result file", function (done) {
         var vtt;
-        loadFiles("subject.smi", "subject.vtt")
+        return loadFiles("subject.smi", "subject.vtt")
             .then(function (_a) {
             var smi = _a[0], _vtt = _a[1];
             vtt = _vtt;
             return SamiTS.createWebVTT(smi);
         })
             .then(function (result) {
-            assert.equal(result.subtitle.replace(/\r\n/g, "\n"), vtt, "Differences are found.");
-            done();
-        })
-            .catch(done);
+            done(assertDiff(result.subtitle.replace(/\r\n/g, "\n"), vtt));
+        });
     });
 });
 //# sourceMappingURL=runtests.js.map

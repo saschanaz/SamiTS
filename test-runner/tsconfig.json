@@ -4,7 +4,6 @@
         "module": "commonjs",
         "noImplicitAny": true,
         "sourceMap": true,
-        "declaration": true,
         "out": "runtests.js"
     },
     "files": [
@@ -20,7 +19,6 @@
         
         "../submodules/node.d.ts",
         "../submodules/mocha.d.ts",
-        "../submodules/chai.d.ts",
         "../submodules/fetch.d.ts",
         "runtests.ts"
     ]
