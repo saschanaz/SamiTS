@@ -1,6 +1,9 @@
 var node_static_1 = require("node-static");
 var http = require("http");
-var server = new node_static_1.Server("../");
+var server = new node_static_1.Server("../", {
+    cache: false,
+    headers: { "Cache-Control": "no-cache, must-revalidate" }
+});
 console.log("Server opened at: " + server.root);
 http.createServer(function (request, response) {
     request.addListener("end", function () {

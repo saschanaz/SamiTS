@@ -1,7 +1,10 @@
 import { Server, ServerResult } from "node-static";
 import * as http from "http";
 
-let server = new Server("../");
+let server = new Server("../", { 
+	cache: false,
+	headers: { "Cache-Control": "no-cache, must-revalidate" }
+});
 
 console.log(`Server opened at: ${server.root}`);
 

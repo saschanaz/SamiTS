@@ -16,7 +16,7 @@ declare module "node-static" {
 		serve(request: http.IncomingMessage, response: http.ServerResponse): events.EventEmitter;
 	} 
 	interface ServerOptions {
-		cache?: number;
+		cache?: number | boolean;
 		serverInfo?: string;
 		headers?: any;
 		gzip?: boolean | RegExp;
