@@ -31,21 +31,21 @@ module SamiTS {
 
     export class HTMLTagFinder {
         static FindStartTag(tagname: string, entirestr: string): FoundHTMLTag {
-            var tag: FoundHTMLTag;
-            var position = 0;
-            var startPosition = 0;
+            let tag: FoundHTMLTag;
+            let position = 0;
+            let startPosition = 0;
             while (!tag) {
                 position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
-                if (position != -1) {
+                if (position !== -1) {
                     startPosition = position;
                     position += tagname.length + 1;
-                    var xe = document.createElement(tagname);
+                    let xe = document.createElement(tagname);
                     while (true) {
-                        var attrAndPos = this.getAttribute(entirestr, position);
+                        let attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
                         if (attrAndPos.attributeName === null) {
                             position++;
-                            tag = { element: xe, startPosition: startPosition, endPosition: position };
+                            tag = { element: xe, startPosition, endPosition: position };
                             break;
                         }
                         else if (xe.getAttribute(attrAndPos.attributeName) !== null)
@@ -61,21 +61,21 @@ module SamiTS {
         }
 
         static FindStartTags(tagname: string, entirestr: string): FoundHTMLTag[] {
-            var list: FoundHTMLTag[] = [];
-            var position = 0;
-            var startPosition = 0;
+            let list: FoundHTMLTag[] = [];
+            let position = 0;
+            let startPosition = 0;
             while (true) {
                 position = this.searchWithIndex(entirestr, new RegExp('<' + tagname, 'i'), position);
                 if (position != -1) {
                     startPosition = position;
                     position += tagname.length + 1;
-                    var xe = document.createElement(tagname);
+                    let xe = document.createElement(tagname);
                     while (true) {
-                        var attrAndPos = this.getAttribute(entirestr, position);
+                        let attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
                         if (attrAndPos.attributeName === null) {
                             position++;
-                            list.push({ element: xe, startPosition: startPosition, endPosition: position });
+                            list.push({ element: xe, startPosition, endPosition: position });
                             break;
                         }
                         else if (xe.getAttribute(attrAndPos.attributeName) !== null)
@@ -90,27 +90,27 @@ module SamiTS {
             return list;
         }
 
-        static FindAllStartTags(entirestr: string): FoundHTMLTag[]{
-            var list: FoundHTMLTag[] = [];
-            var position = 0;
-            var startPosition = 0;
+        static FindAllStartTags(entirestr: string): FoundHTMLTag[] {
+            let list: FoundHTMLTag[] = [];
+            let position = 0;
+            let startPosition = 0;
             while (true) {
                 position = this.searchWithIndex(entirestr, /<\w+/, position);
                 if (position != -1) {
                     startPosition = position;
                     position++;
-                    var tagname = '';
+                    let tagname = '';
                     while ((<string>entirestr[position]).search(/[A-z]/) === 0) {
                         tagname += entirestr[position];
                         position++;
                     }
-                    var xe = document.createElement(tagname);
+                    let xe = document.createElement(tagname);
                     while (true) {
-                        var attrAndPos = this.getAttribute(entirestr, position);
+                        let attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
                         if (attrAndPos.attributeName === null) {
                             position++;
-                            list.push({ element: xe, startPosition: startPosition, endPosition: position });
+                            list.push({ element: xe, startPosition, endPosition: position });
                             break;
                         }
                         else if (xe.getAttribute(attrAndPos.attributeName) !== null)
@@ -136,8 +136,8 @@ module SamiTS {
             if (<string>entirestr[position] == '>')
                 return { attributeName: null, attributeValue: null, nextPosition: position };
             else {
-                var namestr = '';
-                var valuestr = '';
+                let namestr = '';
+                let valuestr = '';
 
                 var spaceparse = () => {
                     while (true) {
@@ -153,7 +153,7 @@ module SamiTS {
                             position++;
                     return valueparse();
                 }
-            var valueparse = () => {
+                var valueparse = () => {
                     while (true) {
                         if (this.charCompare(<string>entirestr[position], '\u0009', '\u000A', '\u000C', '\u000D', '\u0020'))
                             position++;
@@ -161,7 +161,7 @@ module SamiTS {
                             break;
                     }
                     if (this.charCompare(<string>entirestr[position], '\'', '\"')) {
-                        var b = <string>entirestr[position];
+                        let b = <string>entirestr[position];
                         while (true) {
                             position++;
                             if (<string>entirestr[position] == b) {
@@ -188,15 +188,15 @@ module SamiTS {
                     }
                     return parsefinish();
                 }
-            var parsefinish = () => {
+                var parsefinish = () => {
                     if (namestr.length === 0)
                         return { attributeName: null, attributeValue: null, nextPosition: position };
                     else
                         return { attributeName: namestr, attributeValue: valuestr, nextPosition: position };
                 }
 
-            //attribute name parsing
-            while (true) {
+                //attribute name parsing
+                while (true) {
                     if (<string>entirestr[position] == '=') {
                         position++;
                         return valueparse();
@@ -216,7 +216,7 @@ module SamiTS {
 
         private static searchWithIndex(target: string, query: RegExp, position = 0) {
             if (target.length > position) {
-                var found = target.slice(position).search(query);
+                let found = target.slice(position).search(query);
                 return found != -1 ? position + found : -1;
             }
             else
@@ -224,8 +224,8 @@ module SamiTS {
         }
 
         private static charCompare(a: string, ...b: string[]) {
-            for (var i = 0; i < b.length; i++) {
-                if (a === b[i])
+            for (let item of b) {
+                if (a === item)
                     return true;
             }
             return false;
