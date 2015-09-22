@@ -30,7 +30,7 @@ module SamiTS {
     export function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: SAMIDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: any, options?: WebVTTWriterOptions) {
-        var sequence: Promise<SAMIDocument>;
+        let sequence: Promise<SAMIDocument>;
         if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
@@ -43,7 +43,7 @@ module SamiTS {
     export function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     export function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     export function createSubRip(input: any, options?: SubRipWriterOptions) {
-        var sequence: Promise<SAMIDocument>;
+        let sequence: Promise<SAMIDocument>;
         if (input instanceof SAMIDocument)
             sequence = Promise.resolve(input);
         else
@@ -66,7 +66,7 @@ module SamiTS {
             return Promise.resolve(<string>input);
         else if (input instanceof Blob) {
             return new Promise<string>((resolve, reject) => {
-                var reader = new FileReader();
+                let reader = new FileReader();
                 reader.onload = (ev: any) => {
                     resolve(<string>reader.result);
                 };

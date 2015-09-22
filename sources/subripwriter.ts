@@ -7,8 +7,8 @@ module SamiTS {
 
     export class SubRipWriter {
         write(xsyncs: SAMICue[], options: SubRipWriterOptions = {}) {
-            var subDocument = "";
-            var writeText = (i: number, syncindex: number, text: string) => {
+            let subDocument = "";
+            let writeText = (i: number, syncindex: number, text: string) => {
                 subDocument += syncindex.toString();
                 subDocument += "\r\n" + this.getSubRipTime(parseInt(xsyncs[i].syncElement.getAttribute("start"))) + " --> " + this.getSubRipTime(parseInt(xsyncs[i + 1].syncElement.getAttribute("start")));
                 subDocument += "\r\n" + text;
@@ -20,7 +20,7 @@ module SamiTS {
                 let syncindex = 1;
                 let readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
 
-                for (var i = 0; i < xsyncs.length - 1; i++) {
+                for (let i = 0; i < xsyncs.length - 1; i++) {
                     text = util.absorbAir(xsyncs[i].readDOM(readElement, options));
                     if (text.length > 0) {
                         if (syncindex > 1)
@@ -34,19 +34,19 @@ module SamiTS {
         }
 
         private getSubRipTime(ms: number) {
-            var hour = (ms - ms % 3600000) / 3600000;
+            let hour = (ms - ms % 3600000) / 3600000;
             ms -= hour * 3600000;
-            var min = (ms - ms % 60000) / 60000;
+            let min = (ms - ms % 60000) / 60000;
             ms -= min * 60000;
-            var sec = (ms - ms % 1000) / 1000;
+            let sec = (ms - ms % 1000) / 1000;
             ms -= sec * 1000;
-            var hourstr = hour.toString();
+            let hourstr = hour.toString();
             if (hourstr.length < 2) hourstr = '0' + hourstr;
-            var minstr = min.toString();
+            let minstr = min.toString();
             if (minstr.length < 2) minstr = '0' + minstr;
-            var secstr = sec.toString();
+            let secstr = sec.toString();
             if (secstr.length < 2) secstr = '0' + secstr;
-            var msstr = ms.toString();
+            let msstr = ms.toString();
             while (msstr.length < 3) msstr = '0' + msstr;
             return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
         }
