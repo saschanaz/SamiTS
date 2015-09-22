@@ -1,4 +1,4 @@
-declare var diff_match_patch: any;
+declare var JsDiff: any;
 
 function loadFiles(...names: string[]) {
 	return Promise
@@ -12,34 +12,58 @@ function loadFiles(...names: string[]) {
 }
 
 function assertDiff(first: string, second: string) {
-	let dmp = new diff_match_patch();
-	let diff = dmp.diff_main(first, second);
+	let diffs = JsDiff.structuredPatch("", "", first, second);
 	
-	if (diff.length > 2) {
-		dmp.diff_cleanupSemantic(diff);
-	}
-	
-	let patchList = dmp.patch_make(first, second, diff);
-	let patchText = dmp.patch_toText(patchList);
-	
-	if (patchText) {
-		return new Error(decodeURI(patchText));
+	if (diffs.hunks.length) {
+		let output = `${diffs.hunks.length} diff hunks found.\r\n\r\n`;
+		for (let hunk of diffs.hunks) {
+			output += `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@\r\n`;
+			for (let line of hunk.lines) {
+				output += line + "\r\n";
+			}
+			output += "\r\n";
+		}
+		
+		return new Error(output);
 	}
 }
 
 describe("Conversion diff test", function () {
-	this.timeout(5000);
+	let tempStorage = {
+		smiDoc: <SamiTS.SAMIDocument>null,
+		vtt: <string>null,
+		srt: <string>null,
+		prepare(name: string) {
+			if (this.smiDoc) {
+				return Promise.resolve<void>();
+			}
+			return loadFiles(`subject.smi`, `subject.vtt`, `subject.srt`)
+				.then(([smi, vtt, srt]) => {
+					this.vtt = vtt;
+					this.srt = srt;
+					return SamiTS.createSAMIDocument(smi);
+				})
+				.then((smiDoc) => {
+					this.smiDoc = smiDoc;
+				});
+		}
+	}
+	this.timeout(10000);
 	
-	it("should be same as result file", (done) => {
-		let vtt: string;
-		return loadFiles("subject.smi", "subject.vtt")
-			.then(([smi, _vtt]) => {
-				vtt = _vtt;
-				return SamiTS.createWebVTT(smi);
-			})
+	it("should be same as test WebVTT file", (done) => {
+		return tempStorage.prepare("subject")
+			.then(() => SamiTS.createWebVTT(tempStorage.smiDoc))
 			.then((result) => {
-				done(assertDiff(result.subtitle.replace(/\r\n/g, "\n"), vtt)) 
+				done(assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n")))
 			})
 			.catch(done);
 	});
+	it("should be same as test SubRip file", (done) => {
+		return tempStorage.prepare("subject")
+			.then(() => SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true }))
+			.then((result) => {
+				done(assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n")))
+			})
+			.catch(done);
+	})
 });

@@ -1,7 +1,7 @@
 import { Server, ServerResult, mime } from "node-static";
 import * as http from "http";
 
-mime.define({ "text/plain;charset=utf-16": ["smi"], "text/vtt;charset=utf-16": ["vtt"] })
+mime.define({ "text/plain;charset=utf-8": ["smi", "srt"], "text/vtt;charset=utf-8": ["vtt"] })
 
 let server = new Server("../", {
 	cache: false,

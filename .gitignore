@@ -1,6 +1,7 @@
 node_modules/
 built/
 sources/*.js
+test/fileserver.js
 test-runner/*.js
 test-runner/*.js.map
 

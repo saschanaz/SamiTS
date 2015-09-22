@@ -7,16 +7,7 @@
         "out": "runtests.js"
     },
     "files": [
-        "../submodules/es6-promises.d.ts",
-        "../sources/htmltagfinder.ts",
-        "../sources/samiconverter.ts",
-        "../sources/samiparser.ts",
-        "../sources/samiwrapper.ts",
-        "../sources/sdpuswriter.ts",
-        "../sources/subripwriter.ts",
-        "../sources/util.ts",
-        "../sources/webvttwriter.ts",
-        
+        "../built/sami.d.ts",
         "../submodules/node.d.ts",
         "../submodules/mocha.d.ts",
         "../submodules/fetch.d.ts",

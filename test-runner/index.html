@@ -5,7 +5,7 @@
   <link href="../node_modules/mocha/mocha.css" rel="stylesheet" />
   
   <script src="../node_modules/mocha/mocha.js"></script>
-  <script src="../node_modules/diff_match_patch/lib/diff_match_patch.js"></script>
+  <script src="../node_modules/diff/dist/diff.js"></script>
   <script>mocha.setup('bdd')</script>
   
   <script src="../submodules/fetch/fetch.js"></script>  
@@ -14,6 +14,7 @@
       mocha.run();
     });
   </script>
+  <script src="../built/sami.js"></script>
   <script src="runtests.js"></script>
 </head>
 <body>
