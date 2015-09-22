@@ -31,13 +31,13 @@
 
         filter(...languages: string[]) {
             // Dictionary initialization
-            var cues: { [key: string]: SAMICue } = {};
-            for (var i in languages)
+            let cues: { [key: string]: SAMICue } = {};
+            for (let i in languages)
                 cues[languages[i]] = new SAMICue(<SAMISyncElement>this.syncElement.cloneNode());
 
             // Filter
-            Array.prototype.forEach.call(this.syncElement.childNodes, (child: Node) => {
-                var language: string;
+            for (let child of <Node[]><any>this.syncElement.childNodes) {
+                let language: string;
                 if (child.nodeType === NodeType.Element) {
                     language = (<SAMIContentElement>child).dataset.language;
                     if (languages.indexOf(language) >= 0) {
@@ -51,17 +51,17 @@
                 if (!language)
                     for (let language in cues)
                         cues[language].syncElement.appendChild(child.cloneNode(true));
-            });
+            }
             return cues;
         }
 
         readDOM<OptionBag extends DOMReadOptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
-            var stack: TagReadResult[] = [];
-            var walker = document.createTreeWalker(this.syncElement, -1, null, false);
+            let stack: TagReadResult[] = [];
+            let walker = document.createTreeWalker(this.syncElement, -1, null, false);
             let isBlankNewLine = true;
             while (true) {
                 if (walker.currentNode.nodeType === NodeType.Element) {
-                    var element = readElement(<Element>walker.currentNode, options);
+                    let element = readElement(<Element>walker.currentNode, options);
                     stack.unshift(element);
                     
                     // Read children if there are and if readElement understands current node
@@ -72,7 +72,7 @@
                     stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue });
 
                 do {
-                    var zero = stack.shift();
+                    let zero = stack.shift();
 
                     if (!stack.length)
                         return util.manageLastLine(zero.content, options.preventEmptyLine);
