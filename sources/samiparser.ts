@@ -32,8 +32,9 @@ module SamiTS {
 
         clone() {
             let newDocument = new SAMIDocument();
-            for (let cue of this.cues)
+            for (let cue of this.cues) {
                 newDocument.cues.push(cue.clone());
+            }
             newDocument.languages = this.languages.slice();
             return newDocument;
         }
@@ -42,15 +43,14 @@ module SamiTS {
         Split SAMI document by its languages. Result may not be strictly ordered by any ways.
         */
         splitByLanguage() {
-            var samiDocuments: SAMIDocumentDictionary = {};
-            var languageCodes: string[] = [];
+            let samiDocuments: SAMIDocumentDictionary = {};
+            let languageCodes: string[] = [];
 
             // Dictionary initialization
-            for (var i in this.languages) {
-                var language = this.languages[i];
+            for (let language of this.languages) {
                 languageCodes.push(language.code);
 
-                var sami = new SAMIDocument();
+                let sami = new SAMIDocument();
                 sami.languages.push({
                     cssClass: language.cssClass,
                     code: language.code,
@@ -60,12 +60,11 @@ module SamiTS {
             }
 
             // Cue splitting
-            for (var i in this.cues) {
-                var cue = this.cues[i];
-                var filtered = cue.filter.apply(cue, languageCodes);
-                languageCodes.forEach((code) => {
+            for (let cue of this.cues) {
+                let filtered = cue.filter.apply(cue, languageCodes);
+                for (let code of languageCodes) {
                     samiDocuments[code].cues.push(filtered[code]);
-                });
+                };
             }
 
             return samiDocuments;
@@ -75,8 +74,7 @@ module SamiTS {
         @param increment Delay in microseconds
         */
         delay(increment: number) {
-            for (var i in this.cues) {
-                var cue = this.cues[i];
+            for (let cue of this.cues) {
                 cue.syncElement.setAttribute("start", (parseInt(cue.syncElement.getAttribute("start")) + increment).toFixed());
             }
         }
@@ -84,13 +82,13 @@ module SamiTS {
 
     export module SAMIDocument {
         export function parse(samistr: string): SAMIDocument {
-            var samiDocument = new SAMIDocument();
-            var domparser = new DOMParser();
+            let samiDocument = new SAMIDocument();
+            let domparser = new DOMParser();
 
-            var bodystart = HTMLTagFinder.FindStartTag('body', samistr);
-            var bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
+            let bodystart = HTMLTagFinder.FindStartTag('body', samistr);
+            let bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
 
-            var samicontainer = <Element>domparser.parseFromString(
+            let samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))
                     .replace(/(<\/?)(\w+)[^<]+>/g, function (word) { return word.toLowerCase() })
                     .replace(/<!--(?:(?!-->)[\s\S])*-->/g, function (comment) { return comment.slice(0, 4) + comment.slice(4, -4).replace(/--+|-$/gm, '') + comment.slice(-4); })
@@ -99,54 +97,59 @@ module SamiTS {
             Delete double hyphens and line end single hyphens to prevent XML parser error
             regex: http://stackoverflow.com/questions/406230/regular-expression-to-match-string-not-containing-a-word
             */
-            var samihead = <Element>samicontainer.getElementsByTagName("head")[0];
+            let samihead = samicontainer.getElementsByTagName("head")[0];
 
-            var stylestr = '';
-            Array.prototype.forEach.call(samihead.getElementsByTagName("style")[0].childNodes, (text: Text) => {
-                if (text.data) stylestr += text.data;
-            });
+            let stylestr = '';
+            for (let text of <Node[]><any>samihead.getElementsByTagName("style")[0].childNodes) {
+                if (text instanceof Text || text instanceof Comment) {
+                    stylestr += text.data;
+                }
+            }
             samiDocument.languages = extractClassSelectors(stylestr);
 
-            var samistyle = <CSSStyleSheet>domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").head.getElementsByTagName("style")[0].sheet;
+            let samistyle = domparser.parseFromString("<style>" + stylestr + "</style>", "text/html").styleSheets[0];
 
-            var samibody = samistr.slice(bodystart.endPosition, bodyendindex);
+            let samibody = samistr.slice(bodystart.endPosition, bodyendindex);
 
-            var syncs = HTMLTagFinder.FindStartTags('sync', samibody);
-            for (var i = 0; i < syncs.length - 1; i++)
-                syncs[i].element.innerHTML = (<SAMISyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
-            if (i > 0)
-                syncs[i].element.innerHTML = (<SAMISyncElement>syncs[i].element).dataset.originalString = samibody.slice(syncs[i].endPosition, bodyendindex);
+            let syncs = HTMLTagFinder.FindStartTags<SAMISyncElement>('sync', samibody);
+            for (let i = 0; i < syncs.length - 1; i++) {
+                syncs[i].element.innerHTML = syncs[i].element.dataset.originalString = samibody.slice(syncs[i].endPosition, syncs[i + 1].startPosition);
+            }
+            if (syncs.length > 0) {
+                let sync = syncs[syncs.length - 1];
+                sync.element.innerHTML = sync.element.dataset.originalString = samibody.slice(sync.endPosition, bodyendindex);
+            }
 
-            syncs.forEach((sync) => {
-                samiDocument.cues.push(new SAMICue(fixIncorrectRubyNodes(<SAMISyncElement>minifyWhitespace(sync.element))));
-            });
-            samiDocument.cues.forEach((cue: SAMICue) => {
+            for (let sync of syncs) {
+                let cue = new SAMICue(fixIncorrectRubyNodes(minifyWhitespace(sync.element)));
                 giveLanguageData(cue, samiDocument.languages);
-            });
+                samiDocument.cues.push(cue);
+            }
 
             return samiDocument;
         }
 
         function giveLanguageData(cue: SAMICue, languages: SAMILanguage[]) {
-            Array.prototype.forEach.call(cue.syncElement.children, (child: SAMIContentElement) => {
-                for (var i = 0; i < languages.length; i++) {
-                    var classCode = child.className;
-                    if (!classCode || classCode === languages[i].cssClass)
-                        child.dataset.language = languages[i].code;//so that we can easily use it to convert to WebVTT lang tag which requires BCP47
+            for (let child of <SAMIContentElement[]>util.arrayFrom(cue.syncElement.children)) {
+                for (let language of languages) {
+                    if (child.className === language.cssClass) {
+                        child.dataset.language = language.code; // for BCP47 WebVTT lang tag
+                        break;
+                    }
                 }
-            });
+            };
         }
 
         function extractClassSelectors(stylestr: string) {
-            var classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
-            var languages: SAMILanguage[] = [];
-            classes.forEach((classstr) => {
-                var classselector = classstr.match(/\.\w+{/);
+            let classes = stylestr.replace(/\s/g, "").match(/\.\w+{[^{]+}/g);
+            let languages: SAMILanguage[] = [];
+            for (let classstr of classes) {
+                let classselector = classstr.match(/\.\w+{/);
                 if (classselector.length != 1)
                     return;
-                var stylebody = classstr.slice(classselector[0].length).split(';');
-                var name: string;
-                var lang: string;
+                let stylebody = classstr.slice(classselector[0].length).split(';');
+                let name: string;
+                let lang: string;
                 for (var i = 0; i < stylebody.length; i++) {
                     var stylename = stylebody[i].match(/\w+:/);
                     if (stylename.length == 1) {
@@ -166,11 +169,11 @@ module SamiTS {
                         displayName: name,
                         code: lang
                     });
-            });
+            };
             return languages;
         }
 
-        function minifyWhitespace(root: Node) {
+        function minifyWhitespace<T extends Node>(root: T) {
             var walker = document.createTreeWalker(root, -1, null, false);
             var text = "";
             var lastTextNode: Node;

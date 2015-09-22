@@ -30,6 +30,17 @@ module SamiTS.util {
         }
         return target;
     }
+    export interface ArrayLike<T> {
+        length: number;
+        [i: number]: T;
+    }
+    export function arrayFrom<T>(arrayLike: ArrayLike<T>): T[] {
+        let array: T[] = [];
+        for (let i = 0; i < arrayLike.length; i++) {
+            array.push(arrayLike[i]);
+        }    
+        return array;
+    }
     export function generateTagReadResultTemplate(content = '') {
         return <TagReadResult>{ start: '', end: '', content };
     }

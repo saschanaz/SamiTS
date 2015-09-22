@@ -1,15 +1,16 @@
 ﻿"use strict";
 
 module SamiTS {
-    export interface FoundHTMLTag {
-        element: HTMLElement;
+    export interface FoundHTMLTag extends FoundHTMLTagOf<HTMLElement> {}
+    export interface FoundHTMLTagOf<T extends HTMLElement> {
+        element: T;
         startPosition: number;
         endPosition: number;
     }
 
     export class HTMLTagFinder {
-        static FindStartTag(tagname: string, entirestr: string): FoundHTMLTag {
-            let tag: FoundHTMLTag;
+        static FindStartTag<T extends HTMLElement>(tagname: string, entirestr: string): FoundHTMLTagOf<T> {
+            let tag: FoundHTMLTagOf<T>;
             let position = 0;
             let startPosition = 0;
             while (!tag) {
@@ -17,7 +18,7 @@ module SamiTS {
                 if (position !== -1) {
                     startPosition = position;
                     position += tagname.length + 1;
-                    let xe = document.createElement(tagname);
+                    let xe = <T>document.createElement(tagname);
                     while (true) {
                         let attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;
@@ -38,8 +39,8 @@ module SamiTS {
             return tag;
         }
 
-        static FindStartTags(tagname: string, entirestr: string): FoundHTMLTag[] {
-            let list: FoundHTMLTag[] = [];
+        static FindStartTags<T extends HTMLElement>(tagname: string, entirestr: string): FoundHTMLTagOf<T>[] {
+            let list: FoundHTMLTagOf<T>[] = [];
             let position = 0;
             let startPosition = 0;
             while (true) {
@@ -47,7 +48,7 @@ module SamiTS {
                 if (position != -1) {
                     startPosition = position;
                     position += tagname.length + 1;
-                    let xe = document.createElement(tagname);
+                    let xe = <T>document.createElement(tagname);
                     while (true) {
                         let attrAndPos = this.getAttribute(entirestr, position);
                         position = attrAndPos.nextPosition;

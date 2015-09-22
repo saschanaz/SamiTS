@@ -48,7 +48,7 @@ describe("Conversion diff test", function () {
 				});
 		}
 	}
-	this.timeout(10000);
+	this.timeout(0);
 	
 	it("should be same as test WebVTT file", (done) => {
 		return tempStorage.prepare("subject")
