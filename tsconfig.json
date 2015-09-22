@@ -5,7 +5,8 @@
         "noImplicitAny": true,
         "sourceMap": true,
         "declaration": true,
-        "out": "sami.js"
+        "stripInternal": true,
+        "out": "built/sami.js"
     },
     "files": [
         "submodules/es6-promises.d.ts",
