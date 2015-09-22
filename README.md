@@ -1,7 +1,7 @@
 SamiTS
 ======
 
-SamiTS converts Microsoft SAMI-formatted subtitle files to more popular WebVTT and Subrip ones, thus allows browsers and players to read the best popular subtitle format in South Korea.
+SamiTS converts Microsoft SAMI-formatted subtitle files to more popular WebVTT and Subrip ones, thus allows browsers and players to read the most popular subtitle format in South Korea.
 
 SamiTS also supports styles by collecting SAMI styling tags to make a standard CSS stylesheet.
 
