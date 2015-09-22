@@ -1,4 +1,5 @@
-﻿module SamiTS.util {
+﻿/* @internal */
+module SamiTS.util {
     export function isEmptyOrEndsWithSpace(input: string) {
         return !input.length || input[input.length - 1] === ' ';
     }
