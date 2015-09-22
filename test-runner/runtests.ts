@@ -3,7 +3,12 @@ declare var diff_match_patch: any;
 function loadFiles(...names: string[]) {
 	return Promise
 		.all(names.map(name => fetch(`../test/data/${name}`)))
-		.then(results => Promise.all(results.map(result => result.text())))
+		.then(results => {
+			if (!results.every((result) => result.ok)) {
+				throw new Error("Failed to receive files from local server.");
+			}
+			return Promise.all(results.map(result => result.text()))
+		})
 }
 
 function assertDiff(first: string, second: string) {
@@ -35,5 +40,6 @@ describe("Conversion diff test", function () {
 			.then((result) => {
 				done(assertDiff(result.subtitle.replace(/\r\n/g, "\n"), vtt)) 
 			})
+			.catch(done);
 	});
 });

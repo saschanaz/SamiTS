@@ -27,4 +27,9 @@ declare module "node-static" {
 		headers: any;
 		message: string;
 	}
+	
+	namespace mime {
+		function define(map: { [type: string]: string[] }): void;
+		function lookup(path: string): string;
+	}
 }

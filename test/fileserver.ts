@@ -1,9 +1,11 @@
-import { Server, ServerResult } from "node-static";
+import { Server, ServerResult, mime } from "node-static";
 import * as http from "http";
 
-let server = new Server("../", { 
+mime.define({ "text/plain;charset=utf-16": ["smi"], "text/vtt;charset=utf-16": ["vtt"] })
+
+let server = new Server("../", {
 	cache: false,
-	headers: { "Cache-Control": "no-cache, must-revalidate" }
+	headers: { "Cache-Control": "no-store" }
 });
 
 console.log(`Server opened at: ${server.root}`);

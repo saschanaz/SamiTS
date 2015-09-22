@@ -51,22 +51,22 @@ interface Request extends Body {
 	clone(): Request;
 }
 interface RequestInit {
-	method: string;
-	headers: HeadersInit;
-	body: BodyInit;
-	referrer: string;
+	method?: string;
+	headers?: HeadersInit;
+	body?: BodyInit;
+	referrer?: string;
 	/** "", "no-referrer", "no-referrer-when-downgrade", "origin-only", "origin-when-cross-origin", "unsafe-url" */
-	referrerPolicy: string;
+	referrerPolicy?: string;
 	/** "same-origin", "no-cors", "cors" */
-	mode: string;
+	mode?: string;
 	/** "omit", "same-origin", "include" */
-	credentials: string;
+	credentials?: string;
 	/** "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached" */
-	cache: string;
+	cache?: string;
 	/** "follow", "error", "manual" */
-	redirect: string;
-	integrity: string;
-	window: any;
+	redirect?: string;
+	integrity?: string;
+	window?: any;
 }
 interface RequestConstructor {
 	new (input: RequestInfo, init?: RequestInit): Request;
@@ -85,9 +85,9 @@ interface Response extends Body {
 	clone(): Response;
 }
 interface ResponseInit {
-	status: number;
-	statusText: number;
-	headers: HeadersInit;
+	status?: number;
+	statusText?: number;
+	headers?: HeadersInit;
 }
 interface ResponseConstructor {
 	new (body?: BodyInit, init?: ResponseInit): Response;

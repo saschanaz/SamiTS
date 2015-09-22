@@ -1,5 +1,9 @@
 node_modules/
 sources/*.js
+test-runner/*.js
+test-runner/*.js.map
 
 # temporarily ignore them until we get license-free test sets
 test/data
+# temporarily ignore this until TypeScript supports full path for project file
+tsconfig-test.json
