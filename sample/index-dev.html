@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>SamiTS Sample App</title>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+	
+    <script src="../built/sami.js"></script>
+	<script src="../submodules/promise/Promise.js"></script>
+    <script src="../submodules/filesaver/FileSaver.js"></script>
+	
+    <script src="app.js"></script>
+</head>
+<body>
+    <h1>SamiTS Sample App</h1>
+
+    <div id="content">
+        <div>
+            <input id="loader" type="file" multiple="multiple" onchange="load(event)" />
+        </div>
+        <div>
+            <input type="radio" name="subtype" id="subtypewebvtt" checked="checked" /><label for="subtypewebvtt">WebVTT</label>
+            <input type="radio" name="subtype" id="subtypesrt" /><label for="subtypesrt">SRT</label>
+            <!--<input type="radio" name="subtype" />TTML SDP-US-->
+        </div>
+        <div>
+            <input id="taguse" type="checkbox" checked="checked" /><label for="taguse">Use Tags</label>
+        </div>
+        <input id="areaselector" type="button" style="display: none;" onclick="selectArea()" />
+        <div>
+            <div id="previewarea" style="width: 100%; height: 500px; display: none;">
+                <textarea id="output" style="width: 100%; height: 100%;" readonly="readonly"></textarea>
+                <input id="downloader" type="button" value="Download as file" onclick="download()" />
+            </div>
+            <video id="player" style="width: 640px; height: 360px; display: none;" controls="controls"></video>
+        </div>
+    </div>
+</body>
+</html>

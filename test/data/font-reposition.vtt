@@ -1,0 +1,22 @@
+WEBVTT
+
+STYLE -->
+::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }
+::cue-region { font: 0.077vh sans-serif; line-height: 0.1vh; }
+::cue(.cf0547d) { color: #f0547d; }
+::cue(.c000000) { color: #000000; }
+::cue(.cfce8f7) { color: #fce8f7; }
+::cue(.cfcc0e1) { color: #fcc0e1; }
+
+00:00.000 --> 00:00.001
+<c.cf0547d>CANDY ISLAND</c> 입니다!
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+<ruby><c.cf0547d>不器用な</c><c.c000000>笑顔と</c><rt><c.cfce8f7>후키요-나 </c><c.c000000>에가오토</c></rt></ruby>
+<c.cfcc0e1>서투른 미소와</c>

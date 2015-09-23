@@ -1,0 +1,25 @@
+<SAMI>
+<HEAD>
+<TITLE>SamiTS Test File</TITLE>
+<STYLE TYPE="text/css">
+<!--
+P { margin-left:8pt; margin-right:8pt; margin-bottom:2pt;
+    margin-top:2pt; font-size:14pt; text-align:center;
+    font-family:굴림, Arial; font-weight:normal; color:white;
+    background-color:black; }
+.KRCC { Name:한국어; lang:ko-KR; SAMIType:CC; }
+#STDPrn { Name:Standard Print; }
+#LargePrn { Name:Large Print; font-size:20pt; }
+#SmallPrn { Name:Small Print; font-size:10pt; }
+-->
+</STYLE>
+</HEAD>
+<BODY>
+<SYNC Start=0><P Class=KRCC>
+<font color=#F0547D>CANDY ISLAND</font> 입니다!
+<br><br><br><br><br><br><br><br><br>
+
+<font color=#F0547D><ruby>不器用な</font><font color=#000000>笑顔と</font><rt><font color=#FCE8F7>후키요-나 </font><font color=#000000>에가오토</font><font color=#000000></font></rt></ruby><BR><font color=#FCC0E1><font face="HY바다L">서투른 미소와
+<SYNC Start=1><P Class=KRCC>&nbsp;
+</BODY>
+</SAMI>

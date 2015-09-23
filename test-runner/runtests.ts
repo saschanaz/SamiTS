@@ -28,42 +28,51 @@ function assertDiff(first: string, second: string) {
 	}
 }
 
-describe("Conversion diff test", function () {
-	let tempStorage = {
-		smiDoc: <SamiTS.SAMIDocument>null,
-		vtt: <string>null,
-		srt: <string>null,
-		prepare(name: string) {
-			if (this.smiDoc) {
-				return Promise.resolve<void>();
-			}
-			return loadFiles(`subject.smi`, `subject.vtt`, `subject.srt`)
-				.then(([smi, vtt, srt]) => {
-					this.vtt = vtt;
-					this.srt = srt;
-					return SamiTS.createSAMIDocument(smi);
-				})
-				.then((smiDoc) => {
-					this.smiDoc = smiDoc;
+loadFiles("../list.json").then(([list]) => {
+	describe("Conversion diff test", function () {
+		for (var item of <string[]>JSON.parse(list)) {
+			describe(`${item}.smi`, function () {
+				let tempStorage = {
+					smiDoc: <SamiTS.SAMIDocument>null,
+					vtt: <string>null,
+					srt: <string>null,
+					prepare(name: string) {
+						if (this.smiDoc) {
+							return Promise.resolve<void>();
+						}
+						return loadFiles(`${item}.smi`, `${item}.vtt`, `${item}.srt`)
+							.then(([smi, vtt, srt]) => {
+								this.vtt = vtt;
+								this.srt = srt;
+								return SamiTS.createSAMIDocument(smi);
+							})
+							.then((smiDoc) => {
+								this.smiDoc = smiDoc;
+							});
+					}
+				}
+				this.timeout(0);
+				
+				it("should be same as test WebVTT file", (done) => {
+					return tempStorage.prepare("subject")
+						.then(() => SamiTS.createWebVTT(tempStorage.smiDoc))
+						.then((result) => {
+							done(assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n")))
+						})
+						.catch(done);
 				});
+				it("should be same as test SubRip file", (done) => {
+					return tempStorage.prepare("subject")
+						.then(() => SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true }))
+						.then((result) => {
+							done(assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n")))
+						})
+						.catch(done);
+				})
+			});
 		}
-	}
-	this.timeout(0);
-	
-	it("should be same as test WebVTT file", (done) => {
-		return tempStorage.prepare("subject")
-			.then(() => SamiTS.createWebVTT(tempStorage.smiDoc))
-			.then((result) => {
-				done(assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n")))
-			})
-			.catch(done);
 	});
-	it("should be same as test SubRip file", (done) => {
-		return tempStorage.prepare("subject")
-			.then(() => SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true }))
-			.then((result) => {
-				done(assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n")))
-			})
-			.catch(done);
-	})
+	
+	mocha.run();
 });
+	
