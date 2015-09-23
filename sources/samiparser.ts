@@ -302,7 +302,7 @@ module SamiTS {
             for (let fonttag of HTMLTagFinder.FindStartTags('font', newsyncstr).reverse()) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
             }
-            newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
+            newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '<x-samits-temp></x-samits-temp>');
             return newsync;
         }
 
