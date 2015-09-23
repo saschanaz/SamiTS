@@ -10,8 +10,8 @@
     },
     "files": [
         "submodules/es6-promises.d.ts",
-        "sources/htmltagfinder.ts",
         "sources/samiconverter.ts",
+        "sources/htmltagfinder.ts",
         "sources/samiparser.ts",
         "sources/samiwrapper.ts",
         "sources/sdpuswriter.ts",
