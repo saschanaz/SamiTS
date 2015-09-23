@@ -1,12 +1,14 @@
 declare module SamiTS {
-    interface FoundHTMLTag {
-        element: HTMLElement;
+    interface FoundHTMLTag extends FoundHTMLTagOf<HTMLElement> {
+    }
+    interface FoundHTMLTagOf<T extends HTMLElement> {
+        element: T;
         startPosition: number;
         endPosition: number;
     }
     class HTMLTagFinder {
-        static FindStartTag(tagname: string, entirestr: string): FoundHTMLTag;
-        static FindStartTags(tagname: string, entirestr: string): FoundHTMLTag[];
+        static FindStartTag<T extends HTMLElement>(tagname: string, entirestr: string): FoundHTMLTagOf<T>;
+        static FindStartTags<T extends HTMLElement>(tagname: string, entirestr: string): FoundHTMLTagOf<T>[];
         static FindAllStartTags(entirestr: string): FoundHTMLTag[];
         private static getAttribute(entirestr, position);
         private static searchWithIndex(target, query, position?);
@@ -29,10 +31,14 @@ declare module SamiTS {
 }
 declare module SamiTS {
     interface SAMILanguage {
+        /** The CSS class name defined within SAMI markup. */
         cssClass: string;
+        /** The display name */
         displayName: string;
+        /** BCP47 language code */
         code: string;
     }
+    /** A dictionary which is composed of SAMIDocument objects with BCP47 language code keys. */
     interface SAMIDocumentDictionary {
         [key: string]: SAMIDocument;
     }
@@ -52,7 +58,13 @@ declare module SamiTS {
         cues: SAMICue[];
         languages: SAMILanguage[];
         clone(): SAMIDocument;
+        /**
+        Split SAMI document by its languages. Result may not be strictly ordered by any ways.
+        */
         splitByLanguage(): SAMIDocumentDictionary;
+        /**
+        @param increment Delay in microseconds
+        */
         delay(increment: number): void;
     }
     module SAMIDocument {
@@ -103,20 +115,12 @@ declare module SamiTS {
         private readElementRich(element);
     }
 }
-declare module SamiTS.util {
-    function isEmptyOrEndsWithSpace(input: string): boolean;
-    function isEmptyOrEndsWithLinefeed(input: string): boolean;
-    function absorbSpaceEnding(input: string): string;
-    function manageLastLine(input: string, preventEmptyLine: boolean): string;
-    function assign<T>(target: T, ...sources: any[]): T;
-    function generateTagReadResultTemplate(content?: string): TagReadResult;
-    function absorbAir(input: string): string;
-}
 declare module SamiTS {
     interface WebVTTWriterOptions {
         createStyleElement?: boolean;
         disableDefaultStyle?: boolean;
         enableLanguageTag?: boolean;
+        /** The default value is "video". */
         selector?: string;
     }
     class WebVTTWriter {
