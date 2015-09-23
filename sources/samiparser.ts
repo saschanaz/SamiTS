@@ -145,15 +145,13 @@ module SamiTS {
             let languages: SAMILanguage[] = [];
             for (let classstr of classes) {
                 let classselector = classstr.match(/\.\w+{/);
-                if (classselector.length != 1)
-                    return;
                 let stylebody = classstr.slice(classselector[0].length).split(';');
                 let name: string;
                 let lang: string;
-                for (var i = 0; i < stylebody.length; i++) {
-                    var stylename = stylebody[i].match(/\w+:/);
-                    if (stylename.length == 1) {
-                        var stylevalue = stylebody[i].slice(stylename[0].length);
+                for (let rule of stylebody) {
+                    let stylename = rule.match(/\w+:/);
+                    if (stylename.length === 1) {
+                        let stylevalue = rule.slice(stylename[0].length);
                         if (!name && stylename[0].toLowerCase() === "name:")
                             name = stylevalue;
                         else if (!lang && stylename[0].toLowerCase() === "lang:")
@@ -174,15 +172,15 @@ module SamiTS {
         }
 
         function minifyWhitespace<T extends Node>(root: T) {
-            var walker = document.createTreeWalker(root, -1, null, false);
-            var text = "";
-            var lastTextNode: Node;
+            let walker = document.createTreeWalker(root, -1, null, false);
+            let text = "";
+            let lastTextNode: Node;
             while (walker.nextNode()) {
                 if (walker.currentNode.nodeType === 1)
                     continue;
 
                 // Shrink whitespaces into a single space
-                var nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
+                let nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
                 // If cummulated text is empty or ends with whitespace, remove whitespace in front of nodeText
                 if (util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ')
                     nodeText = nodeText.slice(1);
@@ -199,12 +197,12 @@ module SamiTS {
         }
 
         function fixIncorrectRubyNodes(syncobject: SAMISyncElement) {
-            var rubylist = syncobject.getElementsByTagName("ruby");
-            var rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
+            let rubylist = syncobject.getElementsByTagName("ruby");
+            let rtlist = rubylist.length > 0 ? syncobject.getElementsByTagName("rt") : undefined;
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            if (Array.prototype.every.call(rtlist, (rt: HTMLElement) => isRubyParentExist(rt) && rt.textContent.length > 0))
+            if (util.arrayFrom(rtlist).every((rt: HTMLElement) => isRubyParentExist(rt) && rt.textContent.length > 0))
                 return syncobject;
 
             //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
@@ -212,12 +210,12 @@ module SamiTS {
         }
 
         function fixIncorrectFontEnds(syncobject: SAMISyncElement) {
-            var fontdeleted = exchangeFontWithTemp(syncobject);
-            var fontextracted = extractFontAndText(syncobject);
-            var textsFromNoFont = extractReadableTextNodes(fontdeleted);
-            var textsFromOnlyFont = extractReadableTextNodes(fontextracted);
-            for (var i = 0; i < textsFromOnlyFont.length; i++) {
-                var font = getFontFromNode(textsFromOnlyFont[i]);
+            let fontdeleted = exchangeFontWithTemp(syncobject);
+            let fontextracted = extractFontAndText(syncobject);
+            let textsFromNoFont = extractReadableTextNodes(fontdeleted);
+            let textsFromOnlyFont = extractReadableTextNodes(fontextracted);
+            for (let i = 0; i < textsFromOnlyFont.length; i++) {
+                let font = getFontFromNode(textsFromOnlyFont[i]);
                 if (font)
                     wrapWith(textsFromNoFont[i], font);
             }
@@ -225,18 +223,18 @@ module SamiTS {
         }
 
         function fixIncorrectRPs(syncobject: SAMISyncElement) {
-            var newsync = <SAMISyncElement>syncobject.cloneNode(true);
-            Array.prototype.forEach.call(newsync.getElementsByTagName("ruby"), (ruby: HTMLElement) => {
-                var rt = ruby.getElementsByTagName("rt")[0];
+            let newsync = <SAMISyncElement>syncobject.cloneNode(true);
+            for (let ruby of util.arrayFrom(newsync.getElementsByTagName("ruby"))) {
+                let rt = ruby.getElementsByTagName("rt")[0];
                 if (!rt || rt.innerHTML.length > 0 || rt === ruby.childNodes[ruby.childNodes.length - 1])
                     return syncobject;
 
-                var firstRp = ruby.getElementsByTagName("rp")[0]; // First child RP that is in wrong place
+                let firstRp = ruby.getElementsByTagName("rp")[0]; // First child RP that is in wrong place
                 if (rt.nextElementSibling !== firstRp) // Wrong RP always sit next to its RT sibling
                     return syncobject;
 
-                var repositionList: Node[] = [];
-                var sibling = firstRp.nextSibling;
+                let repositionList: Node[] = [];
+                let sibling = firstRp.nextSibling;
                 while (sibling && sibling.nodeName.toLowerCase() !== "rp") { // Catch all nodes that ran away
                     repositionList.push(sibling);
                     sibling = sibling.nextSibling;
@@ -244,17 +242,17 @@ module SamiTS {
                 firstRp.parentNode.removeChild(firstRp); // RP should be left, not right
                 ruby.insertBefore(firstRp, rt);
 
-                repositionList.forEach((node) => { // return nodes in their proper place
+                for (let node of repositionList) { // return nodes in their proper place
                     node.parentNode.removeChild(node);
                     rt.appendChild(node);
-                });
-            });
+                }
+            };
             return newsync;
         }
 
         function wrapWith(targetNode: Node, newParentNode: Node) {
-            var currentParentNode = targetNode.parentNode;//shall have one
-            var currentNextSibling = targetNode.nextSibling;
+            let currentParentNode = targetNode.parentNode;//shall have one
+            let currentNextSibling = targetNode.nextSibling;
             currentParentNode.removeChild(targetNode);
             newParentNode.appendChild(targetNode);//will be inserted end of the list when .nextSibling is null
             currentParentNode.insertBefore(newParentNode, currentNextSibling);
@@ -273,7 +271,7 @@ module SamiTS {
 
         function getFontFromNode(text: Node): HTMLElement {
             if (text.parentNode) {
-                var parent = <HTMLElement>text.parentNode;
+                let parent = <HTMLElement>text.parentNode;
                 if (parent.tagName.toLowerCase() === "font") {
                     if ((<HTMLElement>parent).getAttribute("color"))
                         return <HTMLElement>parent.cloneNode(false);
@@ -289,11 +287,11 @@ module SamiTS {
         Creates new element that replaces <font> start tags with <x-samits-temp></x-samits-temp> and deletes </font> end tags.
         */
         function exchangeFontWithTemp(syncobject: SAMISyncElement) {
-            var newsync = <SAMISyncElement>syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset.originalString;
-            HTMLTagFinder.FindStartTags('font', newsyncstr).reverse().forEach((fonttag: FoundHTMLTag) => {
+            let newsync = <SAMISyncElement>syncobject.cloneNode(false);
+            let newsyncstr = newsync.dataset.originalString;
+            for (let fonttag of HTMLTagFinder.FindStartTags('font', newsyncstr).reverse()) {
                 newsyncstr = newsyncstr.slice(0, fonttag.startPosition) + "<x-samits-temp></x-samits-temp>" + newsyncstr.slice(fonttag.endPosition);
-            });
+            }
             newsync.innerHTML = newsyncstr.replace(/<\/font>/g, '');
             return newsync;
         }
@@ -302,38 +300,40 @@ module SamiTS {
         Removes all <x-samits-temp> tags in the input element.
         */
         function stripTemp(syncobject: SAMISyncElement) {
-            var temps = syncobject.querySelectorAll("x-samits-temp");
-            Array.prototype.forEach.call(temps, (temp: HTMLElement) => {
+            let temps = syncobject.querySelectorAll("x-samits-temp");
+            for (let temp of util.arrayFrom(temps)) {
                 temp.parentNode.removeChild(temp);
-            });
+            };
             return syncobject;
         }
 
         function extractFontAndText(syncobject: SAMISyncElement) {
-            var newsync = <SAMISyncElement>syncobject.cloneNode(false);
-            var newsyncstr = newsync.dataset.originalString;
-            var tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
-            tags.filter((foundtag: SamiTS.FoundHTMLTag) => {
+            let newsync = <SAMISyncElement>syncobject.cloneNode(false);
+            let newsyncstr = newsync.dataset.originalString;
+            let tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
+            let foundtags = tags.filter((foundtag) => {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
                     case "p": return false;
                     default: return true;
                 }
-            }).reverse().forEach((foundtag: SamiTS.FoundHTMLTag) => {
-                    newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
-                });;
-            newsyncstr.match(/<\/\w+>/g).forEach((foundendtag: string) => {
+            }).reverse();
+            
+            for (let foundtag of foundtags) {
+                newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
+            }
+            for (let foundendtag of newsyncstr.match(/<\/\w+>/g)) {
                 if (foundendtag !== "</font>")
                     newsyncstr = newsyncstr.replace(foundendtag, '');
-            });
+            }
             newsync.innerHTML = newsyncstr;
             return newsync;
         }
 
         function extractReadableTextNodes(syncobject: HTMLElement) {
-            var walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
-            var node: Text;
-            var textNodes: Text[] = [];
+            let walker = document.createTreeWalker(syncobject, NodeFilter.SHOW_TEXT, null, false);
+            let node: Text;
+            let textNodes: Text[] = [];
             node = <Text>walker.nextNode();
             while (node) {
                 if (node.nodeValue.trim().length > 0)
@@ -348,9 +348,9 @@ module SamiTS {
                 return -1;
             else if (searchString.length == 0)
                 return 0;
-            var lowersearch = searchString.toLowerCase();
-            for (var i = Math.min(target.length - searchString.length, position); i >= 0; i--) {
-                if ((<string>target[i]).toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
+            let lowersearch = searchString.toLowerCase();
+            for (let i = Math.min(target.length - searchString.length, position); i >= 0; i--) {
+                if (target[i].toLowerCase() == lowersearch[0] && (target.slice(i, i + searchString.length).toLowerCase() == lowersearch))
                     return i;
             }
             return -1;
