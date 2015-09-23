@@ -20,8 +20,10 @@
   "ignore": [
     "**/.*",
     "node_modules",
+    "submodules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "test-runner"
   ]
 }
