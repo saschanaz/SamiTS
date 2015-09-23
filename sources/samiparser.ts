@@ -176,14 +176,22 @@ module SamiTS {
             let text = "";
             let lastTextNode: Node;
             while (walker.nextNode()) {
-                if (walker.currentNode.nodeType === 1)
+                if (walker.currentNode.nodeType === 1) {
+                    if (walker.currentNode instanceof HTMLBRElement) {
+                        text += " ";
+                        if (lastTextNode) {
+                            lastTextNode.nodeValue = util.absorbSpaceEnding(lastTextNode.nodeValue);
+                        }
+                    }
                     continue;
+                }
 
                 // Shrink whitespaces into a single space
                 let nodeText = walker.currentNode.nodeValue.replace(/[ \t\r\n\f]{1,}/g, ' ');
                 // If cummulated text is empty or ends with whitespace, remove whitespace in front of nodeText
-                if (util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ')
+                if (util.isEmptyOrEndsWithSpace(text) && nodeText[0] === ' ') {
                     nodeText = nodeText.slice(1);
+                }
 
                 text += nodeText;
                 walker.currentNode.nodeValue = nodeText;
@@ -191,7 +199,9 @@ module SamiTS {
                 if (nodeText.length)
                     lastTextNode = walker.currentNode;
             }
-            lastTextNode.nodeValue = util.absorbSpaceEnding(lastTextNode.nodeValue);
+            if (lastTextNode) {
+                lastTextNode.nodeValue = util.absorbSpaceEnding(lastTextNode.nodeValue);
+            }
 
             return root;
         }
@@ -219,7 +229,7 @@ module SamiTS {
                 if (font)
                     wrapWith(textsFromNoFont[i], font);
             }
-            return stripTemp(fontdeleted);
+            return minifyWhitespace(stripTemp(fontdeleted));
         }
 
         function fixIncorrectRPs(syncobject: SAMISyncElement) {
