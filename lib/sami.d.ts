@@ -1,4 +1,18 @@
 declare module SamiTS {
+    interface SamiTSResult {
+        subtitle: string;
+        stylesheet?: HTMLStyleElement;
+    }
+    function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createWebVTT(input: SAMIDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
+    function createSubRip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
+    function createSAMIDocument(input: string): Promise<SAMIDocument>;
+    function createSAMIDocument(input: Blob): Promise<SAMIDocument>;
+}
+declare module SamiTS {
     interface FoundHTMLTag extends FoundHTMLTagOf<HTMLElement> {
     }
     interface FoundHTMLTagOf<T extends HTMLElement> {
@@ -14,20 +28,6 @@ declare module SamiTS {
         private static searchWithIndex(target, query, position?);
         private static charCompare(a, ...b);
     }
-}
-declare module SamiTS {
-    interface SamiTSResult {
-        subtitle: string;
-        stylesheet?: HTMLStyleElement;
-    }
-    function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createWebVTT(input: SAMIDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    function createSubRip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    function createSAMIDocument(input: string): Promise<SAMIDocument>;
-    function createSAMIDocument(input: Blob): Promise<SAMIDocument>;
 }
 declare module SamiTS {
     interface SAMILanguage {
