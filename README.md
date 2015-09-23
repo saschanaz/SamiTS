@@ -90,5 +90,6 @@ declare module SamiTS {
 
 The following Node.js packages are used to test SamiTS:
 
-* Mocha
-* jsdiff
+* [Mocha](https://github.com/mochajs/mocha)
+* [node-static](https://github.com/cloudhead/node-static)
+* [jsdiff](https://github.com/kpdecker/jsdiff)
