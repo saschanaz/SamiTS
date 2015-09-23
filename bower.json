@@ -1,0 +1,27 @@
+{
+  "name": "SamiTS",
+  "description": "A SAMI converter for web browsers and players",
+  "main": "lib/sami.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "sami",
+    "smi",
+    "subtitle",
+    "webvtt",
+    "subrip",
+    "srt"
+  ],
+  "authors": [
+    "Kagami Sascha Rosylight <saschanaz@outlook.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
