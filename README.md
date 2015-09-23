@@ -85,3 +85,10 @@ declare module SamiTS {
     }
 }
 ```
+
+# Development?
+
+The following Node.js packages are used to test SamiTS:
+
+* Mocha
+* jsdiff
