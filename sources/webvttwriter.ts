@@ -62,10 +62,10 @@ module SamiTS {
             if (hour > 0) {
                 hourstr = hour.toString();
                 if (hourstr.length < 2) hourstr = '0' + hourstr;
-                return hourstr + ':' + minstr + ':' + secstr + '.' + msstr;
+                return `${hourstr}:${minstr}:${secstr}.${msstr}`;
             }
             else
-                return minstr + ':' + secstr + '.' + msstr;
+                return `${minstr}:${secstr}.${msstr}`;
         }
 
         private readElement(element: SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
@@ -80,7 +80,7 @@ module SamiTS {
                 case "font": {
                     let stylename = this.registerStyle(element);
                     if (stylename) {
-                        template.start = "<c." + stylename + ">";
+                        template.start = `<c.${stylename}>`;
                         template.end = "</c>";
                     }
                     break;
@@ -94,13 +94,13 @@ module SamiTS {
                 case "i":
                 case "u": {
                     let tagname = element.tagName.toLowerCase();
-                    template.start = "<" + tagname + ">";
-                    template.end = "</" + tagname + ">";
+                    template.start = `<${tagname}>`;
+                    template.end = `</${tagname}>`;
                     break;
                 }
             }
             if (options.enableLanguageTag && element.dataset.language && template.content.trim()) {
-                template.start = "<lang " + element.dataset.language + ">" + template.start;
+                template.start = `<lang ${element.dataset.language}>` + template.start;
                 template.end += "</lang>";
             }
             return template;
@@ -112,7 +112,7 @@ module SamiTS {
             let color = fontelement.getAttribute("color");
             if (color) {
                 styleName += 'c' + color.replace('#', '').toLowerCase();
-                rule += "color: " + this.fixIncorrectColorAttribute(color) + ';';
+                rule += `color: ${this.fixIncorrectColorAttribute(color)};`;
             }
             if (styleName.length != 0 && !this.webvttStyleSheet.hasRuleFor(styleName))
                 this.webvttStyleSheet.insertRuleFor(styleName, rule);
@@ -138,7 +138,7 @@ module SamiTS {
             return !!this.ruledictionary[targetname];
         }
         insertRuleFor(targetname: string, rule: string) {
-            this.ruledictionary[targetname] = "::cue(." + targetname + ") { " + rule + " }";
+            this.ruledictionary[targetname] = `::cue(.${targetname}) { ${rule} }`;
         }
         getStylesheet(options: WebVTTWriterOptions) {
             let resultarray: string[] = [];
