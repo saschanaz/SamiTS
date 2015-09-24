@@ -32,6 +32,7 @@ loadFiles("../list.json").then(([list]) => {
 	describe("Conversion diff test", function () {
 		for (var item of <string[]>JSON.parse(list)) {
 			describe(`${item}.smi`, function () {
+				this.timeout(0);
 				let tempStorage = {
 					smiDoc: <SamiTS.SAMIDocument>null,
 					vtt: <string>null,
@@ -50,20 +51,18 @@ loadFiles("../list.json").then(([list]) => {
 								this.smiDoc = smiDoc;
 							});
 					}
-				}
-				this.timeout(0);
+				}				
+				beforeEach(() => tempStorage.prepare("subject"));
 				
 				it("should be same as test WebVTT file", (done) => {
-					return tempStorage.prepare("subject")
-						.then(() => SamiTS.createWebVTT(tempStorage.smiDoc))
+					return SamiTS.createWebVTT(tempStorage.smiDoc)
 						.then((result) => {
 							done(assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n")))
 						})
 						.catch(done);
 				});
 				it("should be same as test SubRip file", (done) => {
-					return tempStorage.prepare("subject")
-						.then(() => SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true }))
+					return SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true })
 						.then((result) => {
 							done(assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n")))
 						})
