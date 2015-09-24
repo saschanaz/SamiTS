@@ -48,7 +48,7 @@ module SamiTS {
             if (secstr.length < 2) secstr = '0' + secstr;
             let msstr = ms.toString();
             while (msstr.length < 3) msstr = '0' + msstr;
-            return hourstr + ':' + minstr + ':' + secstr + ',' + msstr;
+            return `${hourstr}:${minstr}:${secstr},${msstr}`;
         }
 
         private readElementSimple(element: SAMISyncElement) {
