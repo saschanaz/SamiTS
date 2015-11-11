@@ -7,6 +7,8 @@ SamiTS also supports styles by collecting SAMI styling tags to make a standard C
 
 Get a sneak peak with [a sample](http://saschanaz.github.io/SamiTS/sample/) here.
 
+Install with bower: `bower install samits`
+
 # Example
 
 ### Simple use
