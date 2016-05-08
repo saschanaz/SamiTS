@@ -90,11 +90,13 @@ module SamiTS {
             const samiEndIndex = lastIndexOfInsensitive(samistr, "</sami>");
             if (samiEndIndex !== -1) {
                 if (bodyendindex === -1) {
+                    bodyendindex = samistr.length;
                     samistr = samistr.slice(0, samiEndIndex) + "</body></sami>";
                 }
             }
             else {
                 if (bodyendindex === -1) {
+                    bodyendindex = samistr.length;
                     samistr += "</body></sami>";
                 }
                 else {
