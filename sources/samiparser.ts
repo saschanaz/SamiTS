@@ -87,6 +87,20 @@ module SamiTS {
 
             let bodystart = HTMLTagFinder.FindStartTag('body', samistr);
             let bodyendindex = lastIndexOfInsensitive(samistr, "</body>");
+            const samiEndIndex = lastIndexOfInsensitive(samistr, "</sami>");
+            if (samiEndIndex !== -1) {
+                if (bodyendindex === -1) {
+                    samistr = samistr.slice(0, samiEndIndex) + "</body></sami>";
+                }
+            }
+            else {
+                if (bodyendindex === -1) {
+                    samistr += "</body></sami>";
+                }
+                else {
+                    samistr += "</sami>";
+                }
+            }
 
             let samicontainer = <Element>domparser.parseFromString(
                 (samistr.slice(0, bodystart.endPosition) + samistr.slice(bodyendindex))

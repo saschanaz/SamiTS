@@ -73,5 +73,5 @@ loadFiles("../list.json").then(([list]) => {
 	});
 	
 	mocha.run();
-});
+}).catch((err) => console.error(err));
 	
