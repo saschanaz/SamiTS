@@ -1,0 +1,9 @@
+WEBVTT
+
+STYLE
+::cue { background: transparent; text-shadow: 0 0 0.2em black; text-outline: 2px 2px black; }
+::cue-region { font: 0.077vh sans-serif; line-height: 0.1vh; }
+::cue(.cff9900) { color: #ff9900; }
+
+00:00.000 --> 00:00.001
+<c.cff9900>1st Season</c>

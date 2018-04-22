@@ -137,7 +137,7 @@ module SamiTS {
             }
 
             for (let sync of syncs) {
-                let cue = new SAMICue(fixIncorrectRubyNodes(minifyWhitespace(sync.element)));
+                let cue = new SAMICue(fixPotplayerCompatibility(minifyWhitespace(sync.element)));
                 giveLanguageData(cue, samiDocument.languages);
                 samiDocument.cues.push(cue);
             }
@@ -220,6 +220,29 @@ module SamiTS {
             }
 
             return root;
+        }
+
+        function fixPotplayerCompatibility(syncobject: SAMISyncElement) {
+            syncobject = fixIncorrectRubyNodes(syncobject);
+            for (const font of syncobject.getElementsByTagName("font")) {
+                const color = font.getAttribute("color");
+                if (color) {
+                    font.setAttribute("color", fixColorAttribute(color));
+                }
+            }
+            return syncobject;
+        }
+
+        function fixColorAttribute(colorstr: string) {
+            colorstr = colorstr.toLowerCase();
+            if (colorstr.length == 6 && colorstr.search(/^[0-9a-f]{6}/) == 0) {
+                return '#' + colorstr;
+            }
+            const lengthCheck = colorstr.match(/#?([0-9a-f]{6}).+/);
+            if (lengthCheck) {
+                return `#${lengthCheck[1]}`;
+            }
+            return colorstr;
         }
 
         function fixIncorrectRubyNodes(syncobject: SAMISyncElement) {
@@ -344,7 +367,7 @@ module SamiTS {
                     default: return true;
                 }
             }).reverse();
-            
+
             for (let foundtag of foundtags) {
                 newsyncstr = newsyncstr.slice(0, foundtag.startPosition) + newsyncstr.slice(foundtag.endPosition);
             }

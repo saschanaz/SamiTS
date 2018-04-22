@@ -112,19 +112,11 @@ module SamiTS {
             let color = fontelement.getAttribute("color");
             if (color) {
                 styleName += 'c' + color.replace('#', '').toLowerCase();
-                rule += `color: ${this.fixIncorrectColorAttribute(color)};`;
+                rule += `color: ${color};`;
             }
             if (styleName.length != 0 && !this.webvttStyleSheet.hasRuleFor(styleName))
                 this.webvttStyleSheet.insertRuleFor(styleName, rule);
             return styleName;
-        }
-
-        private fixIncorrectColorAttribute(colorstr: string) {
-            if (colorstr.length == 6 && colorstr.search(/^[0-9a-f]{6}/) == 0) {
-                return '#' + colorstr;
-            }
-            else
-                return colorstr;
         }
     }
 
