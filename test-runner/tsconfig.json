@@ -1,17 +1,11 @@
 {
     "compilerOptions": {
-        "target": "ES5",
-        "module": "commonjs",
+        "target": "es2017",
         "noImplicitAny": true,
-        "sourceMap": true,
-        "out": "runtests.js"
+        "sourceMap": true
     },
     "files": [
         "../built/sami.d.ts",
-        "../submodules/es6-promises.d.ts",
-        "../submodules/node.d.ts",
-        "../submodules/mocha.d.ts",
-        "../submodules/fetch.d.ts",
         "runtests.ts"
     ]
 }

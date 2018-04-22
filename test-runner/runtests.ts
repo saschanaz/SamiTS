@@ -39,7 +39,7 @@ loadFiles("../list.json").then(([list]) => {
 					srt: <string>null,
 					prepare(name: string) {
 						if (this.smiDoc) {
-							return Promise.resolve<void>();
+							return Promise.resolve();
 						}
 						return loadFiles(`${item}.smi`, `${item}.vtt`, `${item}.srt`)
 							.then(([smi, vtt, srt]) => {

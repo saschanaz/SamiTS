@@ -1,12 +1,10 @@
 {
     "compilerOptions": {
-        "target": "ES5",
+        "target": "es2017",
         "module": "commonjs",
         "noImplicitAny": true
     },
     "files": [
-        "fileserver.ts",
-        "../submodules/node-static.d.ts",
-        "../submodules/node.d.ts"
+        "fileserver.ts"
     ]
 }

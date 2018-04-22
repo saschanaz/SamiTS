@@ -102,7 +102,6 @@ module SamiTS {
             }
 
             return list;
-            //return [];//RegExp로 모든 start tag의 시작부를 찾아낼 수 있다. /<\/?\w+/g
         }
 
         private static getAttribute(entirestr: string, position: number): { attributeName: string; attributeValue: string; nextPosition: number; } {
@@ -165,7 +164,6 @@ module SamiTS {
                             valuestr += entirestr[position];
                         position++;
                     }
-                    return parsefinish();
                 }
                 var parsefinish = () => {
                     if (namestr.length === 0)

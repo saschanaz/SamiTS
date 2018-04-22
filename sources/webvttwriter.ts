@@ -26,7 +26,7 @@ module SamiTS {
                 let readElement = this.readElement.bind(this);
                 
                 for (let i = 0; i < xsyncs.length - 1; i++) {
-                    text = util.absorbAir(xsyncs[i].readDOM(readElement, options));//prevents cues consists of a single &nbsp;
+                    text = util.absorbAir(xsyncs[i].readDOM(readElement, options as any));//prevents cues consists of a single &nbsp;
                     if (text.length > 0)
                         writeText(i, text);
                 }

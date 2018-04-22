@@ -1,15 +1,13 @@
 {
     "compilerOptions": {
-        "target": "ES5",
-        "module": "commonjs",
+        "target": "es2017",
         "noImplicitAny": true,
         "sourceMap": true,
         "declaration": true,
         "stripInternal": true,
-        "out": "built/sami.js"
+        "outFile": "built/sami.js"
     },
     "files": [
-        "submodules/es6-promises.d.ts",
         "sources/samiconverter.ts",
         "sources/htmltagfinder.ts",
         "sources/samiparser.ts",

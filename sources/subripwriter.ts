@@ -21,7 +21,7 @@ module SamiTS {
                 let readElement = (options.useTextStyles ? this.readElementRich : this.readElementSimple).bind(this);
 
                 for (let i = 0; i < xsyncs.length - 1; i++) {
-                    text = util.absorbAir(xsyncs[i].readDOM(readElement, options));
+                    text = util.absorbAir(xsyncs[i].readDOM(readElement, options as any));
                     if (text.length > 0) {
                         if (syncindex > 1)
                             subDocument += "\r\n\r\n";

@@ -1,0 +1,39 @@
+{
+  "name": "samits",
+  "version": "1.0.0",
+  "description": "A SAMI converter for web browsers and players",
+  "main": "lib/sami.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.0",
+    "@types/node": "^9.6.6",
+    "@types/node-static": "^0.7.1",
+    "diff": "^2.1.1",
+    "mocha": "^2.2.5",
+    "node-static": "^0.7.7"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SaschaNaz/SamiTS.git"
+  },
+  "keywords": [
+    "sami",
+    "smi",
+    "subtitle",
+    "webvtt",
+    "subrip",
+    "srt"
+  ],
+  "author": "Kagami Sascha Rosoylight <saschanaz@outlook.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SaschaNaz/SamiTS/issues"
+  },
+  "homepage": "https://github.com/SaschaNaz/SamiTS#readme"
+}

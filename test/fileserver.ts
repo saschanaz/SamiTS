@@ -1,4 +1,4 @@
-import { Server, ServerResult, mime } from "node-static";
+import { Server, mime } from "node-static";
 import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
@@ -26,7 +26,7 @@ console.log(`Server opened at: ${server.root}`);
 http.createServer((request, response) => {
 	request.addListener("end", () => {
 		console.log("Received a request.");
-		server.serve(request, response).addListener("error", (err: ServerResult) => {
+		server.serve(request, response).addListener("error", err => {
 			console.log(`Error serving ${request.url}: ${err.status} ${err.message}`);
 			
 			response.writeHead(err.status, err.headers);
