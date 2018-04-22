@@ -1,18 +1,21 @@
 ﻿module SamiTS {
     const enum NodeType {
         Element = 1,
-        Text = 3
+        Text = 3,
+        Comment = 8
     }
 
     export interface TagReadResult {
         start: string;
         end: string;
         content: string;
+        comment?: boolean;
         divides?: boolean;
         linebreak?: boolean;
     }
 
     export interface DOMReadOptionBag {
+        /** Give true if the target format thinks an empty line as the end of the cue */
         preventEmptyLine?: boolean;
     }
     
@@ -57,6 +60,7 @@
 
         readDOM<OptionBag extends DOMReadOptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
             let stack: TagReadResult[] = [];
+            let comments: string[] = [];
             let walker = document.createTreeWalker(this.syncElement, -1, null, false);
             let isBlankNewLine = true;
             while (true) {
@@ -69,13 +73,18 @@
                         continue;
                 }
                 else
-                    stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue });
+                    stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue, comment: walker.currentNode.nodeType === NodeType.Comment });
 
                 do {
                     let zero = stack.shift();
 
-                    if (!stack.length)
-                        return util.manageLastLine(zero.content, options.preventEmptyLine);
+                    if (!stack.length) {
+                        let content = util.manageLastLine(zero.content, options.preventEmptyLine);
+                        if (comments.length) {
+                            content += "\r\n\r\n" + comments.map(comment => comment.includes("\n") ? `NOTE\r\n${comment}` : `NOTE ${comment}`);
+                        }
+                        return content;
+                    }
 
                     if (zero) {
                         let isEffectiveDivider = zero.linebreak || (zero.divides && stack[0].content);
@@ -85,7 +94,10 @@
                             isBlankNewLine = true;
                         }
 
-                        if (zero.content) {
+                        if (zero.comment) {
+                            comments.push(util.manageEmptyLines(zero.content.trim(), options.preventEmptyLine));
+                        }
+                        else if (zero.content) {
                             let content = zero.start + zero.content + zero.end;
                             // Starting space in a line should be removed
                             if (isBlankNewLine && content[0] === ' ')

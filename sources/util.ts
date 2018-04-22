@@ -12,11 +12,18 @@ module SamiTS.util {
         else
             return input;
     }
+    /** Fills the empty last line with a space for formats where the end of a cue is an empty line */
     export function manageLastLine(input: string, preventEmptyLine: boolean) {
         if (isEmptyOrEndsWithLinefeed(input) && preventEmptyLine)
             return input + ' ';
         else
             return input;
+    }
+    export function manageEmptyLines(input: string, preventEmptyLine: boolean) {
+        if (!preventEmptyLine) {
+            return input;
+        }
+        return input.replace(/\r?\n\r?\n/g, "\r\n \r\n");
     }
     export function generateTagReadResultTemplate(content = '') {
         return <TagReadResult>{ start: '', end: '', content };
