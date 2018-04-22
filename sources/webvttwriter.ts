@@ -32,8 +32,8 @@ module SamiTS {
                 }
             }
 
-            //WebVTT v2 http://blog.gingertech.net/2011/06/27/recent-developments-around-webvtt/
-            subHeader += "\r\n\r\nSTYLE -->\r\n" + this.webvttStyleSheet.getStylesheet(options);
+            // WebVTT Styling https://w3c.github.io/webvtt/#styling
+            subHeader += "\r\n\r\nSTYLE\r\n" + this.webvttStyleSheet.getStylesheet(options);
             subDocument = subHeader + subDocument;
 
             let result: SamiTSResult = { subtitle: subDocument };
