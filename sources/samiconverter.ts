@@ -29,49 +29,51 @@ module SamiTS {
     export function createWebVTT(input: string, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: Blob, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
     export function createWebVTT(input: SAMIDocument, options?: WebVTTWriterOptions): Promise<SamiTSResult>;
-    export function createWebVTT(input: any, options?: WebVTTWriterOptions) {
-        let sequence: Promise<SAMIDocument>;
+    export async function createWebVTT(input: any, options?: WebVTTWriterOptions) {
+        let sami: SAMIDocument;
         if (input instanceof SAMIDocument)
-            sequence = Promise.resolve(input);
+            sami = input;
         else
-            sequence = createSAMIDocument(input);
+            sami = await createSAMIDocument(input);
 
-        return sequence.then((sami) => (new SamiTS.WebVTTWriter()).write(sami.cues, options));
+        return (new SamiTS.WebVTTWriter()).write(sami.cues, options);
     }
 
     export function createSubRip(input: string, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     export function createSubRip(input: Blob, options?: SubRipWriterOptions): Promise<SamiTSResult>;
     export function createSubRip(input: SAMIDocument, options?: SubRipWriterOptions): Promise<SamiTSResult>;
-    export function createSubRip(input: any, options?: SubRipWriterOptions) {
-        let sequence: Promise<SAMIDocument>;
+    export async function createSubRip(input: any, options?: SubRipWriterOptions) {
+        let sami: SAMIDocument;
         if (input instanceof SAMIDocument)
-            sequence = Promise.resolve(input);
+            sami = input;
         else
-            sequence = createSAMIDocument(input);
+            sami = await createSAMIDocument(input);
 
-        return sequence.then((sami) => (new SamiTS.SubRipWriter()).write(sami.cues, options));
+        return (new SamiTS.SubRipWriter()).write(sami.cues, options);
     }
 
     export function createSAMIDocument(input: string): Promise<SAMIDocument>;
     export function createSAMIDocument(input: Blob): Promise<SAMIDocument>;
-    export function createSAMIDocument(input: any) {
-        return getString(input).then((samistr) => SAMIDocument.parse(samistr));
+    export async function createSAMIDocument(input: any) {
+        const samistr = await getString(input);
+        return SAMIDocument.parse(samistr);
     }
 
-
-    function getString(input: Blob): Promise<string>;
-    function getString(input: string): Promise<string>;
-    function getString(input: any) {
+    async function getString(input: string | Blob) {
         if (typeof input === "string")
-            return Promise.resolve(<string>input);
+            return input;
         else if (input instanceof Blob) {
-            return new Promise<string>((resolve, reject) => {
-                let reader = new FileReader();
-                reader.onload = (ev: any) => {
-                    resolve(<string>reader.result);
-                };
-                reader.readAsText(input);
-            });
+            return readBlobAsText(input);
         }
+    }
+
+    function readBlobAsText(blob: Blob) {
+        return new Promise<string>((resolve, reject) => {
+            let reader = new FileReader();
+            reader.onload = (ev: any) => {
+                resolve(<string>reader.result);
+            };
+            reader.readAsText(blob);
+        });
     }
 }

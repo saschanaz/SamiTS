@@ -1,5 +1,4 @@
-﻿///<reference path="../sami.d.ts" />
-///<reference path="../submodules/es6-promises.d.ts" />
+﻿///<reference path="../lib/sami.d.ts" />
 
 /*
 Copyright (c) 2014 SaschaNaz
@@ -52,7 +51,7 @@ enum SubType {
     WebVTT, SRT
 }
 
-function load(evt: Event) {
+async function load(evt: Event) {
     var files = (<HTMLInputElement>evt.target).files;
     var videofile: File;
     var subfile: File;
@@ -70,16 +69,16 @@ function load(evt: Event) {
 
     subtitleFileDisplayName = getFileDisplayName(subfile);
     
-    var sequence: Promise<SamiTS.SamiTSResult>;
+    var result: SamiTS.SamiTSResult;
     switch (getTargetSubType()) {
         case SubType.WebVTT:
-            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
+            result = await SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
             break;
         case SubType.SRT:
-            sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
+            result = await SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
             break;
     }
-    return sequence.then((result) => resultOutput(videofile, result));
+    return resultOutput(videofile, result);
 }
 
 var resultOutput = (videoFile: Blob, result: SamiTS.SamiTSResult) => {

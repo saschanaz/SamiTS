@@ -146,7 +146,7 @@ module SamiTS {
         }
 
         function giveLanguageData(cue: SAMICue, languages: SAMILanguage[]) {
-            for (let child of <SAMIContentElement[]>util.arrayFrom(cue.syncElement.children)) {
+            for (let child of Array.from(cue.syncElement.children) as SAMIContentElement[]) {
                 for (let language of languages) {
                     if (child.className === language.cssClass) {
                         child.dataset.language = language.code; // for BCP47 WebVTT lang tag
@@ -228,7 +228,7 @@ module SamiTS {
             if (!rtlist || rtlist.length == 0)
                 return syncobject;
 
-            if (util.arrayFrom(rtlist).every((rt: HTMLElement) => isRubyParentExist(rt) && rt.textContent.length > 0))
+            if (Array.from(rtlist).every((rt: HTMLElement) => isRubyParentExist(rt) && rt.textContent.length > 0))
                 return syncobject;
 
             //rt가 ruby 바깥에 있거나 rt가 비어 있는 것을 체크. 해당 조건에 맞으면 font 태그를 모두 제거한 뒤 파싱, 그 뒤에 font를 다시 적용한다
@@ -250,7 +250,7 @@ module SamiTS {
 
         function fixIncorrectRPs(syncobject: SAMISyncElement) {
             let newsync = <SAMISyncElement>syncobject.cloneNode(true);
-            for (let ruby of util.arrayFrom(newsync.getElementsByTagName("ruby"))) {
+            for (let ruby of Array.from(newsync.getElementsByTagName("ruby"))) {
                 let rt = ruby.getElementsByTagName("rt")[0];
                 if (!rt || rt.innerHTML.length > 0 || rt === ruby.childNodes[ruby.childNodes.length - 1])
                     return syncobject;
@@ -327,7 +327,7 @@ module SamiTS {
         */
         function stripTemp(syncobject: SAMISyncElement) {
             let temps = syncobject.querySelectorAll("x-samits-temp");
-            for (let temp of util.arrayFrom(temps)) {
+            for (let temp of Array.from(temps)) {
                 temp.parentNode.removeChild(temp);
             };
             return syncobject;
@@ -337,7 +337,7 @@ module SamiTS {
             let newsync = <SAMISyncElement>syncobject.cloneNode(false);
             let newsyncstr = newsync.dataset.originalString;
             let tags = HTMLTagFinder.FindAllStartTags(syncobject.dataset.originalString);
-            let foundtags = tags.filter((foundtag) => {
+            let foundtags = tags.filter(foundtag => {
                 switch (foundtag.element.tagName.toLowerCase()) {
                     case "font":
                     case "p": return false;

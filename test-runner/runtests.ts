@@ -1,14 +1,11 @@
 declare var JsDiff: any;
 
-function loadFiles(...names: string[]) {
-	return Promise
-		.all(names.map(name => fetch(`../test/data/${name}`)))
-		.then(results => {
-			if (!results.every((result) => result.ok)) {
-				throw new Error("Failed to receive files from local server.");
-			}
-			return Promise.all(results.map(result => result.text()))
-		})
+async function loadFiles(...names: string[]) {
+	const results = await Promise.all(names.map(name => fetch(`../test/data/${name}`)));
+	if (!results.every(result => result.ok)) {
+		throw new Error("Failed to receive files from local server.");
+	}
+	return Promise.all(results.map(result => result.text()))
 }
 
 function assertDiff(first: string, second: string) {
@@ -30,48 +27,37 @@ function assertDiff(first: string, second: string) {
 
 loadFiles("../list.json").then(([list]) => {
 	describe("Conversion diff test", function () {
-		for (var item of <string[]>JSON.parse(list)) {
+		for (const item of JSON.parse(list) as string[]) {
 			describe(`${item}.smi`, function () {
 				this.timeout(0);
-				let tempStorage = {
+				const tempStorage = {
 					smiDoc: <SamiTS.SAMIDocument>null,
 					vtt: <string>null,
 					srt: <string>null,
-					prepare(name: string) {
+					async prepare(name: string) {
 						if (this.smiDoc) {
-							return Promise.resolve();
+							return;
 						}
-						return loadFiles(`${item}.smi`, `${item}.vtt`, `${item}.srt`)
-							.then(([smi, vtt, srt]) => {
-								this.vtt = vtt;
-								this.srt = srt;
-								return SamiTS.createSAMIDocument(smi);
-							})
-							.then((smiDoc) => {
-								this.smiDoc = smiDoc;
-							});
+						const [smi, vtt, srt] = await loadFiles(`${name}.smi`, `${name}.vtt`, `${name}.srt`);	
+						this.vtt = vtt;
+						this.srt = srt;
+						this.smiDoc = await SamiTS.createSAMIDocument(smi);
 					}
 				}				
-				beforeEach(() => tempStorage.prepare("subject"));
+				beforeEach(() => tempStorage.prepare(item));
 				
-				it("should be same as test WebVTT file", (done) => {
-					return SamiTS.createWebVTT(tempStorage.smiDoc)
-						.then((result) => {
-							done(assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n")))
-						})
-						.catch(done);
+				it("should be same as test WebVTT file", async () => {
+					const result = await SamiTS.createWebVTT(tempStorage.smiDoc)
+					assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n"));
 				});
-				it("should be same as test SubRip file", (done) => {
-					return SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true })
-						.then((result) => {
-							done(assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n")))
-						})
-						.catch(done);
+				it("should be same as test SubRip file", async () => {
+					const result = await SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true });
+					assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n"));
 				})
 			});
 		}
 	});
 	
 	mocha.run();
-}).catch((err) => console.error(err));
+}).catch(console.error);
 	

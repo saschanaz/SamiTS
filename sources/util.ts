@@ -18,29 +18,6 @@ module SamiTS.util {
         else
             return input;
     }
-    export function assign<T>(target: T, ...sources: any[]) {
-        if ((<any>Object).assign)
-            return <T>((<any>Object).assign)(target, ...sources);
-
-        for (let source of sources) {
-            source = Object(source);
-            for (let property in source) {
-                (<any>target)[property] = source[property];
-            }
-        }
-        return target;
-    }
-    export interface ArrayLike<T> {
-        length: number;
-        [i: number]: T;
-    }
-    export function arrayFrom<T>(arrayLike: ArrayLike<T>): T[] {
-        let array: T[] = [];
-        for (let i = 0; i < arrayLike.length; i++) {
-            array.push(arrayLike[i]);
-        }    
-        return array;
-    }
     export function generateTagReadResultTemplate(content = '') {
         return <TagReadResult>{ start: '', end: '', content };
     }

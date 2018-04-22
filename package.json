@@ -12,7 +12,7 @@
     "@types/node": "^9.6.6",
     "@types/node-static": "^0.7.1",
     "diff": "^2.1.1",
-    "mocha": "^2.2.5",
+    "mocha": "^5.1.1",
     "node-static": "^0.7.7"
   },
   "scripts": {
@@ -35,5 +35,10 @@
   "bugs": {
     "url": "https://github.com/SaschaNaz/SamiTS/issues"
   },
-  "homepage": "https://github.com/SaschaNaz/SamiTS#readme"
+  "homepage": "https://github.com/SaschaNaz/SamiTS#readme",
+  "files": [
+    "lib/",
+    "LICENSE",
+    "README.md"
+  ]
 }
