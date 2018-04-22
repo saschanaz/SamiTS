@@ -21,8 +21,12 @@ function assertDiff(first: string, second: string) {
 			output += "\r\n";
 		}
 		
-		return new Error(output);
+		throw new Error(output);
 	}
+}
+
+function assertDiffLinebreakSafe(first: string, second: string) {
+	assertDiff(first.replace(/\r\n/g, "\n"), second.replace(/\r\n/g, "\n"));
 }
 
 loadFiles("../list.json").then(([list]) => {
@@ -48,11 +52,11 @@ loadFiles("../list.json").then(([list]) => {
 				
 				it("should be same as test WebVTT file", async () => {
 					const result = await SamiTS.createWebVTT(tempStorage.smiDoc)
-					assertDiff(tempStorage.vtt, result.subtitle.replace(/\r\n/g, "\n"));
+					assertDiffLinebreakSafe(tempStorage.vtt, result.subtitle);
 				});
 				it("should be same as test SubRip file", async () => {
 					const result = await SamiTS.createSubRip(tempStorage.smiDoc, { useTextStyles: true });
-					assertDiff(tempStorage.srt, result.subtitle.replace(/\r\n/g, "\n"));
+					assertDiffLinebreakSafe(tempStorage.srt, result.subtitle);
 				})
 			});
 		}
