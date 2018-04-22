@@ -76,10 +76,12 @@ declare module SamiTS {
         start: string;
         end: string;
         content: string;
+        comment?: boolean;
         divides?: boolean;
         linebreak?: boolean;
     }
     interface DOMReadOptionBag {
+        /** Give true if the target format thinks an empty line as the end of the cue */
         preventEmptyLine?: boolean;
     }
     class SAMICue {
@@ -129,6 +131,5 @@ declare module SamiTS {
         private getWebVTTTime(ms);
         private readElement(element, options);
         private registerStyle(fontelement);
-        private fixIncorrectColorAttribute(colorstr);
     }
 }
