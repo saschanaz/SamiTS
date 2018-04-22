@@ -1,5 +1,4 @@
-///<reference path="../sami.d.ts" />
-///<reference path="../submodules/es6-promises.d.ts" />
+///<reference path="../lib/sami.d.ts" />
 // Main
 "use strict";
 var subtypechecks;
@@ -7,7 +6,7 @@ var track;
 var style;
 var isPreviewAreaShown = false;
 var subtitleFileDisplayName;
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     subtypechecks = document.getElementsByName("subtype");
 });
 var SubType;
@@ -15,7 +14,7 @@ var SubType;
     SubType[SubType["WebVTT"] = 0] = "WebVTT";
     SubType[SubType["SRT"] = 1] = "SRT";
 })(SubType || (SubType = {}));
-function load(evt) {
+async function load(evt) {
     var files = evt.target.files;
     var videofile;
     var subfile;
@@ -31,18 +30,18 @@ function load(evt) {
     if (!subfile)
         return;
     subtitleFileDisplayName = getFileDisplayName(subfile);
-    var sequence;
+    var result;
     switch (getTargetSubType()) {
         case SubType.WebVTT:
-            sequence = SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
+            result = await SamiTS.createWebVTT(subfile, { createStyleElement: true, selector: '#player' });
             break;
         case SubType.SRT:
-            sequence = SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
+            result = await SamiTS.createSubRip(subfile, { useTextStyles: getTagUse() });
             break;
     }
-    return sequence.then(function (result) { return resultOutput(videofile, result); });
+    return resultOutput(videofile, result);
 }
-var resultOutput = function (videoFile, result) {
+var resultOutput = (videoFile, result) => {
     hidePreviewArea();
     hidePlayer();
     hideAreaSelector();
@@ -68,7 +67,7 @@ var resultOutput = function (videoFile, result) {
         showPreviewArea();
     loadStyle(result.stylesheet);
 };
-var loadStyle = function (stylesheet) {
+var loadStyle = (stylesheet) => {
     if (style)
         document.head.removeChild(style);
     style = stylesheet;
