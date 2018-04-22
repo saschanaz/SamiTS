@@ -34,7 +34,7 @@ module SamiTS {
 
             // WebVTT Styling https://w3c.github.io/webvtt/#styling
             subHeader += "\r\n\r\nSTYLE\r\n" + this.webvttStyleSheet.getStylesheet(options);
-            subDocument = subHeader + subDocument;
+            subDocument = subHeader + subDocument + "\r\n";
 
             let result: SamiTSResult = { subtitle: subDocument };
             if (options.createStyleElement)

@@ -30,7 +30,7 @@ module SamiTS {
                     }
                 }
             }
-            return <SamiTSResult>{ subtitle: subDocument };
+            return <SamiTSResult>{ subtitle: subDocument + "\r\n" };
         }
 
         private getSubRipTime(ms: number) {
