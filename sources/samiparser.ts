@@ -224,7 +224,8 @@ module SamiTS {
 
         function fixPotplayerCompatibility(syncobject: SAMISyncElement) {
             syncobject = fixIncorrectRubyNodes(syncobject);
-            for (const font of syncobject.getElementsByTagName("font")) {
+            // TODO: remove Array.from when Edge 18 arrives
+            for (const font of Array.from(syncobject.getElementsByTagName("font"))) {
                 const color = font.getAttribute("color");
                 if (color) {
                     font.setAttribute("color", fixColorAttribute(color));

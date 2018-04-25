@@ -58,46 +58,41 @@
             return cues;
         }
 
-        readDOM<OptionBag extends DOMReadOptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
-            let stack: TagReadResult[] = [];
-            let comments: string[] = [];
-            let walker = document.createTreeWalker(this.syncElement, -1, null, false);
+        readDOM<OptionBag extends DOMReadOptionBag>(readNode: (element: Node, options: OptionBag) => TagReadResult, options = <OptionBag>{}) {
+            const stack: TagReadResult[] = [];
+            const walker = document.createTreeWalker(this.syncElement, -1, null, false);
             let isBlankNewLine = true;
             while (true) {
-                if (walker.currentNode.nodeType === NodeType.Element) {
-                    let element = readElement(<Element>walker.currentNode, options);
-                    stack.unshift(element);
+                if (
+                    walker.currentNode.nodeType === NodeType.Element ||
+                    walker.currentNode.nodeType === NodeType.Comment
+                ) {
+                    const node = readNode(walker.currentNode, options);
+                    stack.unshift(node);
                     
                     // Read children if there are and if readElement understands current node
-                    if (element && walker.firstChild())
+                    if (node && walker.firstChild())
                         continue;
                 }
                 else
-                    stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue, comment: walker.currentNode.nodeType === NodeType.Comment });
+                    stack.unshift({ start: '', end: '', content: walker.currentNode.nodeValue });
 
                 do {
-                    let zero = stack.shift();
+                    const zero = stack.shift();
 
                     if (!stack.length) {
-                        let content = util.manageLastLine(zero.content, options.preventEmptyLine);
-                        if (comments.length) {
-                            content += "\r\n\r\n" + comments.map(comment => comment.includes("\n") ? `NOTE\r\n${comment}` : `NOTE ${comment}`);
-                        }
-                        return content;
+                        return util.manageLastLine(zero.content, options.preventEmptyLine);
                     }
 
                     if (zero) {
-                        let isEffectiveDivider = zero.linebreak || (zero.divides && stack[0].content);
+                        const isEffectiveDivider = zero.linebreak || (zero.divides && stack[0].content);
                         if (isEffectiveDivider) {
                             // Ending space in a line should be removed
                             stack[0].content = util.manageLastLine(util.absorbSpaceEnding(stack[0].content), options.preventEmptyLine) + "\r\n";
                             isBlankNewLine = true;
                         }
 
-                        if (zero.comment) {
-                            comments.push(util.manageEmptyLines(zero.content.trim(), options.preventEmptyLine));
-                        }
-                        else if (zero.content) {
+                        if (zero.content) {
                             let content = zero.start + zero.content + zero.end;
                             // Starting space in a line should be removed
                             if (isBlankNewLine && content[0] === ' ')

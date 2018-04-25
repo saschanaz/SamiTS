@@ -23,7 +23,7 @@ module SamiTS {
 
             let text: string;
             if (xsyncs.length > 0) {
-                let readElement = this.readElement.bind(this);
+                let readElement = this.readNode.bind(this);
                 
                 for (let i = 0; i < xsyncs.length - 1; i++) {
                     text = util.absorbAir(xsyncs[i].readDOM(readElement, options as any));//prevents cues consists of a single &nbsp;
@@ -68,9 +68,17 @@ module SamiTS {
                 return `${minstr}:${secstr}.${msstr}`;
         }
 
-        private readElement(element: SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
+        private readNode(node: Node | SAMIContentElement, options: WebVTTWriterOptions): TagReadResult {
             let template = util.generateTagReadResultTemplate();
-            switch (element.tagName.toLowerCase()) {
+            if (!(node instanceof Element)) {
+                if (node instanceof Comment && util.isLastRelevantNodeInSync(node)) {
+                    // no visible text or element after this
+                    const text = util.fillEmptyLines(node.textContent.trim());
+                    template.content = "\r\n\r\n" + (text.includes("\n") ? `NOTE\r\n${text}` : `NOTE ${text}`);
+                }
+                return template;
+            }
+            switch (node.tagName.toLowerCase()) {
                 case "p":
                     template.divides = true;
                     break;
@@ -78,7 +86,7 @@ module SamiTS {
                     template.linebreak = true;
                     break;
                 case "font": {
-                    let stylename = this.registerStyle(element);
+                    let stylename = this.registerStyle(node);
                     if (stylename) {
                         template.start = `<c.${stylename}>`;
                         template.end = "</c>";
@@ -93,14 +101,14 @@ module SamiTS {
                 case "b":
                 case "i":
                 case "u": {
-                    let tagname = element.tagName.toLowerCase();
+                    let tagname = node.tagName.toLowerCase();
                     template.start = `<${tagname}>`;
                     template.end = `</${tagname}>`;
                     break;
                 }
             }
-            if (options.enableLanguageTag && element.dataset.language && template.content.trim()) {
-                template.start = `<lang ${element.dataset.language}>` + template.start;
+            if (options.enableLanguageTag && node.dataset.language && template.content.trim()) {
+                template.start = `<lang ${node.dataset.language}>` + template.start;
                 template.end += "</lang>";
             }
             return template;

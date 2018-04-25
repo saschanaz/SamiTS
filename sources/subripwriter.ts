@@ -51,8 +51,11 @@ module SamiTS {
             return `${hourstr}:${minstr}:${secstr},${msstr}`;
         }
 
-        private readElementSimple(element: SAMISyncElement) {
+        private readElementSimple(element: Node | SAMISyncElement) {
             let template = util.generateTagReadResultTemplate();
+            if (!(element instanceof Element)) {
+                return template;
+            }
             switch (element.tagName.toLowerCase()) {
                 case "p":
                     template.divides = true;
@@ -64,8 +67,11 @@ module SamiTS {
             return template;
         }
 
-        private readElementRich(element: SAMISyncElement) {
+        private readElementRich(element: Node | SAMISyncElement) {
             let template = util.generateTagReadResultTemplate();
+            if (!(element instanceof Element)) {
+                return template;
+            }
             switch (element.tagName.toLowerCase()) {
                 case "p":
                     template.divides = true;
