@@ -7,6 +7,8 @@ module SamiTS {
         enableLanguageTag?: boolean;
         /** The default value is "video". */
         selector?: string;
+        /** Some browsers including MSEdge requires --> after STYLE and NOTE */
+        legacyForceArrow?: boolean;
     }
 
     export class WebVTTWriter {
@@ -33,7 +35,7 @@ module SamiTS {
             }
 
             // WebVTT Styling https://w3c.github.io/webvtt/#styling
-            subHeader += "\r\n\r\nSTYLE\r\n" + this.webvttStyleSheet.getStylesheet(options);
+            subHeader += `\r\n\r\nSTYLE${options.legacyForceArrow ? " -->" : ""}\r\n` + this.webvttStyleSheet.getStylesheet(options);
             subDocument = subHeader + subDocument + "\r\n";
 
             let result: SamiTSResult = { subtitle: subDocument };
@@ -74,7 +76,8 @@ module SamiTS {
                 if (node instanceof Comment && util.isLastRelevantNodeInSync(node)) {
                     // no visible text or element after this
                     const text = util.fillEmptyLines(node.textContent.trim());
-                    template.content = "\r\n\r\n" + (text.includes("\n") ? `NOTE\r\n${text}` : `NOTE ${text}`);
+                    const note = `NOTE${options.legacyForceArrow ? " -->" : ""}`
+                    template.content = "\r\n\r\n" + (text.includes("\n") ? `${note}\r\n${text}` : `${note} ${text}`);
                 }
                 return template;
             }

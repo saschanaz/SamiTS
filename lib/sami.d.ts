@@ -127,6 +127,8 @@ declare module SamiTS {
         enableLanguageTag?: boolean;
         /** The default value is "video". */
         selector?: string;
+        /** Some browsers including MSEdge requires --> after STYLE and NOTE */
+        legacyForceArrow?: boolean;
     }
     class WebVTTWriter {
         private webvttStyleSheet;
