@@ -91,7 +91,7 @@ declare module SamiTS {
         filter(...languages: string[]): {
             [key: string]: SAMICue;
         };
-        readDOM<OptionBag extends DOMReadOptionBag>(readElement: (element: Element, options: OptionBag) => TagReadResult, options?: OptionBag): string;
+        readDOM<OptionBag extends DOMReadOptionBag>(readNode: (element: Node, options: OptionBag) => TagReadResult, options?: OptionBag): string;
     }
 }
 declare module SamiTS {
@@ -117,6 +117,9 @@ declare module SamiTS {
         private readElementRich(element);
     }
 }
+interface Comment {
+    nextElementSibling(): Element | null;
+}
 declare module SamiTS {
     interface WebVTTWriterOptions {
         createStyleElement?: boolean;
@@ -129,7 +132,7 @@ declare module SamiTS {
         private webvttStyleSheet;
         write(xsyncs: SAMICue[], options?: WebVTTWriterOptions): SamiTSResult;
         private getWebVTTTime(ms);
-        private readElement(element, options);
+        private readNode(node, options);
         private registerStyle(fontelement);
     }
 }
